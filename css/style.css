@@ -1,0 +1,515 @@
+@import url("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;1,400;1,500;1,600&family=Lato&family=Montserrat:wght@300;400;500&family=Open+Sans&family=Poppins:ital,wght@0,300;0,400;0,500;1,400;1,500&family=Roboto:wght@300;400&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+a,
+a:hover,
+a:visited {
+  text-decoration: none;
+  color: #007bff;
+}
+
+ul {
+  list-style-position: inside;
+}
+
+p {
+  margin: 0;
+}
+
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: .5rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+body {
+  color: #141313;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.hero {
+  width: 100%;
+  min-height: 300px;
+  height: auto;
+  padding: 1rem;
+  background-image: linear-gradient(120deg, #069eb3, #11d0c6);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  color: white;
+}
+
+.hero .profile-img {
+  width: 150px;
+  min-height: 150px;
+  height: auto;
+  background-image: linear-gradient(60deg, #069eb3, #11cec4);
+  border-radius: 50%;
+  -webkit-box-shadow: 0 0 10px 5px rgba(114, 20, 168, 0.3);
+          box-shadow: 0 0 10px 5px rgba(114, 20, 168, 0.3);
+}
+
+.hero .profile-img img {
+  width: 100%;
+  min-height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  border-radius: 50%;
+}
+
+.hero h1 {
+  margin: 10px 0;
+}
+
+.hero .socials {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  font-size: 18px;
+}
+
+.hero .socials a {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  border-radius: 50%;
+  padding: 5px;
+  width: 32px;
+  height: 32px;
+  color: white;
+  margin: 0 5px;
+}
+
+main {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  margin: 1rem calc(0.05*100vw);
+}
+
+.aside {
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+  -ms-flex-preferred-size: 40%;
+      flex-basis: 40%;
+  margin: 10px;
+  padding: 10px;
+  color: #141313;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3);
+          box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3);
+}
+
+.aside .edu > h1,
+.aside .skills > h1,
+.aside .associations > h1 {
+  margin: 10px 0;
+}
+
+.aside .edu > h2,
+.aside .skills > h2,
+.aside .associations > h2 {
+  margin: 5px 0;
+}
+
+.aside .edu h3,
+.aside .skills h3,
+.aside .associations h3 {
+  font-size: 20px;
+}
+
+.aside .associations ul {
+  list-style-type: none;
+  margin-left: 1rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 500;
+  font-size: 24px;
+}
+
+.school-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap-reverse;
+      flex-wrap: wrap-reverse;
+  margin-bottom: 10px;
+}
+
+.school-wrapper h2 {
+  font-size: 20px;
+}
+
+.school-wrapper .school-logo {
+  width: 50px;
+  height: 50px;
+  padding-right: 10px;
+  -ms-flex-item-align: end;
+      align-self: flex-end;
+}
+
+.school-wrapper .school-logo img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.school-wrapper .school {
+  padding-right: 10px;
+  padding-bottom: 10px;
+  -ms-flex-preferred-size: 300px;
+      flex-basis: 300px;
+}
+
+.school-wrapper .school h2 {
+  margin-bottom: 5px;
+}
+
+.school-wrapper .school p {
+  font-size: large;
+}
+
+.school-wrapper .course-period {
+  text-align: right;
+  margin: 5px 0 10px 0;
+  color: rgba(132, 0, 255, 0.788);
+}
+
+.skill-wrapper {
+  margin: 10px 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+.skill-wrapper p {
+  -ms-flex-preferred-size: 100px;
+      flex-basis: 100px;
+}
+
+.skill-level {
+  min-width: 60%;
+  height: 6px;
+  border-radius: 3px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5), inset 0 0 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.8);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5), inset 0 0 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.8);
+  margin: 3px 0;
+}
+
+.skill-level [class^='skill-'] {
+  height: inherit;
+  border-radius: inherit;
+  -webkit-transform: scaleX(0);
+          transform: scaleX(0);
+  -webkit-transform-origin: left;
+          transform-origin: left;
+  -webkit-animation: progress 0.5s cubic-bezier(1, 0, 0.5, 1) forwards;
+          animation: progress 0.5s cubic-bezier(1, 0, 0.5, 1) forwards;
+}
+
+.skill-level .skill-js {
+  width: 90%;
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(30%, #00ffd5), color-stop(70%, #00b6ad));
+  background-image: linear-gradient(to right, #00ffd5 30%, #00b6ad 70%);
+}
+
+.skill-level .skill-php {
+  width: 80%;
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(30%, #00ffd5), color-stop(70%, #00b6ad));
+  background-image: linear-gradient(to right, #00ffd5 30%, #00b6ad 70%);
+  -webkit-animation-delay: 0.2s;
+          animation-delay: 0.2s;
+}
+
+.skill-level .skill-python {
+  width: 70%;
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(30%, #00ffd5), color-stop(70%, #00b6ad));
+  background-image: linear-gradient(to right, #00ffd5 30%, #00b6ad 70%);
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s;
+}
+
+.skill-level .skill-expressjs {
+  width: 95%;
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(30%, #ff0077), color-stop(70%, #b60064));
+  background-image: linear-gradient(to right, #ff0077 30%, #b60064 70%);
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s;
+}
+
+.skill-level .skill-react {
+  width: 60%;
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(30%, #00ffd5), color-stop(70%, #00b6ad));
+  background-image: linear-gradient(to right, #00ffd5 30%, #00b6ad 70%);
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s;
+}
+
+.skill-level .skill-vue {
+  width: 30%;
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(30%, #00ffd5), color-stop(70%, #00b6ad));
+  background-image: linear-gradient(to right, #00ffd5 30%, #00b6ad 70%);
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s;
+}
+
+.code::before {
+  content: '<';
+  padding-right: 6px;
+}
+
+.code::after {
+  content: '/>';
+  padding-left: 6px;
+}
+
+.work-experience {
+  -ms-flex-preferred-size: 55%;
+      flex-basis: 55%;
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  margin: 10px;
+  padding: 10px 2rem 10px 1rem;
+  color: #141313;
+  -webkit-box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3);
+          box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3);
+}
+
+.job-details {
+  margin: 1rem 0;
+}
+
+.job-details .job-heading {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  padding: 5px 0;
+}
+
+.job-details .company {
+  margin: 2px 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.job-details .company .company-logo {
+  width: 30px;
+  height: 30px;
+  margin-left: 10px;
+}
+
+.job-details .company .company-logo img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.job-details p {
+  font-size: 20px;
+}
+
+.job-details ul {
+  list-style-position: inside;
+  list-style-type: circle;
+  line-height: normal;
+  font-size: 16px;
+}
+
+.featured-projects {
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  padding: 2rem 10px;
+  margin: 2rem 0;
+}
+
+.featured-projects > h1,
+.featured-projects > h3 {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.projects-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+.project-card {
+  -webkit-box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3);
+          box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3);
+  -webkit-transition: all 0.3s linear;
+  transition: all 0.3s linear;
+  width: 256px;
+  margin: 1rem;
+  height: 300px;
+  cursor: pointer;
+}
+
+.project-card a {
+  color: #141313;
+}
+
+.project-card:hover {
+  -webkit-transform: scale(1.01, 1.01);
+          transform: scale(1.01, 1.01);
+  -webkit-box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3), -1px -2px 5px 3px rgba(44, 53, 33, 0.3);
+          box-shadow: 0 5px 10px 3px rgba(44, 53, 33, 0.3), -1px -2px 5px 3px rgba(44, 53, 33, 0.3);
+}
+
+.project-card .project-media {
+  width: 100%;
+  height: 144px;
+  background-image: linear-gradient(35deg, #a3133e, #ff006a);
+}
+
+.project-card .project-media img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.project-card .project-details {
+  padding: 8px;
+}
+
+.project-card .project-details h2 {
+  padding: 3px 0;
+}
+
+.developer-accs {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.developer-accs a {
+  margin: 10px;
+  font-size: 24px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+@-webkit-keyframes progress {
+  100% {
+    -webkit-transform: scaleX(1);
+            transform: scaleX(1);
+  }
+}
+
+@keyframes progress {
+  100% {
+    -webkit-transform: scaleX(1);
+            transform: scaleX(1);
+  }
+}
