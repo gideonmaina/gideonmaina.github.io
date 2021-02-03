@@ -352,3 +352,6 @@ MigrationBackup/
 
 #Ignore scss folder
 scss/
+
+#CNAME
+CNAME
