@@ -4,11 +4,17 @@ const { frontmatter } = Astro.props;
 
 <html>
   <head>
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={frontmatter.title} />
+    <meta property="og:updated_time" content={frontmatter.updated} />
     <title>{frontmatter.title}</title>
   </head>
 
   <body>
     <main>
+      <div>
+        <span> 🕙 Updated {frontmatter.updated}</span>
+      </div>
       <slot />
     </main>
   </body>
