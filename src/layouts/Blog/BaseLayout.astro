@@ -1,12 +1,13 @@
 ---
+import SEO_Meta from "../../components/SEO_Meta.astro";
+
 const { frontmatter } = Astro.props;
 ---
 
 <html>
   <head>
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content={frontmatter.title} />
-    <meta property="og:updated_time" content={frontmatter.updated} />
+    <SEO_Meta frontmatter={frontmatter} />
+
     <title>{frontmatter.title}</title>
   </head>
 
@@ -17,13 +18,12 @@ const { frontmatter } = Astro.props;
       </div>
       <slot />
     </main>
+    <style>
+      main {
+        width: 70%;
+        margin: 0 auto;
+        padding: 4px 8px;
+      }
+    </style>
   </body>
 </html>
-
-<style>
-  main {
-    width: 70%;
-    margin: 0 auto;
-    padding: 4px 8px;
-  }
-</style>

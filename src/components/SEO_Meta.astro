@@ -1,0 +1,8 @@
+---
+const { frontmatter } = Astro.props;
+---
+
+<meta "author" content={frontmatter.author} />
+<meta property="og:type" content="article" />
+<meta property="og:title" content={frontmatter.title} />
+<meta property="og:updated_time" content={frontmatter.updated} />
