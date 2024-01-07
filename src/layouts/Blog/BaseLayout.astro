@@ -1,6 +1,7 @@
 ---
 import SEO_Meta from "../../components/SEO_Meta.astro";
-
+import Breadcrumbs from "../../components/Breadcrumbs.astro"; // replace with relative component path
+const currentPath = Astro.url.pathname;
 const { frontmatter } = Astro.props;
 const updated_date = new Date(frontmatter.created);
 const updated_date_fmt = `${updated_date.toLocaleString("default", {
@@ -17,6 +18,7 @@ const updated_date_fmt = `${updated_date.toLocaleString("default", {
 
   <body>
     <main>
+      <Breadcrumbs currentPath={currentPath} />
       <div>
         <span> 🕙 Updated {updated_date_fmt}</span>
       </div>
