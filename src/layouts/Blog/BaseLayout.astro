@@ -1,5 +1,6 @@
 ---
 import SEO_Meta from "../../components/SEO_Meta.astro";
+import Navbar from "../../components/Navbar.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro"; // replace with relative component path
 const currentPath = Astro.url.pathname;
 const { frontmatter } = Astro.props;
@@ -17,6 +18,7 @@ const updated_date_fmt = `${updated_date.toLocaleString("default", {
   </head>
 
   <body>
+    <Navbar />
     <main>
       <Breadcrumbs currentPath={currentPath} />
       <div>
@@ -25,6 +27,12 @@ const updated_date_fmt = `${updated_date.toLocaleString("default", {
       <slot />
     </main>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;1,400;1,500;1,600&family=Lato&family=Montserrat:wght@300;400;500&family=Open+Sans&family=Poppins:ital,wght@0,300;0,400;0,500;1,400;1,500&family=Roboto:wght@300;400&display=swap");
+
+      body {
+        color: #141313;
+        font-family: "Open Sans", sans-serif;
+      }
       main {
         width: 70%;
         margin: 0 auto;

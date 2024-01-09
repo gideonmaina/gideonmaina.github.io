@@ -1,0 +1,122 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <a href="/" class="navbar-logo">Home</a>
+    <ul class="navbar-menu">
+      <li class="navbar-item"><a href="#">Blog</a></li>
+      <li class="navbar-item"><a href="#">Contact</a></li>
+    </ul>
+    <div class="navbar-toggle">
+      <span class="navbar-toggle-icon"></span>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    background: linear-gradient(
+      90deg,
+      rgba(4, 209, 245, 0.974) 0%,
+      #069eb3 40%,
+      #11d0c6 87%
+    );
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .navbar-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .navbar-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .navbar-item {
+    margin: 0 10px;
+  }
+
+  .navbar-item a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .navbar-item a:hover {
+    background-color: #fff;
+    color: #333;
+  }
+
+  .navbar-toggle {
+    display: none;
+  }
+
+  .navbar-toggle-icon {
+    display: block;
+    width: 30px;
+    height: 2px;
+    background-color: #fff;
+    position: relative;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .navbar-toggle-icon::before,
+  .navbar-toggle-icon::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    position: absolute;
+    left: 0;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .navbar-toggle-icon::before {
+    top: -10px;
+  }
+
+  .navbar-toggle-icon::after {
+    top: 10px;
+  }
+
+  .navbar-toggle.active .navbar-toggle-icon {
+    background-color: transparent;
+  }
+
+  .navbar-toggle.active .navbar-toggle-icon::before {
+    transform: rotate(45deg);
+    top: 0;
+  }
+
+  .navbar-toggle.active .navbar-toggle-icon::after {
+    transform: rotate(-45deg);
+    top: 0;
+  }
+</style>
