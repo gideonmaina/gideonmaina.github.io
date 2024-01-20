@@ -6,7 +6,10 @@
 <nav class="navbar">
   <div class="navbar-logo">
     <a href="/">
-      <img src="../../android-chrome-192x192.png" alt="navbar-logo" />
+      <img
+        src="../../public/assets/logos/site-icons/android-chrome-192x192.png"
+        alt="navbar-logo"
+      />
     </a>
   </div>
   <div class="navbar-container">
@@ -55,9 +58,11 @@
     list-style: none;
     padding: 4px 8px;
     border-radius: 4px;
+    color: white;
   }
   .navbar-item:hover {
     background-color: white;
+    color: rgb(27, 25, 25);
   }
 
   .navbar-logo,
@@ -77,7 +82,7 @@
   a::before {
     text-decoration: none;
     letter-spacing: 2px;
-    color: rgb(27, 25, 25);
+    color: inherit;
     text-transform: uppercase;
   }
 
@@ -158,6 +163,7 @@
     .navbar-item {
       padding: 0;
       text-transform: initial;
+      color: rgb(27, 25, 25);
     }
     .menu-icon {
       display: block;
@@ -170,7 +176,7 @@
 
   @media screen and (min-width: 600px) {
     .mobile-navbar {
-      display: none;
+      display: none !important;
     }
   }
 </style>
