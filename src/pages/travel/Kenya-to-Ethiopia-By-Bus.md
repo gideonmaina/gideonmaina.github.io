@@ -20,7 +20,7 @@ Traveling to Ethiopia from Kenya is as easy as it gets. Kenyans do not require a
 3.  Yellow Fever certificate
 
 ***Things you need to know before visiting Ethiopia***  
-1 A majority of Ethiopians do not speak English but rather speak the Amharic so brace yourself.  
+1\. A majority of Ethiopians do not speak English but rather speak the Amharic so brace yourself.  
 2\. You wont get your regular multinational chain of brands and services. E.g. no Uber, Bolt,  
 3\. It is kinda 'illegal' to posses US dollars. You will have to use black market channels to exchange your dollars.  
 4\. Ethiopian food is generally spicy.
