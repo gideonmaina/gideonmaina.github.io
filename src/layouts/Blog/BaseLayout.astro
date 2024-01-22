@@ -12,8 +12,9 @@ const updated_date_fmt = `${updated_date.toLocaleString("default", {
 
 <html>
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <SEO_Meta frontmatter={frontmatter} />
-
     <title>{frontmatter.title}</title>
   </head>
 
@@ -61,11 +62,15 @@ font-family: 'Roboto', sans-serif; */
         padding: 4px 8px;
 
         p {
-          font-size: 1.2rem;
-          line-height: 1.5;
+          line-height: 1.2;
           letter-spacing: 0.8px;
           font-weight: 400;
         }
+      }
+
+      p,
+      a {
+        font-size: 1.1rem;
       }
 
       @media screen and (max-width: 600px) {
