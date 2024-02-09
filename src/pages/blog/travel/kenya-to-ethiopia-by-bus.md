@@ -1,5 +1,5 @@
 ---
-layout: ../../layouts/Blog/BaseLayout.astro
+layout: ../../../layouts/Blog/BaseLayout.astro
 title: Kenya to Ethiopia By Bus
 author: Gideon Maina
 updated: 2024-01-03 17:09:42Z
