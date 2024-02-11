@@ -1,12 +1,11 @@
 ---
-layout: ../../layouts/Blog/BaseLayout.astro
+layout: '@layouts/Blog/BaseLayout.astro'
 title: Kenya to Ethiopia By Bus
 author: Gideon Maina
 updated: 2024-01-03 17:09:42Z
 created: 2024-01-02 17:36:40Z
 latitude: -1.29206590
 longitude: 36.82194620
-altitude: 0.0000
 ---
 
 # Kenya to Ethiopia By Bus
