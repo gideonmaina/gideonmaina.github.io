@@ -4,7 +4,7 @@ import Navbar from "../../components/Navbar.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro"; // replace with relative component path
 const currentPath = Astro.url.pathname;
 const { frontmatter } = Astro.props;
-const updated_date = new Date(frontmatter.created);
+const updated_date = new Date(frontmatter.updated);
 const updated_date_fmt = `${updated_date.toLocaleString("default", {
   month: "long",
 })} ${updated_date.getDay()}, ${updated_date.getFullYear()}`;
@@ -23,7 +23,7 @@ const updated_date_fmt = `${updated_date.toLocaleString("default", {
     <main>
       <Breadcrumbs currentPath={currentPath} />
       <div>
-        <span> 🕙 Updated {updated_date_fmt}</span>
+        <span> 🕙 Updated {updated_date}</span>
       </div>
       <slot />
     </main>
