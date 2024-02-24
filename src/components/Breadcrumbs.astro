@@ -10,7 +10,7 @@ const getBreadcrumbs = (path) => {
     splitPath.pop();
     breadcrumbs.push(splitPath.join("/"));
   }
-
+  if (path.endsWith("/")) breadcrumbs.pop();
   return breadcrumbs;
 };
 const breadcrumbs = getBreadcrumbs(currentPath).reverse();
