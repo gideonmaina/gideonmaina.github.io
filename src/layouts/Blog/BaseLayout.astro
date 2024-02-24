@@ -7,7 +7,7 @@ const { frontmatter } = Astro.props;
 const updated_date = new Date(frontmatter.updated);
 const updated_date_fmt = `${updated_date.toLocaleString("default", {
   month: "long",
-})} ${updated_date.getDay()}, ${updated_date.getFullYear()}`;
+})} ${updated_date.getDate()}, ${updated_date.getFullYear()}`;
 ---
 
 <html>
