@@ -1,6 +1,6 @@
 ---
 import Navbar from "@components/Navbar.astro";
-const currentPath = Astro.url.pathname;
+const current_url = Astro.url + "/";
 ---
 
 <!doctype html>
@@ -13,7 +13,7 @@ const currentPath = Astro.url.pathname;
   <body>
     <Navbar />
     <h1>Featured</h1>
-    <a href={currentPath + "/kenya-to-ethiopia-by-bus"}
+    <a href={new URL("kenya-to-ethiopia-by-bus", current_url)}
       >Kenya to Ethiopia by bus</a
     >
   </body>
