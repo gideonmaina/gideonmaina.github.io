@@ -1,5 +1,6 @@
 ---
 import Navbar from "@components/Navbar.astro";
+const current_url = Astro.url + "/";
 ---
 
 <!doctype html>
@@ -12,8 +13,8 @@ import Navbar from "@components/Navbar.astro";
   <body>
     <Navbar />
     <ol>
-      <li><a href="/blog/hardware">hardware</a></li>
-      <li><a href="/blog/travel">travel</a></li>
+      <li><a href={new URL("hardware", current_url)}>hardware</a></li>
+      <li><a href={new URL("travel", current_url)}>travel</a></li>
     </ol>
   </body>
 </html>

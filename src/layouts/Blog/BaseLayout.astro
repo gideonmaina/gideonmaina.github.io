@@ -23,6 +23,7 @@ const updated_date_fmt = `${updated_date.toLocaleString("default", {
     <main>
       <Breadcrumbs currentPath={currentPath} />
       <div>
+        <p>Page path: {currentPath}</p>
         <span> 🕙 Updated {updated_date_fmt}</span>
       </div>
       <slot />
