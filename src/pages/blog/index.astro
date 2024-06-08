@@ -13,8 +13,61 @@ const current_url = Astro.url + "/";
   <body>
     <Navbar />
     <ol>
-      <li><a href={new URL("hardware", current_url)}>hardware</a></li>
-      <li><a href={new URL("travel", current_url)}>travel</a></li>
+      <li>
+        <a href={new URL("hardware", current_url)}> <div>hardware</div></a>
+      </li>
+      <li><a href={new URL("travel", current_url)}><div>travel</div></a></li>
     </ol>
   </body>
 </html>
+
+<style>
+  ol {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  li {
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  div {
+    height: 120px;
+    width: 240px;
+    /* background-color: green; */
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    font-family: Montserrat, sans-serif;
+    /* background-image: linear-gradient(
+      to right,
+      #d16ba5,
+      #bd7bc4,
+      #9f8cdc,
+      #799ce9,
+      #4caaec,
+      #30b5ee,
+      #14c0ec,
+      #11cae8,
+      #21d6ec,
+      #35e3ef,
+      #4aeff0,
+      #5ffbf1
+    ); */
+    background: linear-gradient(
+      77deg,
+      rgba(209, 107, 165, 0.8856136204481793) 16%,
+      rgba(16, 185, 225, 1) 49%,
+      rgba(95, 251, 241, 1) 75%
+    );
+    color: white;
+  }
+  a,
+  a:visited {
+    text-decoration: none;
+  }
+</style>
