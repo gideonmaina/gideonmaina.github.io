@@ -1,6 +1,7 @@
 ---
 import Navbar from '@components/Navbar.astro';
-const current_url = Astro.url + '/';
+const { Paths, FeaturedArticles } = Astro.props;
+const title = `${Paths[1].charAt(0).toUpperCase() + Paths[1].slice(1)} | ${Paths[0].charAt(0).toUpperCase() + Paths[0].slice(1)}`;
 ---
 
 <!doctype html>
@@ -8,23 +9,24 @@ const current_url = Astro.url + '/';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blog</title>
+    <title>{title}</title>
   </head>
   <body>
     <Navbar />
     <div class="wrapper">
-      <h1>Categories</h1>
+      <h1>Featured on {Paths[0]}</h1>
       <ol>
-        <li>
-          <a href={new URL('hardware', current_url)}>
-            <div class="link-card">hardware</div></a
-          >
-        </li>
-        <li>
-          <a href={new URL('travel', current_url)}
-            ><div class="link-card">travel</div></a
-          >
-        </li>
+        {
+          FeaturedArticles.map((link) => (
+            <li>
+              <a href={link.url}>
+                <div class="link-card">
+                  {link.url.split('/').pop().replace(/-/g, ' ')}
+                </div>
+              </a>
+            </li>
+          ))
+        }
       </ol>
     </div>
   </body>

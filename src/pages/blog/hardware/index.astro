@@ -1,20 +1,7 @@
 ---
-import Navbar from "@components/Navbar.astro";
-const current_url = Astro.url + "/";
+import Featured from '@layouts/Blog/Featured.astro';
+const links = await Astro.glob('./*.md');
+const paths = Astro.url.pathname.split('/').reverse();
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blog | Hardware</title>
-  </head>
-  <body>
-    <Navbar />
-    <h1>Featured</h1>
-    <a href={new URL("sim-issues-on-simcom-gsm-chips", current_url)}
-      >sim issues on simcom gsm chips</a
-    >
-  </body>
-</html>
+<Featured Paths={paths} FeaturedArticles={links} />

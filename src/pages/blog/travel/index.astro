@@ -1,20 +1,7 @@
 ---
-import Navbar from "@components/Navbar.astro";
-const current_url = Astro.url + "/";
+import Featured from '@layouts/Blog/Featured.astro';
+const links = await Astro.glob('./*.md');
+const paths = Astro.url.pathname.split('/').reverse();
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blog | Travel</title>
-  </head>
-  <body>
-    <Navbar />
-    <h1>Featured</h1>
-    <a href={new URL("kenya-to-ethiopia-by-bus", current_url)}
-      >Kenya to Ethiopia by bus</a
-    >
-  </body>
-</html>
+<Featured Paths={paths} FeaturedArticles={links} />
