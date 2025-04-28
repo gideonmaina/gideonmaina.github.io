@@ -1,0 +1,23 @@
+---
+layout: '@layouts/Blog/BaseLayout.astro'
+title: SIMCOM GSM module SIM card detection issues
+author: Gideon Maina
+updated: 2025-04-28 20:20:00Z
+created: 2024-04-28 20:20:00Z
+latitude: -1.29206590
+longitude: 36.82194620
+---
+# HTTPACTION VS HTTPREAD ON SIMCOM MODEMS
+![](https://www.electroniclinic.com/wp-content/uploads/2020/02/SIMCom-GSM-module-Sim900A.jpg)
+  <figcaption>A board containing a SIMCOM GSM modem. <i>Source <a href="https://www.electroniclinic.com/gsm-sim900a-with-arduino-complete-guide-with-gsm-based-projects-examples/" target="_blank" >electroniclinic.com</a></i></figcaption>
+
+<br>
+<hr>
+This post might seem trivial but this issue was the cause of a debate with another engineer. To avoid confusion and for posterity, this serves as a reference. Getting on with it...
+<br>
+<br>
+
+The AT command `HTTPACTION` makes an actual HTTP REQUEST and triggers an event in the target's URL server.
+
+
+`AT+HTTPREAD`  returns the response contents of the most recent HTTP request. The response content will persist until it is overwritten by the response content of another HTTP request.
