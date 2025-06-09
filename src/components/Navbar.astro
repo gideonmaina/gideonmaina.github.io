@@ -1,0 +1,200 @@
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+/>
+
+<nav class="navbar">
+  <div class="navbar-logo">
+    <a href="/">
+      <img
+        src="/assets/logos/site-icons/android-chrome-192x192.png"
+        alt="navbar-logo"
+      />
+    </a>
+  </div>
+  <div class="navbar-container">
+    <ul class="navbar-menu desktop-menu">
+      <li class="navbar-item"><a href="/blog">Blog</a></li>
+      <li class="navbar-item"><a href="/">Contact</a></li>
+    </ul>
+
+    <!-- Menu Icon -->
+    <div class="menu-icon" id="nav-open">
+      <span class="material-symbols-outlined"> menu</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu bar -->
+<nav class="mobile-navbar">
+  <div class="menu-icon" id="nav-close">
+    <span class="material-symbols-outlined"> close</span>
+  </div>
+  <div class="navbar-container x-full">
+    <ul class="navbar-menu x-full">
+      <li class="navbar-item"><a href="#">Blog</a></li>
+      <li class="navbar-item"><a href="#">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    background: linear-gradient(
+      90deg,
+      rgba(4, 209, 245, 0.974) 0%,
+      #069eb3 40%,
+      #11d0c6 87%
+    );
+    /* color: #fff; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    font-size: 20px;
+    flex-wrap: nowrap;
+  }
+
+  .navbar-item {
+    list-style: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: white;
+  }
+  .navbar-item:hover {
+    background-color: white;
+    color: rgb(27, 25, 25);
+  }
+
+  .navbar-logo,
+  .navbar-logo a {
+    width: 48px;
+    height: 48px;
+    font-size: small;
+  }
+  .navbar-logo img {
+    width: inherit;
+    height: inherit;
+    object-fit: contain;
+  }
+
+  a,
+  a::after,
+  a::before {
+    text-decoration: none;
+    letter-spacing: 2px;
+    color: inherit;
+    text-transform: uppercase;
+  }
+
+  ul {
+    padding: 0;
+    margin: 0;
+  }
+
+  .menu-icon {
+    padding: 4px;
+    border-radius: 2px;
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    background-color: yellow;
+    display: none;
+  }
+
+  .material-symbols-outlined {
+    font-size: 24px;
+    /* font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; */
+  }
+
+  /* Desktop*/
+  .navbar-container,
+  .navbar-menu {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-right: 1rem;
+  }
+
+  /*************************** Mobile ************************************/
+  .mobile-navbar {
+    /* background-color: yellow; */
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 60vw;
+    height: 100vh;
+    margin-left: auto;
+    padding: 10px 10px;
+    box-shadow: -20px -2px 21px -18px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 999;
+    display: none;
+  }
+
+  #nav-close {
+    margin: 0.5rem 0;
+  }
+
+  @media screen and (max-width: 600px) {
+    .navbar-container,
+    .navbar-menu {
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      margin-top: 0.5rem;
+    }
+    /* .navbar-container {
+    background: green;
+    } */
+    .navbar-menu {
+      /* background-color: aqua; */
+      background-color: transparent;
+    }
+    .desktop-menu {
+      display: none;
+    }
+
+    .x-full {
+      flex-grow: 1;
+      width: 100%;
+    }
+    .navbar-item {
+      padding: 0;
+      color: rgb(27, 25, 25);
+    }
+    /* Display link text as is */
+    /* .navbar-item a {
+      text-transform: initial;
+    } */
+    .menu-icon {
+      display: block;
+    }
+
+    #nav-close {
+      width: fit-content;
+    }
+  }
+
+  @media screen and (min-width: 600px) {
+    .mobile-navbar {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  const close_btn = document.getElementById("nav-close");
+  const open_btn = document.getElementById("nav-open");
+  const mobile_nav = document.querySelector(".mobile-navbar");
+
+  close_btn.addEventListener("click", () => {
+    mobile_nav.style.display = "none";
+  });
+  open_btn.addEventListener("click", () => {
+    mobile_nav.style.display = "block";
+  });
+</script>

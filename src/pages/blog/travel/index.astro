@@ -1,0 +1,7 @@
+---
+import Featured from '@layouts/Blog/Featured.astro';
+const links = await Astro.glob('./*.md');
+const paths = Astro.url.pathname.split('/').reverse();
+---
+
+<Featured Paths={paths} FeaturedArticles={links} />

@@ -1,0 +1,79 @@
+---
+import Navbar from "@components/Navbar.astro";
+import Footer from "@components/Footer.astro";
+const current_url = Astro.url + "/";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <title>Blog</title>
+  </head>
+  <body>
+    <Navbar />
+    <div class="wrapper">
+      <h1>Categories</h1>
+      <ol>
+        <li>
+          <a href={new URL("hardware", current_url)}>
+            <div class="link-card">hardware</div></a
+          >
+        </li>
+        <li>
+          <a href={new URL("travel", current_url)}
+            ><div class="link-card">travel</div></a
+          >
+        </li>
+      </ol>
+    </div>
+  </body>
+  <Footer />
+</html>
+
+<style>
+  h1 {
+    color: rgb(5, 64, 60);
+  }
+  .wrapper {
+    padding: 2rem;
+  }
+  ol {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
+    padding-left: 0;
+  }
+
+  li {
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  .link-card {
+    /* height: 120px;
+    width: 240px; */
+    /* background-color: green; */
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    font-family: Montserrat, sans-serif;
+    color: white;
+    background: rgb(17, 177, 167);
+  }
+  a,
+  a:visited {
+    text-decoration: none;
+  }
+</style>
