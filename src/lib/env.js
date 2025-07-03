@@ -1,0 +1,13 @@
+export default {
+  // // Development
+  // STRAPI_URL: "http://127.0.0.1:1337",
+  // STRAPI_TOKEN:
+  //   "c3c1260a3036100cb91097f824c72beb1f1440320f52d49088af7185b831cec07c5fa4012a6d2b84914b33e6d543f60af645dfcb070977f99edc2f566ba24c2aedc241e0f67106bf81fc7c6b3ff8296b2b5c5d0f43eaf6f6d03410a3fb6fc93a2efabf7314cd45c3ddaf217d8489b2461940e126aa9f7ab77eed4ee90aebf466",
+  // STRAPI_API_URL: "http://localhost:1337/api",
+  // STRAPI_WEBHOOK_SECRET: "your_webhook_secret",
+
+  // Production
+  STRAPI_URL: "https://certain-gem-5b393ed49b.strapiapp.com",
+  STRAPI_TOKEN:
+    "824b434510c6f1c79108b0d94ae51d71d7777d3cc1c7dd1dac9f90cf0330efb210f2e37d277703e0ff7b5d798ca607e0c08f92e9af162391b5e2b190e8b370411183cef0b454619c680582c7d6343a2f3f5ae6cdc63af4939fb99146576de1321a2b638958c3a736b41e5a9565758d75e49b896900439d8f399cde3d3f4c8501",
+};

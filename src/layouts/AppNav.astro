@@ -1,0 +1,651 @@
+---
+const currentPath = Astro.url.pathname;
+---
+
+<!-- Main Navigation -->
+<nav
+  id="main-nav"
+  class="fixed top-0 w-full z-50 bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/50 transition-all duration-500 ease-out"
+  data-aos="fade-down"
+  data-aos-duration="800"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo/Brand -->
+      <div class="flex-shrink-0" data-aos="fade-right" data-aos-delay="100">
+        <a
+          href="/"
+          class="group text-2xl font-bold text-white hover:text-blue-400 transition-all duration-500 ease-out"
+        >
+          <span
+            class="inline-block transition-transform duration-500 group-hover:scale-110 group-hover:rotate-2"
+          >
+            Gideon
+          </span>
+          <span
+            class="text-blue-400 inline-block transition-all duration-300 group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+          >
+            .
+          </span>
+          <span
+            class="inline-block transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-1"
+          >
+            Maina
+          </span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <div class="hidden md:block" data-aos="fade-left" data-aos-delay="200">
+        <div class="ml-10 flex items-center space-x-2">
+          <a
+            href="/"
+            class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:shadow-lg hover:shadow-blue-500/20 ${
+              currentPath === "/"
+                ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-md shadow-blue-500/20"
+                : "text-gray-300"
+            }`}
+            data-aos="fade-down"
+            data-aos-duration="500"
+            data-aos-delay="300"
+          >
+            <i class="fas fa-home mr-2"></i>
+            <span
+              class="relative z-10 transition-transform duration-300 group-hover:scale-105"
+              >Home</span
+            >
+            {
+              currentPath === "/" && (
+                <span class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-xl animate-pulse" />
+              )
+            }
+            <span
+              class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500 group-hover:w-full group-hover:left-0"
+            ></span>
+          </a>
+          <a
+            href="/about"
+            class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:shadow-lg hover:shadow-blue-500/20 ${
+              currentPath === "/about"
+                ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-md shadow-blue-500/20"
+                : "text-gray-300"
+            }`}
+            data-aos="fade-down"
+            data-aos-duration="500"
+            data-aos-delay="350"
+          >
+            <i class="fas fa-user mr-2"></i>
+            <span
+              class="relative z-10 transition-transform duration-300 group-hover:scale-105"
+              >About</span
+            >
+            {
+              currentPath === "/about" && (
+                <span class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-xl animate-pulse" />
+              )
+            }
+            <span
+              class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500 group-hover:w-full group-hover:left-0"
+            ></span>
+          </a>
+          <a
+            href="/projects"
+            class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:shadow-lg hover:shadow-blue-500/20 ${
+              currentPath === "/projects"
+                ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-md shadow-blue-500/20"
+                : "text-gray-300"
+            }`}
+            data-aos="fade-down"
+            data-aos-duration="500"
+            data-aos-delay="400"
+          >
+            <i class="fas fa-rocket mr-2"></i>
+            <span
+              class="relative z-10 transition-transform duration-300 group-hover:scale-105"
+              >Projects</span
+            >
+            {
+              currentPath === "/projects" && (
+                <span class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-xl animate-pulse" />
+              )
+            }
+            <span
+              class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500 group-hover:w-full group-hover:left-0"
+            ></span>
+          </a>
+          <a
+            href="/blog"
+            class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:shadow-lg hover:shadow-blue-500/20 ${
+              currentPath.startsWith("/blog")
+                ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-md shadow-blue-500/20"
+                : "text-gray-300"
+            }`}
+            data-aos="fade-down"
+            data-aos-duration="500"
+            data-aos-delay="450"
+          >
+            <i class="fas fa-blog mr-2"></i>
+            <span
+              class="relative z-10 transition-transform duration-300 group-hover:scale-105"
+              >Blog</span
+            >
+            {
+              currentPath.startsWith("/blog") && (
+                <span class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-xl animate-pulse" />
+              )
+            }
+            <span
+              class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500 group-hover:w-full group-hover:left-0"
+            ></span>
+          </a>
+          <a
+            href="/contact"
+            class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:shadow-lg hover:shadow-blue-500/20 ${
+              currentPath === "/contact"
+                ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-md shadow-blue-500/20"
+                : "text-gray-300"
+            }`}
+            data-aos="fade-down"
+            data-aos-duration="500"
+            data-aos-delay="500"
+          >
+            <i class="fas fa-envelope mr-2"></i>
+            <span
+              class="relative z-10 transition-transform duration-300 group-hover:scale-105"
+              >Contact</span
+            >
+            {
+              currentPath === "/contact" && (
+                <span class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-xl animate-pulse" />
+              )
+            }
+            <span
+              class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500 group-hover:w-full group-hover:left-0"
+            ></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden" data-aos="fade-left" data-aos-delay="100">
+        <button
+          type="button"
+          id="mobile-menu-button"
+          class="group relative inline-flex items-center justify-center p-3 rounded-xl text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-500 ease-out hover:shadow-lg hover:shadow-blue-500/20"
+          aria-expanded="false"
+        >
+          <span class="sr-only">Open main menu</span>
+          <!-- Menu icon -->
+          <svg
+            id="menu-icon"
+            class="h-6 w-6 transition-all duration-500 ease-out"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <!-- Close icon -->
+          <svg
+            id="close-icon"
+            class="h-6 w-6 transition-all duration-500 ease-out hidden"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Full-Screen Mobile Navigation -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-60 md:hidden transform translate-x-full transition-transform duration-700 ease-out opacity-0 invisible"
+>
+  <!-- Backdrop -->
+  <div
+    class="absolute inset-0 bg-black/80 backdrop-blur-md opacity-0 transition-opacity duration-700"
+    data-aos="fade-in"
+    data-aos-duration="600"
+  >
+  </div>
+
+  <!-- Menu Content -->
+  <div
+    class="relative h-full w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col"
+    data-aos="slide-left"
+    data-aos-duration="800"
+    data-aos-delay="200"
+  >
+    <!-- Header -->
+    <div
+      class="flex justify-between items-center p-6 border-b border-gray-700/50"
+    >
+      <div
+        class="text-2xl font-bold text-white"
+        data-aos="fade-down"
+        data-aos-duration="600"
+        data-aos-delay="400"
+      >
+        <span
+          class="inline-block transition-transform duration-500 hover:scale-110 hover:rotate-2"
+        >
+          Gideon
+        </span>
+        <span
+          class="text-blue-400 inline-block transition-all duration-300 hover:text-cyan-300 hover:drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+        >
+          .
+        </span>
+        <span
+          class="inline-block transition-transform duration-500 hover:scale-110 hover:-rotate-1"
+        >
+          Maina
+        </span>
+      </div>
+      <button
+        id="mobile-menu-close"
+        class="p-3 rounded-xl text-gray-300 hover:text-white hover:bg-red-500/20 transition-all duration-300 hover:rotate-90"
+        data-aos="fade-down"
+        data-aos-duration="600"
+        data-aos-delay="500"
+      >
+        <svg
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="flex-1 flex flex-col justify-center px-8 space-y-6">
+      <a
+        href="/"
+        class={`group block text-center py-4 text-2xl font-bold transition-all duration-500 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 ${
+          currentPath === "/"
+            ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-lg shadow-blue-500/20"
+            : "text-white hover:text-blue-400"
+        }`}
+        data-aos="slide-right"
+        data-aos-duration="600"
+        data-aos-delay="600"
+      >
+        <span class="flex items-center justify-center">
+          <span class="mr-4 text-3xl">
+            <i class="fas fa-home"></i>
+          </span>
+          <span
+            class="transition-transform duration-300 group-hover:translate-x-2"
+            >Home</span
+          >
+        </span>
+      </a>
+
+      <a
+        href="/about"
+        class={`group block text-center py-4 text-2xl font-bold transition-all duration-500 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 ${
+          currentPath === "/about"
+            ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-lg shadow-blue-500/20"
+            : "text-white hover:text-blue-400"
+        }`}
+        data-aos="slide-right"
+        data-aos-duration="600"
+        data-aos-delay="650"
+      >
+        <span class="flex items-center justify-center">
+          <span class="mr-4 text-3xl">
+            <i class="fas fa-user"></i>
+          </span>
+          <span
+            class="transition-transform duration-300 group-hover:translate-x-2"
+            >About</span
+          >
+        </span>
+      </a>
+
+      <a
+        href="/projects"
+        class={`group block text-center py-4 text-2xl font-bold transition-all duration-500 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 ${
+          currentPath === "/projects"
+            ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-lg shadow-blue-500/20"
+            : "text-white hover:text-blue-400"
+        }`}
+        data-aos="slide-right"
+        data-aos-duration="600"
+        data-aos-delay="700"
+      >
+        <span class="flex items-center justify-center">
+          <span class="mr-4 text-3xl">
+            <i class="fas fa-rocket"></i>
+          </span>
+          <span
+            class="transition-transform duration-300 group-hover:translate-x-2"
+            >Projects</span
+          >
+        </span>
+      </a>
+
+      <a
+        href="/blog"
+        class={`group block text-center py-4 text-2xl font-bold transition-all duration-500 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 ${
+          currentPath.startsWith("/blog")
+            ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-lg shadow-blue-500/20"
+            : "text-white hover:text-blue-400"
+        }`}
+        data-aos="slide-right"
+        data-aos-duration="600"
+        data-aos-delay="750"
+      >
+        <span class="flex items-center justify-center">
+          <span class="mr-4 text-3xl">
+            <i class="fas fa-blog"></i>
+          </span>
+          <span
+            class="transition-transform duration-300 group-hover:translate-x-2"
+            >Blog</span
+          >
+        </span>
+      </a>
+
+      <a
+        href="/contact"
+        class={`group block text-center py-4 text-2xl font-bold transition-all duration-500 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 ${
+          currentPath === "/contact"
+            ? "text-blue-400 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-lg shadow-blue-500/20"
+            : "text-white hover:text-blue-400"
+        }`}
+        data-aos="slide-right"
+        data-aos-duration="600"
+        data-aos-delay="800"
+      >
+        <span class="flex items-center justify-center">
+          <span class="mr-4 text-3xl">
+            <i class="fas fa-envelope"></i>
+          </span>
+          <span
+            class="transition-transform duration-300 group-hover:translate-x-2"
+            >Contact</span
+          >
+        </span>
+      </a>
+    </div>
+
+    <!-- Footer/Social Links -->
+    <div
+      class="p-8 border-t border-gray-700/50"
+      data-aos="fade-up"
+      data-aos-duration="700"
+      data-aos-delay="850"
+    >
+      <div class="flex justify-center space-x-8">
+        <a
+          href="https://github.com/gideonmaina"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group text-gray-400 hover:text-blue-400 transition-all duration-500 hover:scale-125 p-4 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20"
+          data-aos="zoom-in"
+          data-aos-duration="500"
+          data-aos-delay="900"
+        >
+          <svg
+            class="w-8 h-8 transition-transform duration-500 group-hover:rotate-12"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+            ></path>
+          </svg>
+        </a>
+        <a
+          href="https://linkedin.com/in/gideonmaina"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group text-gray-400 hover:text-blue-400 transition-all duration-500 hover:scale-125 p-4 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20"
+          data-aos="zoom-in"
+          data-aos-duration="500"
+          data-aos-delay="950"
+        >
+          <svg
+            class="w-8 h-8 transition-transform duration-500 group-hover:rotate-12"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+            ></path>
+          </svg>
+        </a>
+        <a
+          href="https://twitter.com/gideonmaina"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group text-gray-400 hover:text-blue-400 transition-all duration-500 hover:scale-125 p-4 rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20"
+          data-aos="zoom-in"
+          data-aos-duration="500"
+          data-aos-delay="1000"
+        >
+          <svg
+            class="w-8 h-8 transition-transform duration-500 group-hover:rotate-12"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"
+            ></path>
+          </svg>
+        </a>
+      </div>
+      <div
+        class="text-center mt-6 text-gray-400 text-sm"
+        data-aos="fade-up"
+        data-aos-duration="500"
+        data-aos-delay="1100"
+      >
+        Full-Stack Developer
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const mainNav = document.getElementById("main-nav") as HTMLElement;
+    const mobileMenuButton = document.getElementById(
+      "mobile-menu-button",
+    ) as HTMLElement;
+    const mobileMenu = document.getElementById("mobile-menu") as HTMLElement;
+    const mobileMenuClose = document.getElementById(
+      "mobile-menu-close",
+    ) as HTMLElement;
+    const menuIcon = document.getElementById("menu-icon") as HTMLElement;
+    const closeIcon = document.getElementById("close-icon") as HTMLElement;
+    const backdrop = mobileMenu?.querySelector(
+      ".absolute.inset-0.bg-black\\/80",
+    ) as HTMLElement;
+
+    let lastScrollY = window.scrollY;
+    let scrollThreshold = 100;
+    let isScrollingDown = false;
+    let isMobileMenuOpen = false;
+
+    // Scroll handler for main nav visibility
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+
+      // Don't hide nav when mobile menu is open
+      if (isMobileMenuOpen) return;
+
+      // Determine scroll direction only if we've moved significantly
+      if (Math.abs(currentScrollY - lastScrollY) > 5) {
+        if (currentScrollY > lastScrollY) {
+          isScrollingDown = true;
+        } else {
+          isScrollingDown = false;
+        }
+      }
+
+      // Handle main navigation visibility based on scroll direction
+      if (currentScrollY <= scrollThreshold) {
+        // At top of page - always show main nav
+        if (mainNav) {
+          mainNav.style.transform = "translateY(0)";
+          mainNav.style.opacity = "1";
+        }
+      } else {
+        // Past threshold - control based on scroll direction
+        if (isScrollingDown) {
+          // Scrolling down - hide main nav
+          if (mainNav) {
+            mainNav.style.transform = "translateY(-100%)";
+            mainNav.style.opacity = "0.95";
+          }
+        } else {
+          // Scrolling up - show main nav
+          if (mainNav) {
+            mainNav.style.transform = "translateY(0)";
+            mainNav.style.opacity = "1";
+          }
+        }
+      }
+
+      lastScrollY = Math.max(0, currentScrollY); // Prevent negative scroll values
+    }
+
+    // Open mobile menu
+    function openMobileMenu() {
+      if (mobileMenu && menuIcon && closeIcon && backdrop) {
+        isMobileMenuOpen = true;
+
+        // Make menu visible and show the menu container
+        mobileMenu.classList.remove(
+          "opacity-0",
+          "invisible",
+          "translate-x-full",
+        );
+        mobileMenu.classList.add("opacity-100", "visible", "translate-x-0");
+
+        // Show backdrop
+        backdrop.classList.remove("opacity-0");
+        backdrop.classList.add("opacity-100");
+
+        // Switch icons
+        menuIcon.classList.add("hidden", "rotate-180");
+        closeIcon.classList.remove("hidden");
+        closeIcon.classList.add("rotate-0");
+
+        // Prevent body scroll
+        document.body.style.overflow = "hidden";
+
+        // Update button aria-expanded
+        mobileMenuButton.setAttribute("aria-expanded", "true");
+
+        // Trigger AOS animations
+        setTimeout(() => {
+          if ((window as any).AOS) {
+            (window as any).AOS.refresh();
+          }
+        }, 100);
+      }
+    }
+
+    // Close mobile menu
+    function closeMobileMenu() {
+      if (mobileMenu && menuIcon && closeIcon && backdrop) {
+        isMobileMenuOpen = false;
+
+        // Hide the menu container
+        mobileMenu.classList.remove("translate-x-0");
+        mobileMenu.classList.add("translate-x-full");
+
+        // Hide backdrop
+        backdrop.classList.remove("opacity-100");
+        backdrop.classList.add("opacity-0");
+
+        // Switch icons
+        closeIcon.classList.add("hidden", "rotate-180");
+        menuIcon.classList.remove("hidden", "rotate-180");
+        menuIcon.classList.add("rotate-0");
+
+        // Restore body scroll
+        document.body.style.overflow = "";
+
+        // Update button aria-expanded
+        mobileMenuButton.setAttribute("aria-expanded", "false");
+
+        // After transition completes, make completely invisible
+        setTimeout(() => {
+          if (!isMobileMenuOpen && mobileMenu) {
+            mobileMenu.classList.add("opacity-0", "invisible");
+            mobileMenu.classList.remove("opacity-100", "visible");
+          }
+        }, 700); // Match the transition duration
+      }
+    }
+
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+      if (isMobileMenuOpen) {
+        closeMobileMenu();
+      } else {
+        openMobileMenu();
+      }
+    }
+
+    // Event listeners
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    if (mobileMenuButton) {
+      mobileMenuButton.addEventListener("click", toggleMobileMenu);
+    }
+
+    if (mobileMenuClose) {
+      mobileMenuClose.addEventListener("click", closeMobileMenu);
+    }
+
+    // Close mobile menu when clicking backdrop
+    if (backdrop) {
+      backdrop.addEventListener("click", closeMobileMenu);
+    }
+
+    // Close mobile menu when clicking navigation links
+    const mobileNavLinks = mobileMenu?.querySelectorAll("a[href]");
+    mobileNavLinks?.forEach((link) => {
+      link.addEventListener("click", closeMobileMenu);
+    });
+
+    // Close mobile menu on window resize to desktop
+    window.addEventListener("resize", function () {
+      if (window.innerWidth >= 768 && isMobileMenuOpen) {
+        closeMobileMenu();
+      }
+    });
+
+    // Close mobile menu on escape key
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && isMobileMenuOpen) {
+        closeMobileMenu();
+      }
+    });
+  });
+</script>

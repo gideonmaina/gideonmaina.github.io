@@ -1,0 +1,188 @@
+---
+import { AstroSeo } from "@astrolib/seo";
+import { Schema } from "astro-seo-schema";
+
+const {
+  title,
+  description = "Gideon Maina - A passionate full-stack developer, creative thinker, and problem solver building digital experiences that make a difference.",
+  image = "/og-image.jpg",
+  url = Astro.url.href,
+  type = "website",
+  publishedTime,
+  modifiedTime,
+  author,
+  keywords,
+  noindex = false,
+  nofollow = false,
+} = Astro.props;
+
+const fullTitle = `Gideon Maina | ${title}`;
+
+// SEO configuration
+const seoConfig = {
+  title: fullTitle,
+  description,
+  canonical: url,
+  noindex,
+  nofollow,
+  openGraph: {
+    type: type === "article" ? "article" : "website",
+    url,
+    title: fullTitle,
+    description,
+    images: [
+      {
+        url: image,
+        width: 1200,
+        height: 630,
+        alt: title,
+      },
+    ],
+    site_name: "Gideon Maina",
+    ...(type === "article" && {
+      article: {
+        publishedTime: publishedTime,
+        modifiedTime: modifiedTime,
+        authors: [author || "Gideon Maina"],
+      },
+    }),
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@gideon_maina",
+    site: "@gideon_maina",
+  },
+  additionalMetaTags: [
+    {
+      name: "author",
+      content: "Gideon Maina",
+    },
+    {
+      name: "theme-color",
+      content: "#1f2937",
+    },
+    ...(keywords ? [{ name: "keywords", content: keywords }] : []),
+  ],
+  additionalLinkTags: [
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      href: "/favicon.svg",
+    },
+    {
+      rel: "icon",
+      type: "image/x-icon",
+      href: "/favicon.ico",
+    },
+    {
+      rel: "apple-touch-icon",
+      sizes: "180x180",
+      href: "/apple-touch-icon.png",
+    },
+  ],
+};
+---
+
+<head>
+  <AstroSeo {...seoConfig} />
+
+  <!-- Structured Data using astro-seo-schema -->
+  <Schema
+    item={{
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: "Gideon Maina",
+      url: "https://gideonmaina.me",
+      image: "https://gideonmaina.me/profile.jpg",
+      jobTitle: "Full-Stack Developer",
+      description:
+        "Passionate full-stack developer, creative thinker, and problem solver building digital experiences that make a difference.",
+      sameAs: [
+        "https://github.com/gideonmaina",
+        "https://linkedin.com/in/gideonmaina",
+        "https://twitter.com/gideonmaina",
+      ],
+      knowsAbout: [
+        "Web Development",
+        "JavaScript",
+        "TypeScript",
+        "React",
+        "Vue.js",
+        "Astro",
+        "Node.js",
+        "Python",
+        "Full-Stack Development",
+      ],
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "Kenya",
+      },
+      alumniOf: {
+        "@type": "Organization",
+        name: "Jomo Kenyatta University of Agriculture and Technology",
+      },
+    }}
+  />
+
+  {
+    type === "article" && (
+      <Schema
+        item={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: title,
+          description: description,
+          image: image,
+          datePublished: publishedTime,
+          dateModified: modifiedTime || publishedTime,
+          author: {
+            "@type": "Person",
+            name: author || "Gideon Maina",
+            url: "https://gideonmaina.me",
+          },
+          publisher: {
+            "@type": "Person",
+            name: "Gideon Maina",
+            url: "https://gideonmaina.me",
+          },
+          mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": url,
+          },
+        }}
+      />
+    )
+  }
+
+  {
+    type === "website" && (
+      <Schema
+        item={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Gideon Maina",
+          url: "https://gideonmaina.me",
+          description: description,
+          author: {
+            "@type": "Person",
+            name: "Gideon Maina",
+          },
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://gideonmaina.me/search?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }}
+      />
+    )
+  }
+  <!-- Font Awesome -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- manifest -->
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#a592a3" />
+</head>

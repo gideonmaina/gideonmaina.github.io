@@ -1,51 +1,221 @@
 ---
-interface Props {
-  title: string;
-}
+import AppFooter from "@layouts/AppFooter.astro";
+import AppHeader from "@layouts/AppHeader.astro";
+import AppNav from "@layouts/AppNav.astro";
+import "@styles/global.css";
 
-const { title } = Astro.props;
+const {
+  title = "Home",
+  description = "Gideon Maina - A passionate developer, creative thinker, and problem solver building digital experiences that make a difference.",
+  image,
+  type,
+  publishedTime,
+  modifiedTime,
+  author,
+} = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="description" content="Astro description" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-  </head>
-  <body>
-    <slot />
+<html lang="en" class="dark">
+  <AppHeader
+    {title}
+    {description}
+    {image}
+    {type}
+    {publishedTime}
+    {modifiedTime}
+    {author}
+  />
+  <body class="bg-gray-900 text-white min-h-screen flex flex-col">
+    <AppNav />
+    <!-- Scroll Progress Indicator -->
+    <div
+      id="scroll-progress"
+      class="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-purple-500 z-[60] opacity-80 shadow-lg"
+      style="width: 0%; transform-origin: left; transition: width 0.1s ease-out, height 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-out, background 0.5s ease-out;"
+    >
+      <!-- Animated shimmer effect -->
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 transform -skew-x-12 animate-pulse"
+      >
+      </div>
+    </div>
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <AppFooter />
+
+    <!-- Scripts -->
+    <script>
+      import AOS from "aos";
+      import "aos/dist/aos.css";
+
+      // Initialize AOS (Animate On Scroll)
+      AOS.init({
+        duration: 800, // Animation duration in milliseconds
+        once: false, // Whether animation should happen only once - while scrolling down
+        mirror: true, // Whether elements should animate out while scrolling past them
+        offset: 100, // Offset (in pixels) from the original trigger point
+      });
+
+      // Page transition handling with basic progress indication
+      document.addEventListener("astro:page-load", () => {
+        // Page loaded
+        console.log("Page loaded");
+
+        // Initialize scroll progress indicator
+        initScrollProgress();
+      });
+
+      document.addEventListener("astro:before-preparation", () => {
+        // Page navigation started
+        console.log("Navigation started");
+      });
+
+      // Initialize scroll progress on DOM ready (for initial page load)
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("DOM ready - initializing scroll progress");
+        initScrollProgress();
+      });
+
+      // Also initialize immediately if DOM is already ready
+      if (
+        document.readyState === "complete" ||
+        document.readyState === "interactive"
+      ) {
+        console.log(
+          "DOM already ready - initializing scroll progress immediately",
+        );
+        initScrollProgress();
+      }
+
+      // Scroll Progress Indicator Function
+      function initScrollProgress() {
+        const scrollProgress = document.getElementById("scroll-progress");
+        console.log("Scroll progress element:", scrollProgress);
+
+        if (!scrollProgress) {
+          console.warn("Scroll progress element not found!");
+          return;
+        }
+
+        function updateScrollProgress() {
+          if (!scrollProgress) return;
+
+          const windowHeight = window.innerHeight;
+          const documentHeight = document.documentElement.scrollHeight;
+          const scrollTop =
+            window.pageYOffset || document.documentElement.scrollTop;
+
+          // Calculate scroll percentage
+          const scrollableHeight = documentHeight - windowHeight;
+          const scrollPercentage =
+            scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
+
+          // Update the progress bar width with smooth animation
+          const clampedPercentage = Math.min(scrollPercentage, 100);
+          scrollProgress.style.width = `${clampedPercentage}%`;
+
+          // Add dynamic effects based on scroll progress
+          if (scrollPercentage > 0) {
+            // Add glow effect and scale when scrolling
+            scrollProgress.style.boxShadow = `0 0 15px rgba(59, 130, 246, 0.6), 0 0 25px rgba(6, 182, 212, 0.4), 0 0 35px rgba(147, 51, 234, 0.2)`;
+            scrollProgress.style.opacity = "1";
+            scrollProgress.style.transform = "scaleY(1.2)";
+            scrollProgress.style.height = "4px";
+
+            // Change gradient based on progress
+            if (clampedPercentage < 25) {
+              scrollProgress.style.background =
+                "linear-gradient(to right, #3b82f6, #06b6d4)";
+            } else if (clampedPercentage < 50) {
+              scrollProgress.style.background =
+                "linear-gradient(to right, #06b6d4, #8b5cf6)";
+            } else if (clampedPercentage < 75) {
+              scrollProgress.style.background =
+                "linear-gradient(to right, #8b5cf6, #ec4899)";
+            } else {
+              scrollProgress.style.background =
+                "linear-gradient(to right, #ec4899, #f59e0b)";
+            }
+          } else {
+            // Reset to default state
+            scrollProgress.style.boxShadow = "0 0 10px rgba(59, 130, 246, 0.3)";
+            scrollProgress.style.opacity = "0.8";
+            scrollProgress.style.transform = "scaleY(1)";
+            scrollProgress.style.height = "2px";
+            scrollProgress.style.background =
+              "linear-gradient(to right, #3b82f6, #06b6d4, #8b5cf6)";
+          }
+
+          // Add completion celebration effect
+          if (clampedPercentage >= 99) {
+            scrollProgress.style.boxShadow = `0 0 20px rgba(251, 191, 36, 0.8), 0 0 40px rgba(251, 191, 36, 0.6)`;
+            scrollProgress.style.background =
+              "linear-gradient(to right, #fbbf24, #f59e0b, #d97706)";
+          }
+        }
+
+        // Update scroll progress on scroll with throttling for performance
+        let ticking = false;
+        let isScrolling = false;
+        let scrollTimeout: ReturnType<typeof setTimeout>;
+
+        function requestTick() {
+          if (!ticking) {
+            requestAnimationFrame(() => {
+              updateScrollProgress();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        }
+
+        function handleScroll() {
+          // Clear the timeout throughout the scroll
+          clearTimeout(scrollTimeout);
+
+          // Set scrolling state
+          if (!isScrolling && scrollProgress) {
+            isScrolling = true;
+            scrollProgress.style.transition =
+              "width 0.05s ease-out, height 0.2s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out, background 0.3s ease-out";
+          }
+
+          requestTick();
+
+          // Set a timeout to run after scrolling ends
+          scrollTimeout = setTimeout(() => {
+            isScrolling = false;
+            if (scrollProgress) {
+              scrollProgress.style.transition =
+                "width 0.1s ease-out, height 0.4s ease-out, transform 0.4s ease-out, box-shadow 0.4s ease-out, background 0.5s ease-out";
+            }
+          }, 150);
+        }
+
+        // Add scroll event listener
+        window.addEventListener("scroll", handleScroll, {
+          passive: true,
+        });
+
+        // Initial call to set the progress bar
+        updateScrollProgress();
+        console.log("Initial scroll progress updated");
+
+        // Add a subtle introduction animation
+        setTimeout(() => {
+          if (scrollProgress) {
+            scrollProgress.style.opacity = "1";
+            scrollProgress.style.transform = "scaleX(1.01)";
+            setTimeout(() => {
+              if (scrollProgress) {
+                scrollProgress.style.transform = "scaleX(1)";
+              }
+            }, 300);
+          }
+        }, 100);
+      }
+    </script>
   </body>
 </html>
-<style is:global>
-  :root {
-    --accent: 136, 58, 234;
-    --accent-light: 224, 204, 250;
-    --accent-dark: 49, 10, 101;
-    --accent-gradient: linear-gradient(
-      45deg,
-      rgb(var(--accent)),
-      rgb(var(--accent-light)) 30%,
-      white 60%
-    );
-  }
-  html {
-    font-family: system-ui, sans-serif;
-    background: #13151a;
-    background-size: 224px;
-  }
-  code {
-    font-family:
-      Menlo,
-      Monaco,
-      Lucida Console,
-      Liberation Mono,
-      DejaVu Sans Mono,
-      Bitstream Vera Sans Mono,
-      Courier New,
-      monospace;
-  }
-</style>

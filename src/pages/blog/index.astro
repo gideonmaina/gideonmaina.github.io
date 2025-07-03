@@ -1,79 +1,1796 @@
 ---
-import Navbar from "@components/Navbar.astro";
-import Footer from "@components/Footer.astro";
-const current_url = Astro.url + "/";
+import Layout from "@layouts/Layout.astro";
+import { Image } from "astro:assets";
+import strapiAPI from "@lib/strapi.js";
+
+export const prerender = false;
+
+const title = "Blog";
+const description =
+  "Discover the latest insights, tutorials, and thoughts on web development, technology, and digital innovation.";
+
+// Pagination parameters
+const currentPage = parseInt(Astro.url.searchParams.get("page") || "1");
+const postsPerPage = 12;
+
+// Filter parameters
+const categorySlug = Astro.url.searchParams.get("category") || undefined;
+const tagSlug = Astro.url.searchParams.get("tag") || undefined;
+const searchQuery = Astro.url.searchParams.get("search") ?? undefined;
+
+// Build filters
+let filters: any = {};
+if (categorySlug) {
+  filters.category = { slug: { $eq: categorySlug } };
+}
+if (tagSlug) {
+  filters.tags = { slug: { $eq: tagSlug } };
+}
+
+// Fetch blog posts
+let posts = [];
+let totalPosts = 0;
+let totalPages = 1;
+
+try {
+  let result;
+  if (searchQuery) {
+    result = await strapiAPI.searchBlogPosts(
+      searchQuery,
+      postsPerPage * currentPage,
+    );
+    posts = result.map((post: any) => strapiAPI.formatBlogPost(post));
+    totalPosts = posts.length;
+    totalPages = Math.ceil(totalPosts / postsPerPage);
+  } else {
+    result = await strapiAPI.getBlogPosts({
+      pagination: { page: currentPage, pageSize: postsPerPage },
+      filters: filters,
+      sort: "publishedAt:desc",
+    });
+    posts = result.posts.map((post: any) => strapiAPI.formatBlogPost(post));
+    totalPosts = result.meta.pagination?.total || 0;
+    totalPages = result.meta.pagination?.pageCount || 1;
+  }
+} catch (error) {
+  console.error("Failed to fetch blog posts:", error);
+}
+
+// Fetch categories and tags for filters
+let categories = [];
+let tags = [];
+let featuredPosts = [];
+
+try {
+  [categories, tags, featuredPosts] = await Promise.all([
+    strapiAPI.getBlogCategories(),
+    strapiAPI.getBlogTags(),
+    strapiAPI.getFeaturedBlogPosts(3),
+  ]);
+
+  categories = categories.map((cat: any) => strapiAPI.formatCategory(cat));
+  tags = tags.map((tag: any) => strapiAPI.formatTag(tag));
+  featuredPosts = featuredPosts.map((post: any) =>
+    strapiAPI.formatBlogPost(post),
+  );
+} catch (error) {
+  console.error("Failed to fetch blog metadata:", error);
+}
+
+// Filter out featured posts from regular posts if we're on the first page and no filters applied
+if (
+  currentPage === 1 &&
+  !categorySlug &&
+  !tagSlug &&
+  !searchQuery &&
+  featuredPosts.length > 0
+) {
+  const featuredSlugs = new Set(
+    featuredPosts.map((post: { slug: any }) => post.slug),
+  );
+  posts = posts.filter(
+    (post: { slug: unknown }) => !featuredSlugs.has(post.slug),
+  );
+}
+
+// Helper function to build URL with filters
+function buildUrl(params: Record<string, string | number | undefined> = {}) {
+  const url = new URL("/blog", Astro.site || "http://localhost:4321");
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "")
+      url.searchParams.set(key, String(value));
+  });
+  return url.pathname + url.search;
+}
+
+// Helper function to generate pagination numbers
+function generatePageNumbers(currentPage: number, totalPages: number) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const startPage = Math.max(1, Math.min(currentPage - 3, totalPages - 6));
+  const endPage = Math.min(totalPages, startPage + 6);
+  const pageNumbers = [];
+
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  return pageNumbers;
+}
+
+const pageNumbers = generatePageNumbers(currentPage, totalPages);
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <title>Blog</title>
-  </head>
-  <body>
-    <Navbar />
-    <div class="wrapper">
-      <h1>Categories</h1>
-      <ol>
-        <li>
-          <a href={new URL("hardware", current_url)}>
-            <div class="link-card">hardware</div></a
-          >
-        </li>
-        <li>
-          <a href={new URL("travel", current_url)}
-            ><div class="link-card">travel</div></a
-          >
-        </li>
-      </ol>
+<Layout title={title} description={description}>
+  <main
+    class="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black relative overflow-hidden"
+  >
+    <!-- Background Pattern -->
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
+    >
+      <div
+        class="absolute inset-0"
+        style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;"
+      >
+      </div>
     </div>
-  </body>
-  <Footer />
-</html>
+
+    <!-- Animated Blog Elements -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <!-- Floating Pencils -->
+      <div class="absolute top-20 left-10 opacity-20 animate-float-slow">
+        <svg
+          class="w-8 h-8 text-yellow-400 transform rotate-45"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+          ></path>
+        </svg>
+      </div>
+      <div class="absolute top-40 right-20 opacity-20 animate-float-medium">
+        <svg
+          class="w-6 h-6 text-blue-400 transform -rotate-12"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+          ></path>
+        </svg>
+      </div>
+
+      <!-- Floating Books -->
+      <div class="absolute top-60 left-1/4 opacity-20 animate-float-slow">
+        <svg
+          class="w-10 h-10 text-green-400 transform rotate-12"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm2 0h14v14H5V5z"
+          ></path>
+          <path d="M7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"></path>
+        </svg>
+      </div>
+      <div class="absolute bottom-20 right-1/3 opacity-20 animate-float-fast">
+        <svg
+          class="w-8 h-8 text-purple-400 transform -rotate-6"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm2 0h14v14H5V5z"
+          ></path>
+          <path d="M7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"></path>
+        </svg>
+      </div>
+
+      <!-- Floating Code Icons -->
+      <div class="absolute top-32 right-10 opacity-20 animate-float-medium">
+        <svg
+          class="w-7 h-7 text-indigo-400 transform rotate-15"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"
+          ></path>
+        </svg>
+      </div>
+      <div class="absolute bottom-40 left-16 opacity-20 animate-float-slow">
+        <svg
+          class="w-6 h-6 text-cyan-400 transform -rotate-30"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"
+          ></path>
+        </svg>
+      </div>
+
+      <!-- Floating Light Bulbs -->
+      <div class="absolute top-80 left-20 opacity-20 animate-float-fast">
+        <svg
+          class="w-9 h-9 text-yellow-300 transform rotate-6"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17h8v-2.3c1.8-1.2 3-3.3 3-5.7 0-3.9-3.1-7-7-7z"
+          ></path>
+        </svg>
+      </div>
+
+      <!-- Floating Paper Planes -->
+      <div class="absolute top-10 right-1/4 opacity-20 animate-float-diagonal">
+        <svg
+          class="w-8 h-8 text-orange-400 transform rotate-45"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+        </svg>
+      </div>
+      <div
+        class="absolute bottom-10 left-1/3 opacity-20 animate-float-diagonal-reverse"
+      >
+        <svg
+          class="w-6 h-6 text-pink-400 transform -rotate-30"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+        </svg>
+      </div>
+
+      <!-- Floating Tags -->
+      <div class="absolute top-96 right-32 opacity-20 animate-float-medium">
+        <svg
+          class="w-7 h-7 text-red-400 transform rotate-12"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M5.5 7A1.5 1.5 0 017 5.5h3.5L12 4l1.5 1.5H17A1.5 1.5 0 0118.5 7v10a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 17V7zm2 0a.5.5 0 110 1 .5.5 0 010-1z"
+          ></path>
+        </svg>
+      </div>
+
+      <!-- Floating Hearts (for blog love) -->
+      <div class="absolute bottom-60 right-20 opacity-20 animate-pulse-slow">
+        <svg
+          class="w-6 h-6 text-rose-400 transform rotate-12"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden" data-aos="fade-in">
+      <!-- Additional Background Overlay -->
+      <div
+        class="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-purple-900/30 to-gray-900/30"
+      >
+        <div class="absolute inset-0 bg-black/20"></div>
+      </div>
+
+      <div
+        class="relative container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-16 sm:py-20 lg:py-28 xl:py-32"
+      >
+        <div class="text-center max-w-6xl mx-auto">
+          <!-- Badge -->
+          <div
+            class="inline-flex items-center px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm sm:text-base lg:text-lg font-medium mb-6 sm:mb-8 lg:mb-10 border border-white/20 shadow-lg"
+            data-aos="fade-down"
+            data-aos-delay="100"
+          >
+            <svg
+              class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              ></path>
+            </svg>
+            Knowledge Hub
+          </div>
+
+          <h1
+            class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-6 sm:mb-8 lg:mb-10 leading-tight"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            Latest from the
+            <span
+              class="bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 bg-clip-text text-transparent"
+            >
+              Blog
+            </span>
+          </h1>
+
+          <p
+            class="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-white/90 mb-8 sm:mb-10 lg:mb-12 max-w-4xl mx-auto leading-relaxed px-4"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            Discover insights, tutorials, and thoughts on web development,
+            technology, and digital innovation.
+          </p>
+
+          <!-- Enhanced Search Form -->
+          <div
+            class="max-w-3xl mx-auto px-4"
+            data-aos="fade-up"
+            data-aos-delay="400"
+          >
+            <form class="relative group" method="GET">
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"
+              >
+              </div>
+              <div class="relative flex items-center">
+                <input
+                  type="text"
+                  name="search"
+                  placeholder="Search articles, topics, or technologies..."
+                  value={searchQuery || ""}
+                  class="w-full px-6 py-4 sm:px-8 sm:py-5 lg:px-10 lg:py-6 text-base sm:text-lg lg:text-xl rounded-2xl text-gray-900 bg-white/95 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white/40 transition-all shadow-2xl placeholder-gray-500"
+                />
+                <button
+                  type="submit"
+                  class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 sm:px-8 sm:py-4 lg:px-10 lg:py-5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 text-sm sm:text-base lg:text-lg"
+                >
+                  <svg
+                    class="w-5 h-5 sm:w-6 sm:h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Floating Filter Icons -->
+    <div
+      class="fixed left-4 md:left-6 lg:left-8 top-1/2 transform -translate-y-1/2 z-50 flex flex-col space-y-4"
+      data-aos="fade-right"
+      data-aos-delay="500"
+    >
+      <!-- Featured Posts Button -->
+      <button
+        id="featured-scroll"
+        class="group p-3 md:p-4 lg:p-5 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-full shadow-2xl hover:shadow-yellow-500/30 transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-yellow-400/30"
+        title="View Featured Posts"
+      >
+        <svg
+          class="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 transition-transform duration-300 group-hover:rotate-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Categories Button -->
+      <button
+        id="categories-toggle"
+        class="group p-3 md:p-4 lg:p-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-indigo-400/30"
+        title="Browse Categories"
+      >
+        <svg
+          class="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 transition-transform duration-300 group-hover:rotate-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 11H5m14-7v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2h10a2 2 0 012 2v12"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Tags Button -->
+      <button
+        id="tags-toggle"
+        class="group p-3 md:p-4 lg:p-5 bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white rounded-full shadow-2xl hover:shadow-pink-500/30 transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-pink-400/30"
+        title="Browse Tags"
+      >
+        <svg
+          class="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 transition-transform duration-300 group-hover:rotate-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a4 4 0 01-4-4V7a4 4 0 014-4z"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Categories Popup -->
+    <div
+      id="categories-popup"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 invisible transition-all duration-300 p-4"
+    >
+      <div
+        class="bg-gray-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-xl lg:max-w-2xl w-full max-h-[90vh] sm:max-h-[80vh] overflow-y-auto shadow-2xl border border-gray-700 transform scale-95 transition-transform duration-300"
+      >
+        <div class="flex items-center justify-between mb-6 sm:mb-8">
+          <h3
+            class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3"
+          >
+            <div
+              class="p-1.5 sm:p-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg"
+            >
+              <svg
+                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11H5m14-7v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2h10a2 2 0 012 2v12"
+                ></path>
+              </svg>
+            </div>
+            <span class="text-base sm:text-xl lg:text-2xl"
+              >Browse Categories</span
+            >
+          </h3>
+          <button
+            id="categories-close"
+            class="text-gray-400 hover:text-white transition-colors p-1 sm:p-2 hover:bg-gray-700 rounded-lg"
+          >
+            <svg
+              class="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          {
+            categories.map(
+              (
+                category: {
+                  slug: any;
+                  color: any;
+                  name: unknown;
+                  description: unknown;
+                },
+                index: number,
+              ) => (
+                <a
+                  href={buildUrl({ category: category.slug })}
+                  class="group p-4 sm:p-6 bg-gray-700 hover:bg-gray-600 rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-105 border border-gray-600 hover:border-gray-500"
+                  data-aos="fade-up"
+                  data-aos-delay={index * 100}
+                >
+                  <div class="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-3">
+                    <div
+                      class="w-4 h-4 sm:w-6 sm:h-6 rounded-full shadow-lg"
+                      style={`background-color: ${category.color}`}
+                    />
+                    <h4 class="font-semibold text-sm sm:text-base text-white group-hover:text-indigo-300 transition-colors">
+                      {category.name}
+                    </h4>
+                  </div>
+                  {category.description && (
+                    <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                      {category.description}
+                    </p>
+                  )}
+                </a>
+              ),
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Tags Popup -->
+    <div
+      id="tags-popup"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 invisible transition-all duration-300 p-4"
+    >
+      <div
+        class="bg-gray-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-2xl lg:max-w-3xl w-full max-h-[90vh] sm:max-h-[80vh] overflow-y-auto shadow-2xl border border-gray-700 transform scale-95 transition-transform duration-300"
+      >
+        <div class="flex items-center justify-between mb-6 sm:mb-8">
+          <h3
+            class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3"
+          >
+            <div
+              class="p-1.5 sm:p-2 bg-gradient-to-r from-pink-600 to-red-600 rounded-lg"
+            >
+              <svg
+                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a4 4 0 01-4-4V7a4 4 0 014-4z"
+                ></path>
+              </svg>
+            </div>
+            <span class="text-base sm:text-xl lg:text-2xl">Browse Tags</span>
+          </h3>
+          <button
+            id="tags-close"
+            class="text-gray-400 hover:text-white transition-colors p-1 sm:p-2 hover:bg-gray-700 rounded-lg"
+          >
+            <svg
+              class="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap gap-2 sm:gap-3">
+          {
+            tags.map(
+              (
+                tag: { slug: any; color: any; name: unknown },
+                index: number,
+              ) => (
+                <a
+                  href={buildUrl({ tag: tag.slug })}
+                  class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-full text-white hover:opacity-80 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
+                  style={`background: linear-gradient(135deg, ${tag.color}, ${tag.color}dd)`}
+                  data-aos="zoom-in"
+                  data-aos-delay={index * 50}
+                >
+                  #{tag.name}
+                </a>
+              ),
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="relative container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12 sm:py-16 lg:py-20"
+    >
+      <!-- Featured Posts Section -->
+      {
+        featuredPosts.length > 0 && (
+          <section class="mb-16 sm:mb-20 lg:mb-24" data-aos="fade-up">
+            <div class="text-center mb-8 sm:mb-12 lg:mb-16">
+              <div class="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div class="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl sm:rounded-2xl shadow-lg">
+                  <svg
+                    class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                    />
+                  </svg>
+                </div>
+                <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white">
+                  Featured Articles
+                </h2>
+              </div>
+              <p class="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+                Handpicked articles that showcase the best of our content
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 lg:mb-20">
+              {featuredPosts.map((post: any, index: number) => (
+                <article
+                  class="group relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl transition-all duration-500 hover:scale-[1.02] bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50 h-auto flex flex-col"
+                  data-aos="zoom-in"
+                  data-aos-delay={index * 200}
+                >
+                  <a href={`/blog/${post.slug}`} class="block">
+                    {/* <!-- Background Image - All cards same size --> */}
+                    <div class="relative aspect-[4/3] w-full overflow-hidden rounded-t-2xl sm:rounded-t-3xl flex-shrink-0">
+                      {post.image ? (
+                        <Image
+                          src={post.image}
+                          alt={post.title}
+                          width={400}
+                          height={300}
+                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                      ) : (
+                        <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                          <svg
+                            class="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 text-white opacity-80"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="1.5"
+                              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                            />
+                          </svg>
+                        </div>
+                      )}
+
+                      {/* <!-- Gradient Overlay --> */}
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+                      {/* <!-- Featured Badge --> */}
+                      <div class="absolute top-3 sm:top-4 left-3 sm:left-4">
+                        <div class="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-yellow-500 text-black text-xs sm:text-sm font-bold rounded-full shadow-lg">
+                          <svg
+                            class="w-3 h-3 sm:w-4 sm:h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                          <span class="hidden sm:inline">FEATURED</span>
+                          <span class="sm:hidden">★</span>
+                        </div>
+                      </div>
+
+                      {/* <!-- Category Badge --> */}
+                      {post.category && (
+                        <div class="absolute top-3 sm:top-4 right-3 sm:right-4">
+                          <span
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded-full text-white shadow-lg backdrop-blur-sm border border-white/30"
+                            style={`background: linear-gradient(135deg, ${post.category.color}cc, ${post.category.color})`}
+                          >
+                            {post.category.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* <!-- Read Time Badge --> */}
+                      <div class="absolute bottom-3 sm:bottom-4 right-3 sm:right-4">
+                        <div class="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-xs font-medium">
+                          <svg
+                            class="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {post.readTime}m
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* <!-- Content --> */}
+                    <div class="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8 flex-1 flex flex-col min-h-0">
+                      <div class="mb-2 sm:mb-3">
+                        <div class="flex items-center gap-2 text-xs sm:text-sm text-white/80 mb-2">
+                          <time>
+                            {new Date(post.publishedAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            )}
+                          </time>
+                          <span>•</span>
+                          <span>{post.readTime}m read</span>
+                        </div>
+                      </div>
+
+                      <h3 class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3 lg:mb-4 group-hover:text-yellow-300 transition-colors duration-300 line-clamp-2 leading-tight flex-shrink-0">
+                        {post.title}
+                      </h3>
+
+                      {post.excerpt && (
+                        <p class="text-xs sm:text-sm md:text-base text-white/90 mb-3 sm:mb-4 lg:mb-5 leading-relaxed line-clamp-3 flex-1 min-h-0">
+                          {post.excerpt}
+                        </p>
+                      )}
+
+                      {/* <!-- Author Info --> */}
+                      {post.author && (
+                        <div class="flex items-center gap-2 sm:gap-3 mt-auto flex-shrink-0">
+                          {post.author.avatar ? (
+                            <Image
+                              src={post.author.avatar}
+                              alt={post.author.name}
+                              width={40}
+                              height={40}
+                              class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full object-cover ring-2 ring-white/30 shadow-lg flex-shrink-0"
+                            />
+                          ) : (
+                            <div class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center ring-2 ring-white/30 shadow-lg flex-shrink-0">
+                              <span class="text-xs sm:text-sm font-bold text-white">
+                                {post.author.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                          <div class="min-w-0 flex-1">
+                            <p class="font-medium text-white text-xs sm:text-sm truncate">
+                              {post.author.name}
+                            </p>
+                            {post.author.title && (
+                              <p class="text-xs text-white/70 truncate hidden sm:block">
+                                {post.author.title}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                </article>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      <div class="container">
+        <!-- Simplified Filter Bar -->
+        <div
+          class="mb-8 sm:mb-12 bg-gray-800/90 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700/50"
+          data-aos="fade-up"
+        >
+          <div
+            class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4 sm:gap-6"
+          >
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="flex items-center gap-2 sm:gap-3">
+                <div
+                  class="p-1.5 sm:p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg"
+                >
+                  <svg
+                    class="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                    ></path>
+                  </svg>
+                </div>
+                <span class="text-base sm:text-lg font-semibold text-gray-100"
+                  >All Articles</span
+                >
+              </div>
+
+              <!-- Clear Filters -->
+              {
+                (categorySlug || tagSlug || searchQuery) && (
+                  <a
+                    href="/blog"
+                    class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-red-900/80 hover:bg-red-800 text-red-200 font-medium rounded-lg transition-colors text-sm"
+                  >
+                    <svg
+                      class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    Clear Filters
+                  </a>
+                )
+              }
+            </div>
+
+            <!-- Results Count -->
+            <div
+              class="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg border border-indigo-700/50"
+            >
+              <svg
+                class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              <span class="text-xs sm:text-sm font-semibold text-indigo-200">
+                {totalPosts} article{totalPosts !== 1 ? "s" : ""} found
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Blog Posts Grid -->
+        {
+          posts.length > 0 ? (
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 mb-16 sm:mb-20 lg:mb-24">
+              {posts.map((post: any, index: number) => (
+                <article
+                  class="group relative bg-gray-800/60 backdrop-blur-sm rounded-2xl lg:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-700/50 hover:scale-[1.02] hover:border-gray-600/50 h-auto flex flex-col"
+                  data-aos="fade-up"
+                  data-aos-delay={index * 100}
+                >
+                  {/* <!-- Image Container --> */}
+                  <div class="relative flex-shrink-0 w-full">
+                    <a href={`/blog/${post.slug}`} class="block">
+                      {post.image ? (
+                        <div class="aspect-[16/9] w-full overflow-hidden rounded-t-2xl lg:rounded-t-3xl">
+                          <Image
+                            src={post.image}
+                            alt={post.title}
+                            width={450}
+                            height={280}
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                        </div>
+                      ) : (
+                        <div class="aspect-[16/9] w-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center rounded-t-2xl lg:rounded-t-3xl">
+                          <div class="text-center text-white">
+                            <svg
+                              class="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 mx-auto mb-2 opacity-80"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="1.5"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                            <p class="text-xs md:text-sm font-medium opacity-90">
+                              Article
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </a>
+
+                    {/* <!-- Category Badge --> */}
+                    {post.category && (
+                      <div
+                        class="absolute top-3 md:top-4 left-3 md:left-4"
+                        data-aos="zoom-in"
+                        data-aos-delay={index * 100 + 200}
+                      >
+                        <span
+                          class="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-bold rounded-full text-white shadow-lg backdrop-blur-sm border border-white/30 hover:scale-110 transition-transform duration-300"
+                          style={`background: linear-gradient(135deg, ${post.category.color}cc, ${post.category.color})`}
+                        >
+                          {post.category.name}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* <!-- Read Time Badge --> */}
+                    <div
+                      class="absolute top-3 md:top-4 right-3 md:right-4"
+                      data-aos="zoom-in"
+                      data-aos-delay={index * 100 + 300}
+                    >
+                      <div class="flex items-center gap-1 px-2 md:px-2.5 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-xs font-medium">
+                        <svg
+                          class="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        {post.readTime}m
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* <!-- Content --> */}
+                  <div class="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8 flex-1 flex flex-col min-h-0">
+                    {/* <!-- Date --> */}
+                    <div
+                      class="flex items-center gap-2 text-sm text-gray-400 mb-2 sm:mb-3 lg:mb-4 flex-shrink-0"
+                      data-aos="fade-right"
+                      data-aos-delay={index * 100 + 400}
+                    >
+                      <svg
+                        class="w-3 h-3 md:w-4 md:h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <time class="text-xs md:text-sm">
+                        {new Date(post.publishedAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          },
+                        )}
+                      </time>
+                    </div>
+
+                    {/* <!-- Title --> */}
+                    <h3
+                      class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-100 mb-2 sm:mb-3 lg:mb-4 group-hover:text-indigo-400 transition-colors duration-300 line-clamp-2 leading-tight flex-shrink-0"
+                      data-aos="fade-up"
+                      data-aos-delay={index * 100 + 500}
+                    >
+                      <a href={`/blog/${post.slug}`} class="hover:underline">
+                        {post.title}
+                      </a>
+                    </h3>
+
+                    {/* <!-- Excerpt --> */}
+                    {post.excerpt && (
+                      <p
+                        class="text-xs sm:text-sm md:text-base text-gray-300 mb-3 sm:mb-4 lg:mb-5 leading-relaxed line-clamp-3 flex-1 min-h-0"
+                        data-aos="fade-up"
+                        data-aos-delay={index * 100 + 600}
+                      >
+                        {post.excerpt}
+                      </p>
+                    )}
+
+                    {/* <!-- Tags --> */}
+                    {post.tags.length > 0 && (
+                      <div
+                        class="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4 lg:mb-5 flex-shrink-0"
+                        data-aos="fade-up"
+                        data-aos-delay={index * 100 + 700}
+                      >
+                        {post.tags
+                          .slice(0, 2)
+                          .map((tag: any, tagIndex: number) => (
+                            <span
+                              class="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full text-white shadow-sm hover:scale-110 transition-transform duration-300 cursor-pointer truncate max-w-[100px] sm:max-w-[120px]"
+                              style={`background-color: ${tag.color}`}
+                              data-aos="zoom-in"
+                              data-aos-delay={
+                                index * 100 + 700 + tagIndex * 100
+                              }
+                              title={tag.name}
+                            >
+                              #{tag.name}
+                            </span>
+                          ))}
+                        {post.tags.length > 2 && (
+                          <span class="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors duration-300">
+                            +{post.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* <!-- Author & CTA --> */}
+                    <div
+                      class="flex items-center justify-between pt-3 sm:pt-4 lg:pt-5 border-t border-gray-700 mt-auto flex-shrink-0"
+                      data-aos="fade-up"
+                      data-aos-delay={index * 100 + 800}
+                    >
+                      {post.author && (
+                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-2 sm:mr-3">
+                          {post.author.avatar ? (
+                            <Image
+                              src={post.author.avatar}
+                              alt={post.author.name}
+                              width={40}
+                              height={40}
+                              class="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full object-cover ring-2 ring-gray-600 shadow-sm hover:ring-indigo-500 transition-all duration-300 flex-shrink-0"
+                            />
+                          ) : (
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center ring-2 ring-gray-600 shadow-sm hover:ring-indigo-500 transition-all duration-300 flex-shrink-0">
+                              <span class="text-xs sm:text-sm md:text-base font-bold text-white">
+                                {post.author.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                          <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm md:text-base font-medium text-gray-200 truncate">
+                              {post.author.name}
+                            </p>
+                            {post.author.title && (
+                              <p class="text-xs text-gray-400 truncate hidden sm:block">
+                                {post.author.title}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <a
+                        href={`/blog/${post.slug}`}
+                        class="inline-flex items-center px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white text-xs sm:text-sm lg:text-base font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex-shrink-0"
+                      >
+                        <span class="hidden sm:inline">Read More</span>
+                        <span class="sm:hidden">Read</span>
+                        <svg
+                          class="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-1.5 group-hover:translate-x-0.5 transition-transform"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-12 sm:py-20">
+              <div class="max-w-md mx-auto px-4">
+                <div class="mb-6 sm:mb-8">
+                  <div class="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center">
+                    <svg
+                      class="w-8 h-8 sm:w-12 sm:h-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 class="text-xl sm:text-2xl font-bold text-gray-100 mb-3 sm:mb-4">
+                    No articles found
+                  </h3>
+                  <p class="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 leading-relaxed">
+                    {searchQuery
+                      ? `We couldn't find any articles matching "${searchQuery}". Try adjusting your search terms or browse our categories.`
+                      : "No articles match your current filters. Try adjusting your selection or explore our popular categories."}
+                  </p>
+                </div>
+
+                <div class="space-y-4">
+                  <a
+                    href="/blog"
+                    class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+                  >
+                    <svg
+                      class="w-4 h-4 sm:w-5 sm:h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                    View All Articles
+                  </a>
+
+                  {categories.length > 0 && (
+                    <div class="mt-6 sm:mt-8">
+                      <p class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
+                        Or explore these popular categories:
+                      </p>
+                      <div class="flex flex-wrap gap-2 justify-center">
+                        {categories.slice(0, 4).map((category: any) => (
+                          <a
+                            href={buildUrl({ category: category.slug })}
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full text-white transition-all duration-300 hover:scale-105"
+                            style={`background-color: ${category.color}`}
+                          >
+                            {category.name}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        <!-- Enhanced Pagination -->
+        {
+          totalPages > 1 && (
+            <div class="flex items-center justify-center mt-12 sm:mt-16">
+              <nav class="flex items-center space-x-1 sm:space-x-2 bg-gray-800/90 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 shadow-xl border border-gray-700/50">
+                {/* <!-- Previous Page --> */}
+                {currentPage > 1 && (
+                  <a
+                    href={buildUrl({
+                      page: currentPage - 1,
+                      category: categorySlug,
+                      tag: tagSlug,
+                      search: searchQuery,
+                    })}
+                    class="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg sm:rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    <svg
+                      class="w-3 h-3 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                    <span class="hidden sm:inline">Previous</span>
+                    <span class="sm:hidden">Prev</span>
+                  </a>
+                )}
+
+                {/* <!-- Page Numbers --> */}
+                {pageNumbers.map((page) => (
+                  <a
+                    href={buildUrl({
+                      page,
+                      category: categorySlug,
+                      tag: tagSlug,
+                      search: searchQuery,
+                    })}
+                    class={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl transition-all duration-300 ${
+                      page === currentPage
+                        ? "text-white bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg"
+                        : "text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 shadow-sm hover:shadow-md"
+                    }`}
+                  >
+                    {page}
+                  </a>
+                ))}
+
+                {/* <!-- Next Page --> */}
+                {currentPage < totalPages && (
+                  <a
+                    href={buildUrl({
+                      page: currentPage + 1,
+                      category: categorySlug,
+                      tag: tagSlug,
+                      search: searchQuery,
+                    })}
+                    class="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg sm:rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    <span class="hidden sm:inline">Next</span>
+                    <span class="sm:hidden">Next</span>
+                    <svg
+                      class="w-3 h-3 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </a>
+                )}
+              </nav>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </main>
+</Layout>
 
 <style>
-  h1 {
-    color: rgb(5, 64, 60);
-  }
-  .wrapper {
-    padding: 2rem;
-  }
-  ol {
-    list-style-type: none;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2rem;
-    padding-left: 0;
+  /* Modern CSS Reset and Utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  li {
-    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-  .link-card {
-    /* height: 120px;
-    width: 240px; */
-    /* background-color: green; */
+
+  /* Custom scrollbar for modern browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(55, 65, 81, 0.5);
     border-radius: 8px;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 28px;
-    font-family: Montserrat, sans-serif;
-    color: white;
-    background: rgb(17, 177, 167);
   }
-  a,
-  a:visited {
-    text-decoration: none;
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 8px;
+    border: 2px solid transparent;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  }
+
+  /* Enhanced selection */
+  ::selection {
+    background-color: rgba(99, 102, 241, 0.3);
+    color: inherit;
+  }
+
+  /* Enhanced focus styles */
+  select:focus,
+  input:focus,
+  button:focus,
+  a:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    transition: box-shadow 0.2s ease;
+  }
+
+  /* Smooth transitions for all interactive elements */
+  * {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Popup animation states */
+  .popup-visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .popup-visible > div {
+    transform: scale(1) !important;
+  }
+
+  /* Modern glass morphism effects */
+  .glass-effect {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Enhanced card hover effects */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Modern animation keyframes */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Responsive typography improvements */
+  @media (max-width: 640px) {
+    .text-responsive {
+      font-size: clamp(0.875rem, 2.5vw, 1rem);
+    }
+  }
+
+  /* Enhanced image loading states */
+  img[loading="lazy"] {
+    transition: opacity 0.3s ease;
+  }
+
+  img[loading="lazy"][data-loaded="false"] {
+    opacity: 0;
+  }
+
+  img[loading="lazy"][data-loaded="true"] {
+    opacity: 1;
+  }
+
+  /* Modern button animations */
+  .btn-modern {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-modern::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  .btn-modern:hover::before {
+    left: 100%;
+  }
+
+  /* Blog Cards Responsive Layout */
+  @media (max-width: 767px) {
+    .blog-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .blog-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .blog-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem;
+    }
+  }
+
+  /* Enhanced blog card styling */
+  .blog-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: fit-content;
+  }
+
+  .blog-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Ensure proper aspect ratios and content fitting */
+  .blog-image {
+    aspect-ratio: 16/9;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  /* Better text line clamping with responsive heights */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+  }
+
+  /* Responsive card content adjustments */
+  @media (max-width: 640px) {
+    .line-clamp-3 {
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  /* Ensure cards have consistent height in grid */
+  .blog-card-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Tag overflow handling */
+  .tag-container {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .tag-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Smooth animations for elements */
+  @keyframes animate-float-slow {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(5deg);
+    }
+  }
+
+  @keyframes animate-float-medium {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-15px) rotate(-3deg);
+    }
+  }
+
+  @keyframes animate-float-fast {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(2deg);
+    }
+  }
+
+  @keyframes animate-float-diagonal {
+    0%,
+    100% {
+      transform: translate(0px, 0px) rotate(45deg);
+    }
+    50% {
+      transform: translate(10px, -10px) rotate(50deg);
+    }
+  }
+
+  @keyframes animate-float-diagonal-reverse {
+    0%,
+    100% {
+      transform: translate(0px, 0px) rotate(-30deg);
+    }
+    50% {
+      transform: translate(-10px, -10px) rotate(-35deg);
+    }
+  }
+
+  @keyframes animate-pulse-slow {
+    0%,
+    100% {
+      opacity: 0.2;
+      transform: scale(1) rotate(12deg);
+    }
+    50% {
+      opacity: 0.3;
+      transform: scale(1.1) rotate(18deg);
+    }
+  }
+
+  .animate-float-slow {
+    animation: animate-float-slow 6s ease-in-out infinite;
+  }
+
+  .animate-float-medium {
+    animation: animate-float-medium 4s ease-in-out infinite;
+  }
+
+  .animate-float-fast {
+    animation: animate-float-fast 3s ease-in-out infinite;
+  }
+
+  .animate-float-diagonal {
+    animation: animate-float-diagonal 5s ease-in-out infinite;
+  }
+
+  .animate-float-diagonal-reverse {
+    animation: animate-float-diagonal-reverse 7s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: animate-pulse-slow 4s ease-in-out infinite;
   }
 </style>
+
+<script>
+  // Floating filter popups and page functionality
+  document.addEventListener("DOMContentLoaded", function () {
+    // Featured posts scroll functionality
+    const featuredScrollBtn = document.getElementById("featured-scroll");
+    if (featuredScrollBtn) {
+      featuredScrollBtn.addEventListener("click", () => {
+        const featuredSection = document.querySelector(
+          'section[data-aos="fade-up"]',
+        );
+        if (featuredSection) {
+          featuredSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
+    }
+
+    // Floating filter popups functionality
+    const categoriesToggle = document.getElementById("categories-toggle");
+    const categoriesPopup = document.getElementById("categories-popup");
+    const categoriesClose = document.getElementById("categories-close");
+
+    const tagsToggle = document.getElementById("tags-toggle");
+    const tagsPopup = document.getElementById("tags-popup");
+    const tagsClose = document.getElementById("tags-close");
+
+    function openPopup(popup: HTMLElement) {
+      if (popup) {
+        popup.classList.add("popup-visible");
+        document.body.style.overflow = "hidden";
+      }
+    }
+
+    function closePopup(popup: HTMLElement) {
+      if (popup) {
+        popup.classList.remove("popup-visible");
+        document.body.style.overflow = "auto";
+      }
+    }
+
+    // Categories popup events
+    if (categoriesToggle && categoriesPopup && categoriesClose) {
+      categoriesToggle.addEventListener("click", () =>
+        openPopup(categoriesPopup),
+      );
+      categoriesClose.addEventListener("click", () =>
+        closePopup(categoriesPopup),
+      );
+
+      categoriesPopup.addEventListener("click", (e) => {
+        if (e.target === categoriesPopup) {
+          closePopup(categoriesPopup);
+        }
+      });
+    }
+
+    // Tags popup events
+    if (tagsToggle && tagsPopup && tagsClose) {
+      tagsToggle.addEventListener("click", () => openPopup(tagsPopup));
+      tagsClose.addEventListener("click", () => closePopup(tagsPopup));
+
+      tagsPopup.addEventListener("click", (e) => {
+        if (e.target === tagsPopup) {
+          closePopup(tagsPopup);
+        }
+      });
+    }
+
+    // Close popups with Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (categoriesPopup?.classList.contains("popup-visible")) {
+          closePopup(categoriesPopup);
+        }
+        if (tagsPopup?.classList.contains("popup-visible")) {
+          closePopup(tagsPopup);
+        }
+      }
+    });
+
+    // Add smooth scroll behavior to all internal links
+    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+      anchor.addEventListener("click", function (e: Event) {
+        e.preventDefault();
+        const anchorElement = e.currentTarget as HTMLAnchorElement;
+        const targetSelector = anchorElement.getAttribute("href") || "";
+        const target = document.querySelector(targetSelector);
+        if (target) {
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
+    });
+
+    // Add hover effects to cards
+    const cards = document.querySelectorAll("article");
+    cards.forEach((card) => {
+      const cardElement = card as HTMLElement;
+      cardElement.addEventListener("mouseenter", function () {
+        this.style.transform = "translateY(-4px) scale(1.02)";
+        this.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.3)";
+      });
+
+      cardElement.addEventListener("mouseleave", function () {
+        this.style.transform = "";
+        this.style.boxShadow = "";
+      });
+    });
+
+    // Add loading animation for images
+    const images = document.querySelectorAll("img");
+    images.forEach((img) => {
+      const imgElement = img as HTMLImageElement;
+      imgElement.addEventListener("load", function () {
+        this.style.opacity = "1";
+        this.style.transform = "scale(1)";
+      });
+
+      // Set initial state
+      imgElement.style.opacity = "0";
+      imgElement.style.transform = "scale(0.95)";
+      imgElement.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+    });
+
+    // Add search functionality enhancements
+    const searchInput = document.querySelector(
+      'input[name="search"]',
+    ) as HTMLInputElement;
+    if (searchInput) {
+      let searchTimeout: NodeJS.Timeout;
+
+      searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+
+        if (query.length >= 3) {
+          searchTimeout = setTimeout(() => {
+            console.log("Searching for:", query);
+          }, 300);
+        }
+      });
+
+      // Enhanced search form submission
+      const searchForm = searchInput.closest("form");
+      if (searchForm) {
+        searchForm.addEventListener("submit", function (e) {
+          const query = searchInput.value.trim();
+          if (!query) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.style.borderColor = "#ef4444";
+            setTimeout(() => {
+              searchInput.style.borderColor = "";
+            }, 2000);
+          }
+        });
+      }
+    }
+
+    // Add intersection observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in");
+        }
+      });
+    }, observerOptions);
+
+    // Observe all cards and sections
+    document.querySelectorAll("article, section").forEach((el) => {
+      observer.observe(el);
+    });
+  });
+</script>
