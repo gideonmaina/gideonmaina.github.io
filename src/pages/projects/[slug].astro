@@ -1,6 +1,6 @@
 ---
-import Layout from '@layouts/Layout.astro';
-import strapiAPI from '@lib/strapi.js';
+import Layout from "@layouts/Layout.astro";
+import strapiAPI from "@lib/strapi.js";
 
 export const prerender = false;
 
@@ -8,902 +8,888 @@ export const prerender = false;
 const { slug } = Astro.params;
 
 if (!slug) {
-	console.error('No slug provided in URL parameters');
-	throw Astro.redirect('/projects');
+  console.error("No slug provided in URL parameters");
+  throw Astro.redirect("/projects");
 }
 
 // Validate slug format (basic validation)
 if (!/^[a-z0-9-]+$/i.test(slug)) {
-	console.error(`Invalid slug format: ${slug}`);
-	throw Astro.redirect('/404');
+  console.error(`Invalid slug format: ${slug}`);
+  throw Astro.redirect("/404");
 }
 
 let project: any;
 try {
-	const rawProject = await strapiAPI.getProject(slug);
-	if (!rawProject) {
-		return Astro.redirect('/404');
-	}
-	project = strapiAPI.formatProject(rawProject);
+  const rawProject = await strapiAPI.getProject(slug);
+  if (!rawProject) {
+    return Astro.redirect("/404");
+  }
+  project = strapiAPI.formatProject(rawProject);
 } catch (error) {
-	console.error('Error fetching project:', error);
-	return Astro.redirect('/404');
+  console.error("Error fetching project:", error);
+  return Astro.redirect("/404");
 }
 
 const title = project.title;
 const description =
-	project.seo?.metaDescription ||
-	project.summary ||
-	project.description?.substring(0, 160);
+  project.seo?.metaDescription ||
+  project.summary ||
+  project.description?.substring(0, 160);
 const image = project.seo?.metaImage || project.image;
 ---
 
 <Layout
-	title={title}
-	description={description}
-	image={image}
-	type='article'
-	publishedTime={project.publishedAt}
-	modifiedTime={project.updatedAt}>
-	<!-- Project Hero Section -->
-	<section
-		class='relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black pt-24 pb-20'>
-		<!-- Same background pattern as AppFooter -->
-		<div
-			class='absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20'>
-		</div>
+  title={title}
+  description={description}
+  image={image}
+  type="article"
+  publishedTime={project.publishedAt}
+  modifiedTime={project.updatedAt}
+>
+  <!-- Project Hero Section -->
+  <section
+    class="relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black pt-24 pb-20"
+  >
+    <!-- Same background pattern as AppFooter -->
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
+    >
+    </div>
 
-		<!-- SVG Background Pattern (same as AppFooter) -->
-		<div class='absolute inset-0 opacity-20'>
-			<svg
-				class='absolute inset-0 h-full w-full'
-				fill='none'
-				viewBox='0 0 400 400'
-				aria-hidden='true'>
-				<defs>
-					<pattern
-						id='project-hero-pattern'
-						x='0'
-						y='0'
-						width='20'
-						height='20'
-						patternUnits='userSpaceOnUse'>
-						<rect
-							x='0'
-							y='0'
-							width='4'
-							height='4'
-							class='text-blue-500/30'
-							fill='currentColor'></rect>
-					</pattern>
-				</defs>
-				<rect
-					width='100%'
-					height='100%'
-					fill='url(#project-hero-pattern)'></rect>
-			</svg>
-		</div>
+    <!-- SVG Background Pattern (same as AppFooter) -->
+    <div class="absolute inset-0 opacity-20">
+      <svg
+        class="absolute inset-0 h-full w-full"
+        fill="none"
+        viewBox="0 0 400 400"
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern
+            id="project-hero-pattern"
+            x="0"
+            y="0"
+            width="20"
+            height="20"
+            patternUnits="userSpaceOnUse"
+          >
+            <rect
+              x="0"
+              y="0"
+              width="4"
+              height="4"
+              class="text-blue-500/30"
+              fill="currentColor"></rect>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#project-hero-pattern)"
+        ></rect>
+      </svg>
+    </div>
 
-		<!-- Animated floating particles -->
-		<div class='absolute inset-0 overflow-hidden'>
-			<div
-				class='absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse'>
-			</div>
-			<div
-				class='absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse'
-				style='animation-delay: 2s;'>
-			</div>
-			<div
-				class='absolute top-1/2 left-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl animate-pulse'
-				style='animation-delay: 4s;'>
-			</div>
-			<div
-				class='absolute bottom-1/4 right-1/3 w-48 h-48 bg-violet-500/10 rounded-full blur-2xl animate-pulse'
-				style='animation-delay: 6s;'>
-			</div>
-		</div>
+    <!-- Animated floating particles -->
+    <div class="absolute inset-0 overflow-hidden">
+      <div
+        class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
+      >
+      </div>
+      <div
+        class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
+        style="animation-delay: 2s;"
+      >
+      </div>
+      <div
+        class="absolute top-1/2 left-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl animate-pulse"
+        style="animation-delay: 4s;"
+      >
+      </div>
+      <div
+        class="absolute bottom-1/4 right-1/3 w-48 h-48 bg-violet-500/10 rounded-full blur-2xl animate-pulse"
+        style="animation-delay: 6s;"
+      >
+      </div>
+    </div>
 
-		<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-			<div class='grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
-				<div
-					data-aos='fade-right'
-					data-aos-duration='1000'
-					data-aos-delay='200'>
-					<!-- Breadcrumb -->
-					<nav
-						class='flex items-center space-x-2 text-sm text-gray-400 mb-6'
-						data-aos='fade-in'
-						data-aos-delay='100'>
-						<a
-							href='/projects'
-							class='hover:text-blue-400 transition-colors flex items-center'>
-							<svg
-								class='w-4 h-4 mr-1'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'>
-								<path
-									stroke-linecap='round'
-									stroke-linejoin='round'
-									stroke-width='2'
-									d='M15 19l-7-7 7-7'></path>
-							</svg>
-							Projects
-						</a>
-						<span>/</span>
-						<span class='text-white font-medium'
-							>{project.title}</span
-						>
-					</nav>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div
+          data-aos="fade-right"
+          data-aos-duration="1000"
+          data-aos-delay="200"
+        >
+          <!-- Breadcrumb -->
+          <nav
+            class="flex items-center space-x-2 text-sm text-gray-400 mb-6"
+            data-aos="fade-in"
+            data-aos-delay="100"
+          >
+            <a
+              href="/projects"
+              class="hover:text-blue-400 transition-colors flex items-center"
+            >
+              <svg
+                class="w-4 h-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Projects
+            </a>
+            <span>/</span>
+            <span class="text-white font-medium">{project.title}</span>
+          </nav>
 
-					<!-- Project Meta -->
-					<div
-						class='flex flex-wrap items-center gap-3 mb-8'
-						data-aos='fade-up'
-						data-aos-delay='300'>
-						{
-							project.category && (
-								<span
-									class='px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm border border-opacity-30 transform hover:scale-105 transition-all duration-300'
-									style={`background-color: ${project.category.color}20; color: ${project.category.color}; border-color: ${project.category.color};`}>
-									{project.category.name}
-								</span>
-							)
-						}
-						{
-							project.completed ? (
-								<span class='bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300'>
-									✓ Completed
-								</span>
-							) : (
-								<span class='bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse'>
-									🚧 In Progress
-								</span>
-							)
-						}
-					</div>
+          <!-- Project Meta -->
+          <div
+            class="flex flex-wrap items-center gap-3 mb-8"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            {
+              project.category && (
+                <span
+                  class="px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm border border-opacity-30 transform hover:scale-105 transition-all duration-300"
+                  style={`background-color: ${project.category.color}20; color: ${project.category.color}; border-color: ${project.category.color};`}
+                >
+                  {project.category.name}
+                </span>
+              )
+            }
+            {
+              project.completed ? (
+                <span class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300">
+                  ✓ Completed
+                </span>
+              ) : (
+                <span class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse">
+                  🚧 In Progress
+                </span>
+              )
+            }
+          </div>
 
-					<!-- Project Title -->
-					<h1
-						class='text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight'
-						data-aos='fade-up'
-						data-aos-delay='400'>
-						<span
-							class='text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500'>
-							{project.title}
-						</span>
-					</h1>
+          <!-- Project Title -->
+          <h1
+            class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
+            data-aos="fade-up"
+            data-aos-delay="400"
+          >
+            <span
+              class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500"
+            >
+              {project.title}
+            </span>
+          </h1>
 
-					<!-- Project Summary -->
-					{
-						project.summary && (
-							<p
-								class='text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl'
-								data-aos='fade-up'
-								data-aos-delay='500'>
-								{project.summary}
-							</p>
-						)
-					}
+          <!-- Project Summary -->
+          {
+            project.summary && (
+              <p
+                class="text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl"
+                data-aos="fade-up"
+                data-aos-delay="500"
+              >
+                {project.summary}
+              </p>
+            )
+          }
 
-					<!-- Project Stats -->
-					<div
-						class='grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8'
-						data-aos='fade-up'
-						data-aos-delay='600'>
-						<div
-							class='bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-blue-500/30 transition-all duration-300 group'>
-							<div
-								class='text-blue-400 text-sm font-semibold mb-1 group-hover:text-blue-300 transition-colors'>
-								Started
-							</div>
-							<div class='text-white font-bold'>
-								{
-									new Date(
-										project.startDate,
-									).toLocaleDateString('en-US', {
-										month: 'short',
-										year: 'numeric',
-									})
-								}
-							</div>
-						</div>
-						{
-							project.endDate && (
-								<div class='bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-green-500/30 transition-all duration-300 group'>
-									<div class='text-green-400 text-sm font-semibold mb-1 group-hover:text-green-300 transition-colors'>
-										Completed
-									</div>
-									<div class='text-white font-bold'>
-										{new Date(
-											project.endDate,
-										).toLocaleDateString('en-US', {
-											month: 'short',
-											year: 'numeric',
-										})}
-									</div>
-								</div>
-							)
-						}
-						{
-							project.technologies &&
-								Array.isArray(project.technologies) && (
-									<div class='bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-purple-500/30 transition-all duration-300 group'>
-										<div class='text-purple-400 text-sm font-semibold mb-1 group-hover:text-purple-300 transition-colors'>
-											Technologies
-										</div>
-										<div class='text-white font-bold'>
-											{project.technologies.length}
-										</div>
-									</div>
-								)
-						}
-					</div>
+          <!-- Project Stats -->
+          <div
+            class="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8"
+            data-aos="fade-up"
+            data-aos-delay="600"
+          >
+            <div
+              class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-blue-500/30 transition-all duration-300 group"
+            >
+              <div
+                class="text-blue-400 text-sm font-semibold mb-1 group-hover:text-blue-300 transition-colors"
+              >
+                Started
+              </div>
+              <div class="text-white font-bold">
+                {
+                  new Date(project.startDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    year: "numeric",
+                  })
+                }
+              </div>
+            </div>
+            {
+              project.endDate && (
+                <div class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-green-500/30 transition-all duration-300 group">
+                  <div class="text-green-400 text-sm font-semibold mb-1 group-hover:text-green-300 transition-colors">
+                    Completed
+                  </div>
+                  <div class="text-white font-bold">
+                    {new Date(project.endDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+              )
+            }
+            {
+              project.technologies && Array.isArray(project.technologies) && (
+                <div class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-purple-500/30 transition-all duration-300 group">
+                  <div class="text-purple-400 text-sm font-semibold mb-1 group-hover:text-purple-300 transition-colors">
+                    Technologies
+                  </div>
+                  <div class="text-white font-bold">
+                    {project.technologies.length}
+                  </div>
+                </div>
+              )
+            }
+          </div>
 
-					<!-- Project Links -->
-					<div
-						class='flex flex-col sm:flex-row gap-4'
-						data-aos='fade-up'
-						data-aos-delay='700'>
-						{
-							project.github && (
-								<a
-									href={project.github}
-									target='_blank'
-									rel='noopener noreferrer'
-									class='group inline-flex items-center justify-center bg-gray-800/80 hover:bg-gray-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50'>
-									<svg
-										class='w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300'
-										fill='currentColor'
-										viewBox='0 0 24 24'>
-										<path d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z' />
-									</svg>
-									View on GitHub
-								</a>
-							)
-						}
-						{
-							project.website && (
-								<a
-									href={project.website}
-									target='_blank'
-									rel='noopener noreferrer'
-									class='group inline-flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl'>
-									<svg
-										class='w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'>
-										<path
-											stroke-linecap='round'
-											stroke-linejoin='round'
-											stroke-width='2'
-											d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
-										/>
-									</svg>
-									Visit Website
-								</a>
-							)
-						}
-					</div>
-				</div>
+          <!-- Project Links -->
+          <div
+            class="flex flex-col sm:flex-row gap-4"
+            data-aos="fade-up"
+            data-aos-delay="700"
+          >
+            {
+              project.github && (
+                <a
+                  href={project.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group inline-flex items-center justify-center bg-gray-800/80 hover:bg-gray-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50"
+                >
+                  <svg
+                    class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                  </svg>
+                  View on GitHub
+                </a>
+              )
+            }
+            {
+              project.website && (
+                <a
+                  href={project.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group inline-flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <svg
+                    class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  Visit Website
+                </a>
+              )
+            }
+          </div>
+        </div>
 
-				<!-- Project Image -->
-				<div
-					data-aos='fade-left'
-					data-aos-duration='1000'
-					data-aos-delay='400'>
-					{
-						project.image && (
-							<div class='relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-500 group'>
-								<img
-									src={project.image}
-									alt={project.title}
-									class='w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700'
-									loading='eager'
-								/>
-								<div class='absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-transparent group-hover:from-gray-900/20 transition-all duration-500' />
-								{/* <!-- Decorative border effect --> */}
-								<div class='absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500' />
-							</div>
-						)
-					}
-				</div>
-			</div>
-		</div>
-	</section>
+        <!-- Project Image -->
+        <div data-aos="fade-left" data-aos-duration="1000" data-aos-delay="400">
+          {
+            project.image && (
+              <div class="relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-500 group">
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  class="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700"
+                  loading="eager"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-transparent group-hover:from-gray-900/20 transition-all duration-500" />
+                {/* <!-- Decorative border effect --> */}
+                <div class="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
 
-	<!-- Project Details Section -->
-	<section
-		class='relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black'>
-		<!-- Same background pattern as AppFooter -->
-		<div
-			class='absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10'>
-		</div>
+  <!-- Project Details Section -->
+  <section
+    class="relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black"
+  >
+    <!-- Same background pattern as AppFooter -->
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10"
+    >
+    </div>
 
-		<!-- SVG Background Pattern -->
-		<div class='absolute inset-0 opacity-10'>
-			<svg
-				class='absolute inset-0 h-full w-full'
-				fill='none'
-				viewBox='0 0 400 400'
-				aria-hidden='true'>
-				<defs>
-					<pattern
-						id='project-details-pattern'
-						x='0'
-						y='0'
-						width='20'
-						height='20'
-						patternUnits='userSpaceOnUse'>
-						<rect
-							x='0'
-							y='0'
-							width='4'
-							height='4'
-							class='text-blue-500/30'
-							fill='currentColor'></rect>
-					</pattern>
-				</defs>
-				<rect
-					width='100%'
-					height='100%'
-					fill='url(#project-details-pattern)'></rect>
-			</svg>
-		</div>
+    <!-- SVG Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+      <svg
+        class="absolute inset-0 h-full w-full"
+        fill="none"
+        viewBox="0 0 400 400"
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern
+            id="project-details-pattern"
+            x="0"
+            y="0"
+            width="20"
+            height="20"
+            patternUnits="userSpaceOnUse"
+          >
+            <rect
+              x="0"
+              y="0"
+              width="4"
+              height="4"
+              class="text-blue-500/30"
+              fill="currentColor"></rect>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#project-details-pattern)"
+        ></rect>
+      </svg>
+    </div>
 
-		<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-			<div class='grid grid-cols-1 lg:grid-cols-3 gap-12'>
-				<!-- Main Content -->
-				<div
-					class='lg:col-span-2'
-					data-aos='fade-up'
-					data-aos-delay='200'>
-					<div
-						class='bg-gray-800/20 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/30'>
-						<div class='prose prose-invert prose-lg max-w-none'>
-							<div
-								class='text-gray-300 leading-relaxed'
-								set:html={project.description}
-							/>
-						</div>
-					</div>
-				</div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Main Content -->
+        <div class="lg:col-span-2" data-aos="fade-up" data-aos-delay="200">
+          <div
+            class="bg-gray-800/20 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/30"
+          >
+            <div class="prose prose-invert prose-lg max-w-none">
+              <div
+                class="text-gray-300 leading-relaxed"
+                set:html={project.description}
+              />
+            </div>
+          </div>
+        </div>
 
-				<!-- Sidebar -->
-				<div class='space-y-8' data-aos='fade-up' data-aos-delay='400'>
-					<!-- Technologies -->
-					{
-						project?.technologies &&
-							Array.isArray(project.technologies) &&
-							project.technologies.length > 0 && (
-								<div class='bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-blue-500/30 transition-all duration-300 group'>
-									<h3 class='text-xl font-semibold text-white mb-4 flex items-center group-hover:text-blue-300 transition-colors'>
-										<svg
-											class='w-5 h-5 mr-2 text-blue-400'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'>
-											<path
-												stroke-linecap='round'
-												stroke-linejoin='round'
-												stroke-width='2'
-												d='M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'
-											/>
-										</svg>
-										Technologies Used
-									</h3>
+        <!-- Sidebar -->
+        <div class="space-y-8" data-aos="fade-up" data-aos-delay="400">
+          <!-- Technologies -->
+          {
+            project?.technologies &&
+              Array.isArray(project.technologies) &&
+              project.technologies.length > 0 && (
+                <div class="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-blue-500/30 transition-all duration-300 group">
+                  <h3 class="text-xl font-semibold text-white mb-4 flex items-center group-hover:text-blue-300 transition-colors">
+                    <svg
+                      class="w-5 h-5 mr-2 text-blue-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                      />
+                    </svg>
+                    Technologies Used
+                  </h3>
 
-									{/* Show categorized technologies if available, otherwise show flat list */}
-									{project.technologiesByCategory &&
-									Object.keys(project.technologiesByCategory)
-										.length > 0 ? (
-										<div class='space-y-4'>
-											{Object.entries(
-												project.technologiesByCategory,
-											).map(([category, techs]) => (
-												<div key={category}>
-													<h4 class='text-sm font-semibold text-blue-400 mb-2 capitalize'>
-														{category.replace(
-															/[_-]/g,
-															' ',
-														)}
-													</h4>
-													<div class='flex flex-wrap gap-2'>
-														{Array.isArray(techs) &&
-															techs.map(
-																(
-																	tech: string,
-																) => (
-																	<span
-																		key={
-																			tech
-																		}
-																		class='bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default'>
-																		{tech}
-																	</span>
-																),
-															)}
-													</div>
-												</div>
-											))}
-										</div>
-									) : (
-										<div class='flex flex-wrap gap-2'>
-											{project.technologies.map(
-												(tech: string) => (
-													<span
-														key={tech}
-														class='bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default'>
-														{tech}
-													</span>
-												),
-											)}
-										</div>
-									)}
-								</div>
-							)
-					}
+                  {/* Show categorized technologies if available, otherwise show flat list */}
+                  {project.technologiesByCategory &&
+                  Object.keys(project.technologiesByCategory).length > 0 ? (
+                    <div class="space-y-4">
+                      {Object.entries(project.technologiesByCategory).map(
+                        ([category, techs]) => (
+                          <div key={category}>
+                            <h4 class="text-sm font-semibold text-blue-400 mb-2 capitalize">
+                              {category.replace(/[_-]/g, " ")}
+                            </h4>
+                            <div class="flex flex-wrap gap-2">
+                              {Array.isArray(techs) &&
+                                techs.map((tech: string) => (
+                                  <span
+                                    key={tech}
+                                    class="bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default"
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <div class="flex flex-wrap gap-2">
+                      {project.technologies.map((tech: string) => (
+                        <span
+                          key={tech}
+                          class="bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+          }
 
-					<!-- Tags -->
-					{
-						project.tags && project.tags.length > 0 && (
-							<div class='bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-purple-500/30 transition-all duration-300 group'>
-								<h3 class='text-xl font-semibold text-white mb-4 flex items-center group-hover:text-purple-300 transition-colors'>
-									<svg
-										class='w-5 h-5 mr-2 text-purple-400'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'>
-										<path
-											stroke-linecap='round'
-											stroke-linejoin='round'
-											stroke-width='2'
-											d='M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
-										/>
-									</svg>
-									Tags
-								</h3>
-								<div class='flex flex-wrap gap-2'>
-									{project.tags.map((tag: any) => (
-										<span
-											class='px-3 py-1 rounded-full text-sm font-medium hover:scale-105 transition-all duration-300 cursor-default'
-											style={`background-color: ${tag.color}20; color: ${tag.color}; border: 1px solid ${tag.color}40;`}>
-											{tag.name}
-										</span>
-									))}
-								</div>
-							</div>
-						)
-					}
+          <!-- Tags -->
+          {
+            project.tags && project.tags.length > 0 && (
+              <div class="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-purple-500/30 transition-all duration-300 group">
+                <h3 class="text-xl font-semibold text-white mb-4 flex items-center group-hover:text-purple-300 transition-colors">
+                  <svg
+                    class="w-5 h-5 mr-2 text-purple-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    />
+                  </svg>
+                  Tags
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                  {project.tags.map((tag: any) => (
+                    <span
+                      class="px-3 py-1 rounded-full text-sm font-medium hover:scale-105 transition-all duration-300 cursor-default"
+                      style={`background-color: ${tag.color}20; color: ${tag.color}; border: 1px solid ${tag.color}40;`}
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
+          }
 
-					<!-- Project Info -->
-					<div
-						class='bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-green-500/30 transition-all duration-300 group'>
-						<h3
-							class='text-xl font-semibold text-white mb-4 flex items-center group-hover:text-green-300 transition-colors'>
-							<svg
-								class='w-5 h-5 mr-2 text-green-400'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'>
-								<path
-									stroke-linecap='round'
-									stroke-linejoin='round'
-									stroke-width='2'
-									d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-								></path>
-							</svg>
-							Project Info
-						</h3>
-						<div class='space-y-4'>
-							<div class='flex items-center justify-between'>
-								<span class='text-gray-400 font-medium'
-									>Status:</span
-								>
-								<span
-									class={`text-white ml-2 px-2 py-1 rounded-full text-sm ${project.completed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-									{
-										project.completed
-											? '✓ Completed'
-											: '🚧 In Progress'
-									}
-								</span>
-							</div>
-							<div class='flex items-center justify-between'>
-								<span class='text-gray-400 font-medium'
-									>Started:</span
-								>
-								<span class='text-white ml-2'>
-									{
-										new Date(
-											project.startDate,
-										).toLocaleDateString('en-US', {
-											year: 'numeric',
-											month: 'long',
-										})
-									}
-								</span>
-							</div>
-							{
-								project.endDate && (
-									<div class='flex items-center justify-between'>
-										<span class='text-gray-400 font-medium'>
-											Completed:
-										</span>
-										<span class='text-white ml-2'>
-											{new Date(
-												project.endDate,
-											).toLocaleDateString('en-US', {
-												year: 'numeric',
-												month: 'long',
-											})}
-										</span>
-									</div>
-								)
-							}
-							{
-								project.category && (
-									<div class='flex items-center justify-between'>
-										<span class='text-gray-400 font-medium'>
-											Category:
-										</span>
-										<span class='text-white ml-2'>
-											{project.category.name}
-										</span>
-									</div>
-								)
-							}
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+          <!-- Project Info -->
+          <div
+            class="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-green-500/30 transition-all duration-300 group"
+          >
+            <h3
+              class="text-xl font-semibold text-white mb-4 flex items-center group-hover:text-green-300 transition-colors"
+            >
+              <svg
+                class="w-5 h-5 mr-2 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              Project Info
+            </h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-400 font-medium">Status:</span>
+                <span
+                  class={`text-white ml-2 px-2 py-1 rounded-full text-sm ${project.completed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}
+                >
+                  {project.completed ? "✓ Completed" : "🚧 In Progress"}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-400 font-medium">Started:</span>
+                <span class="text-white ml-2">
+                  {
+                    new Date(project.startDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                    })
+                  }
+                </span>
+              </div>
+              {
+                project.endDate && (
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-400 font-medium">Completed:</span>
+                    <span class="text-white ml-2">
+                      {new Date(project.endDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                      })}
+                    </span>
+                  </div>
+                )
+              }
+              {
+                project.category && (
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-400 font-medium">Category:</span>
+                    <span class="text-white ml-2">{project.category.name}</span>
+                  </div>
+                )
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-	<!-- Project Gallery with Infinite Carousel -->
-	{
-		project.gallery && project.gallery.length > 0 && (
-			<section class='relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black'>
-				{/* <!-- Same background pattern as AppFooter --> */}
-				<div class='absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10' />
+  <!-- Project Gallery with Infinite Carousel -->
+  {
+    project.gallery && project.gallery.length > 0 && (
+      <section class="relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+        {/* <!-- Same background pattern as AppFooter --> */}
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10" />
 
-				{/* <!-- SVG Background Pattern --> */}
-				<div class='absolute inset-0 opacity-10'>
-					<svg
-						class='absolute inset-0 h-full w-full'
-						fill='none'
-						viewBox='0 0 400 400'
-						aria-hidden='true'>
-						<defs>
-							<pattern
-								id='project-gallery-pattern'
-								x='0'
-								y='0'
-								width='20'
-								height='20'
-								patternUnits='userSpaceOnUse'>
-								<rect
-									x='0'
-									y='0'
-									width='4'
-									height='4'
-									class='text-blue-500/30'
-									fill='currentColor'
-								/>
-							</pattern>
-						</defs>
-						<rect
-							width='100%'
-							height='100%'
-							fill='url(#project-gallery-pattern)'
-						/>
-					</svg>
-				</div>
+        {/* <!-- SVG Background Pattern --> */}
+        <div class="absolute inset-0 opacity-10">
+          <svg
+            class="absolute inset-0 h-full w-full"
+            fill="none"
+            viewBox="0 0 400 400"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern
+                id="project-gallery-pattern"
+                x="0"
+                y="0"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <rect
+                  x="0"
+                  y="0"
+                  width="4"
+                  height="4"
+                  class="text-blue-500/30"
+                  fill="currentColor"
+                />
+              </pattern>
+            </defs>
+            <rect
+              width="100%"
+              height="100%"
+              fill="url(#project-gallery-pattern)"
+            />
+          </svg>
+        </div>
 
-				<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-					<h2
-						class='text-3xl font-bold text-white mb-12 text-center'
-						data-aos='fade-up'>
-						<span class='text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600'>
-							Project Gallery
-						</span>
-					</h2>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2
+            class="text-3xl font-bold text-white mb-12 text-center"
+            data-aos="fade-up"
+          >
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+              Project Gallery
+            </span>
+          </h2>
 
-					<div
-						class='relative'
-						data-aos='fade-up'
-						data-aos-delay='200'>
-						{/* <!-- Carousel Container --> */}
-						<div class='overflow-hidden rounded-2xl'>
-							<div
-								id='gallery-carousel-track'
-								class='flex transition-transform duration-500 ease-in-out'
-								style='width: calc(100% * {project.gallery.length});'>
-								{project.gallery.map((image, index) => (
-									<div class='w-full flex-shrink-0 px-4'>
-										<div class='relative group rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105'>
-											<img
-												src={image.url}
-												alt={
-													image.alternativeText ||
-													`${project.title} - Gallery Image ${index + 1}`
-												}
-												class='w-full h-96 object-cover group-hover:scale-110 transition-transform duration-300'
-												loading='lazy'
-											/>
-											<div class='absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
-											{image.caption && (
-												<div class='absolute bottom-4 left-4 right-4 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-900/80 backdrop-blur-sm rounded-lg p-3'>
-													{image.caption}
-												</div>
-											)}
-											{/* <!-- Image counter --> */}
-											<div class='absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold'>
-												{index + 1} /{' '}
-												{project.gallery.length}
-											</div>
-										</div>
-									</div>
-								))}
-							</div>
-						</div>
+          <div class="relative" data-aos="fade-up" data-aos-delay="200">
+            {/* <!-- Carousel Container --> */}
+            <div class="overflow-hidden rounded-2xl">
+              <div
+                id="gallery-carousel-track"
+                class="flex transition-transform duration-500 ease-in-out"
+                style="width: calc(100% * {project.gallery.length});"
+              >
+                {project.gallery.map((image, index) => (
+                  <div class="w-full flex-shrink-0 px-4">
+                    <div class="relative group rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                      <img
+                        src={image.url}
+                        alt={
+                          image.alternativeText ||
+                          `${project.title} - Gallery Image ${index + 1}`
+                        }
+                        class="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      {image.caption && (
+                        <div class="absolute bottom-4 left-4 right-4 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-900/80 backdrop-blur-sm rounded-lg p-3">
+                          {image.caption}
+                        </div>
+                      )}
+                      {/* <!-- Image counter --> */}
+                      <div class="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold">
+                        {index + 1} / {project.gallery.length}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-						{/* <!-- Navigation Buttons --> */}
-						<button
-							id='gallery-prev'
-							class='absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10'
-							aria-label='Previous image'>
-							<svg
-								class='w-6 h-6'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'>
-								<path
-									stroke-linecap='round'
-									stroke-linejoin='round'
-									stroke-width='2'
-									d='M15 19l-7-7 7-7'
-								/>
-							</svg>
-						</button>
-						<button
-							id='gallery-next'
-							class='absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10'
-							aria-label='Next image'>
-							<svg
-								class='w-6 h-6'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'>
-								<path
-									stroke-linecap='round'
-									stroke-linejoin='round'
-									stroke-width='2'
-									d='M9 5l7 7-7 7'
-								/>
-							</svg>
-						</button>
+            {/* <!-- Navigation Buttons --> */}
+            <button
+              id="gallery-prev"
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10"
+              aria-label="Previous image"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <button
+              id="gallery-next"
+              class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10"
+              aria-label="Next image"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
 
-						{/* <!-- Carousel Indicators --> */}
-						<div
-							class='flex justify-center mt-6 space-x-2'
-							id='gallery-indicators'>
-							{project.gallery.map((_, index) => (
-								<button
-									class={`w-3 h-3 rounded-full transition-all duration-300 ${index === 0 ? 'bg-blue-500' : 'bg-gray-600 hover:bg-gray-500'}`}
-									data-slide={index}
-									aria-label={`Go to image ${index + 1}`}
-								/>
-							))}
-						</div>
-					</div>
-				</div>
-			</section>
-		)
-	}
+            {/* <!-- Carousel Indicators --> */}
+            <div
+              class="flex justify-center mt-6 space-x-2"
+              id="gallery-indicators"
+            >
+              {project.gallery.map((_, index) => (
+                <button
+                  class={`w-3 h-3 rounded-full transition-all duration-300 ${index === 0 ? "bg-blue-500" : "bg-gray-600 hover:bg-gray-500"}`}
+                  data-slide={index}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
 </Layout>
 
 <style>
-	.prose {
-		color: #d1d5db;
-	}
+  .prose {
+    color: #d1d5db;
+  }
 
-	.prose h1,
-	.prose h2,
-	.prose h3,
-	.prose h4,
-	.prose h5,
-	.prose h6 {
-		color: #ffffff;
-		margin-bottom: 1rem;
-	}
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
 
-	.prose a {
-		color: #60a5fa;
-		text-decoration: none;
-		transition: color 0.3s ease;
-	}
+  .prose a {
+    color: #60a5fa;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
 
-	.prose a:hover {
-		color: #93c5fd;
-	}
+  .prose a:hover {
+    color: #93c5fd;
+  }
 
-	.prose code {
-		background-color: #374151;
-		color: #e5e7eb;
-		padding: 0.125rem 0.5rem;
-		border-radius: 0.375rem;
-		font-size: 0.875rem;
-	}
+  .prose code {
+    background-color: #374151;
+    color: #e5e7eb;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+  }
 
-	.prose pre {
-		background-color: #1f2937;
-		color: #e5e7eb;
-		border-radius: 0.5rem;
-		padding: 1rem;
-		overflow-x: auto;
-	}
+  .prose pre {
+    background-color: #1f2937;
+    color: #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+  }
 
-	.prose blockquote {
-		border-left: 4px solid #3b82f6;
-		color: #d1d5db;
-		padding-left: 1rem;
-		margin: 1.5rem 0;
-		font-style: italic;
-	}
+  .prose blockquote {
+    border-left: 4px solid #3b82f6;
+    color: #d1d5db;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+  }
 
-	.prose ul,
-	.prose ol {
-		color: #d1d5db;
-	}
+  .prose ul,
+  .prose ol {
+    color: #d1d5db;
+  }
 
-	.prose strong {
-		color: #ffffff;
-		font-weight: 600;
-	}
+  .prose strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
 
-	/* Gallery Carousel Styles */
-	#gallery-carousel-track {
-		transition: transform 0.5s ease-in-out;
-	}
+  /* Gallery Carousel Styles */
+  #gallery-carousel-track {
+    transition: transform 0.5s ease-in-out;
+  }
 </style>
 
 <script>
-	// Gallery Carousel Functionality
-	class GalleryCarousel {
-		constructor() {
-			this.currentSlide = 0;
-			this.track = document.getElementById('gallery-carousel-track');
-			this.prevBtn = document.getElementById('gallery-prev');
-			this.nextBtn = document.getElementById('gallery-next');
-			this.indicators = document.querySelectorAll(
-				'#gallery-indicators button',
-			);
-			this.totalSlides = this.indicators.length;
-			this.autoplayInterval = null;
+  // Gallery Carousel Functionality
+  class GalleryCarousel {
+    constructor() {
+      this.currentSlide = 0;
+      this.track = document.getElementById("gallery-carousel-track");
+      this.prevBtn = document.getElementById("gallery-prev");
+      this.nextBtn = document.getElementById("gallery-next");
+      this.indicators = document.querySelectorAll("#gallery-indicators button");
+      this.totalSlides = this.indicators.length;
+      this.autoplayInterval = null;
 
-			if (this.totalSlides > 0) {
-				this.init();
-			}
-		}
+      if (this.totalSlides > 0) {
+        this.init();
+      }
+    }
 
-		init() {
-			// Add event listeners
-			this.prevBtn?.addEventListener('click', () => this.prevSlide());
-			this.nextBtn?.addEventListener('click', () => this.nextSlide());
+    init() {
+      // Add event listeners
+      this.prevBtn?.addEventListener("click", () => this.prevSlide());
+      this.nextBtn?.addEventListener("click", () => this.nextSlide());
 
-			// Indicator click handlers
-			this.indicators.forEach((indicator, index) => {
-				indicator.addEventListener('click', () =>
-					this.goToSlide(index),
-				);
-			});
+      // Indicator click handlers
+      this.indicators.forEach((indicator, index) => {
+        indicator.addEventListener("click", () => this.goToSlide(index));
+      });
 
-			// Auto-play functionality (slower for gallery)
-			this.startAutoplay();
+      // Auto-play functionality (slower for gallery)
+      this.startAutoplay();
 
-			// Pause on hover
-			const carousel = this.track?.parentElement?.parentElement;
-			carousel?.addEventListener('mouseenter', () => this.stopAutoplay());
-			carousel?.addEventListener('mouseleave', () =>
-				this.startAutoplay(),
-			);
+      // Pause on hover
+      const carousel = this.track?.parentElement?.parentElement;
+      carousel?.addEventListener("mouseenter", () => this.stopAutoplay());
+      carousel?.addEventListener("mouseleave", () => this.startAutoplay());
 
-			// Keyboard navigation
-			document.addEventListener('keydown', (e) => {
-				if (e.key === 'ArrowLeft') {
-					e.preventDefault();
-					this.prevSlide();
-				}
-				if (e.key === 'ArrowRight') {
-					e.preventDefault();
-					this.nextSlide();
-				}
-			});
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          this.prevSlide();
+        }
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          this.nextSlide();
+        }
+      });
 
-			// Touch/swipe support
-			let startX = 0;
-			let endX = 0;
+      // Touch/swipe support
+      let startX = 0;
+      let endX = 0;
 
-			carousel?.addEventListener('touchstart', (e) => {
-				startX = e.touches[0].clientX;
-			});
+      carousel?.addEventListener("touchstart", (e) => {
+        startX = e.touches[0].clientX;
+      });
 
-			carousel?.addEventListener('touchend', (e) => {
-				endX = e.changedTouches[0].clientX;
-				const diff = startX - endX;
+      carousel?.addEventListener("touchend", (e) => {
+        endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
 
-				if (Math.abs(diff) > 50) {
-					// Minimum swipe distance
-					if (diff > 0) {
-						this.nextSlide();
-					} else {
-						this.prevSlide();
-					}
-				}
-			});
-		}
+        if (Math.abs(diff) > 50) {
+          // Minimum swipe distance
+          if (diff > 0) {
+            this.nextSlide();
+          } else {
+            this.prevSlide();
+          }
+        }
+      });
+    }
 
-		goToSlide(index) {
-			this.currentSlide = index;
-			this.updateCarousel();
-		}
+    goToSlide(index) {
+      this.currentSlide = index;
+      this.updateCarousel();
+    }
 
-		nextSlide() {
-			this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
-			this.updateCarousel();
-		}
+    nextSlide() {
+      this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+      this.updateCarousel();
+    }
 
-		prevSlide() {
-			this.currentSlide =
-				(this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-			this.updateCarousel();
-		}
+    prevSlide() {
+      this.currentSlide =
+        (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+      this.updateCarousel();
+    }
 
-		updateCarousel() {
-			if (this.track) {
-				const translateX = -this.currentSlide * 100;
-				this.track.style.transform = `translateX(${translateX}%)`;
-			}
+    updateCarousel() {
+      if (this.track) {
+        const translateX = -this.currentSlide * 100;
+        this.track.style.transform = `translateX(${translateX}%)`;
+      }
 
-			// Update indicators
-			this.indicators.forEach((indicator, index) => {
-				indicator.classList.toggle(
-					'bg-blue-500',
-					index === this.currentSlide,
-				);
-				indicator.classList.toggle(
-					'bg-gray-600',
-					index !== this.currentSlide,
-				);
-			});
-		}
+      // Update indicators
+      this.indicators.forEach((indicator, index) => {
+        indicator.classList.toggle("bg-blue-500", index === this.currentSlide);
+        indicator.classList.toggle("bg-gray-600", index !== this.currentSlide);
+      });
+    }
 
-		startAutoplay() {
-			this.stopAutoplay();
-			if (this.totalSlides > 1) {
-				this.autoplayInterval = setInterval(() => {
-					this.nextSlide();
-				}, 7000); // Change slide every 7 seconds
-			}
-		}
+    startAutoplay() {
+      this.stopAutoplay();
+      if (this.totalSlides > 1) {
+        this.autoplayInterval = setInterval(() => {
+          this.nextSlide();
+        }, 7000); // Change slide every 7 seconds
+      }
+    }
 
-		stopAutoplay() {
-			if (this.autoplayInterval) {
-				clearInterval(this.autoplayInterval);
-				this.autoplayInterval = null;
-			}
-		}
-	}
+    stopAutoplay() {
+      if (this.autoplayInterval) {
+        clearInterval(this.autoplayInterval);
+        this.autoplayInterval = null;
+      }
+    }
+  }
 
-	// Initialize when DOM is ready
-	document.addEventListener('DOMContentLoaded', () => {
-		new GalleryCarousel();
-	});
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", () => {
+    new GalleryCarousel();
+  });
 
-	// Also initialize on Astro page transitions
-	document.addEventListener('astro:page-load', () => {
-		new GalleryCarousel();
-	});
+  // Also initialize on Astro page transitions
+  document.addEventListener("astro:page-load", () => {
+    new GalleryCarousel();
+  });
 </script>
