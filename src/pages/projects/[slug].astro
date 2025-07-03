@@ -4,10 +4,18 @@ import strapiAPI from '@lib/strapi.js';
 
 export const prerender = false;
 
+//  Get the slug from the URL parameters
 const { slug } = Astro.params;
 
 if (!slug) {
-	return Astro.redirect('/404');
+	console.error('No slug provided in URL parameters');
+	throw Astro.redirect('/projects');
+}
+
+// Validate slug format (basic validation)
+if (!/^[a-z0-9-]+$/i.test(slug)) {
+	console.error(`Invalid slug format: ${slug}`);
+	throw Astro.redirect('/404');
 }
 
 let project: any;

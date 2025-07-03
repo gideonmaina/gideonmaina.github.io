@@ -1,1091 +1,1143 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import { Image } from "astro:assets";
-import strapiAPI from "@lib/strapi.js";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-import { JSDOM } from "jsdom";
+import Layout from '@layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import strapiAPI from '@lib/strapi.js';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 export const prerender = false;
 
-// Get the slug from the URL parameters
+//  Get the slug from the URL parameters
 const { slug } = Astro.params;
 
 if (!slug) {
-  console.error("No slug provided in URL parameters");
-  throw Astro.redirect("/blog");
+	console.error('No slug provided in URL parameters');
+	throw Astro.redirect('/blog');
 }
 
 // Validate slug format (basic validation)
 if (!/^[a-z0-9-]+$/i.test(slug)) {
-  console.error(`Invalid slug format: ${slug}`);
-  throw Astro.redirect("/404");
+	console.error(`Invalid slug format: ${slug}`);
+	throw Astro.redirect('/404');
 }
 
 // Fetch the blog post
 let blogPost = null;
 let relatedPosts = [];
 let title,
-  description,
-  image,
-  publishedTime,
-  modifiedTime,
-  author,
-  structuredData;
+	description,
+	image,
+	publishedTime,
+	modifiedTime,
+	author,
+	structuredData;
 
 try {
-  console.log(`Fetching blog post with slug: ${slug}`);
-  let post = await strapiAPI.getBlogPost(slug);
+	console.log(`Fetching blog post with slug: ${slug}`);
+	let post = await strapiAPI.getBlogPost(slug);
 
-  if (!post) {
-    console.error(`Blog post not found for slug: ${slug}`);
-    throw Astro.redirect("/404");
-  }
+	if (!post) {
+		console.error(`Blog post not found for slug: ${slug}`);
+		throw Astro.redirect('/404');
+	}
 
-  console.log(`Successfully fetched post: ${post.title}`);
+	console.log(`Successfully fetched post: ${post.title}`);
 
-  // Format the post data
-  post = strapiAPI.formatBlogPost(post);
+	// Format the post data
+	post = strapiAPI.formatBlogPost(post);
 
-  if (!post) {
-    console.error(`Failed to format blog post for slug: ${slug}`);
-    throw Astro.redirect("/404");
-  }
+	if (!post) {
+		console.error(`Failed to format blog post for slug: ${slug}`);
+		throw Astro.redirect('/404');
+	}
 
-  // At this point, post is guaranteed to be non-null
-  blogPost = post;
+	// At this point, post is guaranteed to be non-null
+	blogPost = post;
 
-  // Fetch related posts (same category, excluding current post)
-  if (blogPost.category) {
-    try {
-      const relatedResult = await strapiAPI.getBlogPosts({
-        pagination: { pageSize: 3 },
-        filters: {
-          category: { slug: { $eq: blogPost.category.slug } },
-          slug: { $ne: slug },
-        },
-        sort: "publishedAt:desc",
-      });
-      relatedPosts = relatedResult.posts.map((p) =>
-        strapiAPI.formatBlogPost(p),
-      );
-    } catch (error) {
-      console.error("Failed to fetch related posts:", error);
-    }
-  }
+	// Fetch related posts (same category, excluding current post)
+	if (blogPost.category) {
+		try {
+			const relatedResult = await strapiAPI.getBlogPosts({
+				pagination: { pageSize: 3 },
+				filters: {
+					category: { slug: { $eq: blogPost.category.slug } },
+					slug: { $ne: slug },
+				},
+				sort: 'publishedAt:desc',
+			});
+			relatedPosts = relatedResult.posts.map((p) =>
+				strapiAPI.formatBlogPost(p),
+			);
+		} catch (error) {
+			console.error('Failed to fetch related posts:', error);
+		}
+	}
 
-  // SEO data
-  title = blogPost.seo?.metaTitle || blogPost.title;
-  description =
-    blogPost.seo?.metaDescription ||
-    blogPost.excerpt ||
-    `Read ${blogPost.title} by ${blogPost.author?.name || "Gideon Maina"}`;
-  image = blogPost.seo?.metaImage || blogPost.image;
-  publishedTime = blogPost.publishedAt;
-  modifiedTime = blogPost.updatedAt;
-  author = blogPost.author?.name || "Gideon Maina";
+	// SEO data
+	title = blogPost.seo?.metaTitle || blogPost.title;
+	description =
+		blogPost.seo?.metaDescription ||
+		blogPost.excerpt ||
+		`Read ${blogPost.title} by ${blogPost.author?.name || 'Gideon Maina'}`;
+	image = blogPost.seo?.metaImage || blogPost.image;
+	publishedTime = blogPost.publishedAt;
+	modifiedTime = blogPost.updatedAt;
+	author = blogPost.author?.name || 'Gideon Maina';
 
-  // Generate structured data for SEO
-  structuredData = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: blogPost.title,
-    description: blogPost.excerpt || description,
-    image: image,
-    author: {
-      "@type": "Person",
-      name: author,
-      url: blogPost.author?.website || Astro.site?.toString(),
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Gideon Maina",
-      logo: {
-        "@type": "ImageObject",
-        url: `${Astro.site}favicon.svg`,
-      },
-    },
-    datePublished: publishedTime,
-    dateModified: modifiedTime,
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": Astro.url.toString(),
-    },
-  };
+	// Generate structured data for SEO
+	structuredData = {
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		'headline': blogPost.title,
+		'description': blogPost.excerpt || description,
+		'image': image,
+		'author': {
+			'@type': 'Person',
+			'name': author,
+			'url': blogPost.author?.website || Astro.site?.toString(),
+		},
+		'publisher': {
+			'@type': 'Organization',
+			'name': 'Gideon Maina',
+			'logo': {
+				'@type': 'ImageObject',
+				'url': `${Astro.site}favicon.svg`,
+			},
+		},
+		'datePublished': publishedTime,
+		'dateModified': modifiedTime,
+		'mainEntityOfPage': {
+			'@type': 'WebPage',
+			'@id': Astro.url.toString(),
+		},
+	};
 } catch (error) {
-  console.error("Failed to fetch blog post:", error);
-  throw Astro.redirect("/404");
+	console.error('Failed to fetch blog post:', error);
+	throw Astro.redirect('/404');
 }
 
 // Set up DOMPurify with JSDOM for server-side sanitization
-const window = new JSDOM("").window;
+const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
 // Configure DOMPurify options
 const purifyOptions = {
-  ADD_ATTR: ["class"],
-  ADD_TAGS: ["iframe"],
-  FORBID_TAGS: ["style", "script"],
-  FORBID_ATTR: ["style", "onerror", "onload"],
+	ADD_ATTR: ['class'],
+	ADD_TAGS: ['iframe'],
+	FORBID_TAGS: ['style', 'script'],
+	FORBID_ATTR: ['style', 'onerror', 'onload'],
 };
 
 // Configure marked options
 marked.use({
-  gfm: true, // GitHub Flavored Markdown
-  breaks: true, // Convert \n to <br>
+	gfm: true, // GitHub Flavored Markdown
+	breaks: true, // Convert \n to <br>
 });
 
 // Helper function to format date
 function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+	return new Date(dateString).toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+	});
 }
 
 // Helper function to render content components
 function renderContentComponent(component) {
-  switch (component.type) {
-    case "rich-text":
-      if (component.content) {
-        let processedContent = String(component.content);
-        const htmlTagCount = (processedContent.match(/<[^>]+>/g) || []).length;
-        const markdownIndicators = (
-          processedContent.match(
-            /(#{1,6}\s|\*\*|\*|\[.*\]\(.*\)|^>|```|`|^\d+\.)/g,
-          ) || []
-        ).length;
-        if (htmlTagCount > markdownIndicators * 2) {
-          const sanitizedContent = purify.sanitize(
-            processedContent,
-            purifyOptions,
-          );
-          return `<div class="prose-content">${sanitizedContent}</div>`;
-        } else {
-          const htmlContent = marked.parse(processedContent);
-          const sanitizedContent = purify.sanitize(
-            String(htmlContent),
-            purifyOptions,
-          );
-          return `<div class="prose prose-content">${sanitizedContent}</div>`;
-        }
-      }
-      return "";
-    case "media-block":
-      return `<figure class="my-8">
-        ${component.media ? `<img src="${component.media.url}" alt="${component.media.alternativeText || ""}" class="w-full rounded-lg shadow-lg" width="800" height="600" />` : ""}
-        ${component.caption ? `<figcaption class="text-center text-gray-400 mt-4 italic">${component.caption}</figcaption>` : ""}
+	switch (component.type) {
+		case 'rich-text':
+			if (component.content) {
+				let processedContent = String(component.content);
+				const htmlTagCount = (processedContent.match(/<[^>]+>/g) || [])
+					.length;
+				const markdownIndicators = (
+					processedContent.match(
+						/(#{1,6}\s|\*\*|\*|\[.*\]\(.*\)|^>|```|`|^\d+\.)/g,
+					) || []
+				).length;
+				if (htmlTagCount > markdownIndicators * 2) {
+					const sanitizedContent = purify.sanitize(
+						processedContent,
+						purifyOptions,
+					);
+					return `<div class="prose-content">${sanitizedContent}</div>`;
+				} else {
+					const htmlContent = marked.parse(processedContent);
+					const sanitizedContent = purify.sanitize(
+						String(htmlContent),
+						purifyOptions,
+					);
+					return `<div class="prose prose-content">${sanitizedContent}</div>`;
+				}
+			}
+			return '';
+		case 'media-block':
+			return `<figure class="my-8">
+        ${component.media ? `<img src="${component.media.url}" alt="${component.media.alternativeText || ''}" class="w-full rounded-lg shadow-lg" width="800" height="600" />` : ''}
+        ${component.caption ? `<figcaption class="text-center text-gray-400 mt-4 italic">${component.caption}</figcaption>` : ''}
       </figure>`;
-    case "code-block":
-      return `<div class="my-8">
-        ${component.filename ? `<div class="bg-gray-800 px-4 py-2 rounded-t-lg text-sm text-gray-300 border-b border-gray-700">${component.filename}</div>` : ""}
-        <pre class="bg-gray-900 p-4 ${component.filename ? "rounded-b-lg" : "rounded-lg"} overflow-x-auto"><code class="language-${component.language || "javascript"}">${component.code}</code></pre>
-        ${component.caption ? `<p class="text-center text-gray-400 mt-2 text-sm italic">${component.caption}</p>` : ""}
+		case 'code-block':
+			return `<div class="my-8">
+        ${component.filename ? `<div class="bg-gray-800 px-4 py-2 rounded-t-lg text-sm text-gray-300 border-b border-gray-700">${component.filename}</div>` : ''}
+        <pre class="bg-gray-900 p-4 ${component.filename ? 'rounded-b-lg' : 'rounded-lg'} overflow-x-auto"><code class="language-${component.language || 'javascript'}">${component.code}</code></pre>
+        ${component.caption ? `<p class="text-center text-gray-400 mt-2 text-sm italic">${component.caption}</p>` : ''}
       </div>`;
-    case "quote":
-      return `<blockquote class="my-8 border-l-4 border-indigo-500 pl-6 py-4 bg-gray-800/50 rounded-r-lg">
+		case 'quote':
+			return `<blockquote class="my-8 border-l-4 border-indigo-500 pl-6 py-4 bg-gray-800/50 rounded-r-lg">
         <p class="text-xl italic text-gray-200 mb-4">"${component.text}"</p>
-        ${component.author ? `<cite class="text-gray-400 not-italic">— ${component.author}${component.authorTitle ? `, ${component.authorTitle}` : ""}</cite>` : ""}
+        ${component.author ? `<cite class="text-gray-400 not-italic">— ${component.author}${component.authorTitle ? `, ${component.authorTitle}` : ''}</cite>` : ''}
       </blockquote>`;
-    case "callout":
-      const variants = {
-        info: "border-blue-500 bg-blue-500/10 text-blue-100",
-        warning: "border-yellow-500 bg-yellow-500/10 text-yellow-100",
-        error: "border-red-500 bg-red-500/10 text-red-100",
-        success: "border-green-500 bg-green-500/10 text-green-100",
-      };
-      const variantKey =
-        typeof component.variant === "string" ? component.variant : "info";
-      const variant = variants[variantKey] || variants.info;
-      return `<div class="my-8 border-l-4 ${variant} p-6 rounded-r-lg">
-        ${component.title ? `<h4 class="font-semibold mb-2">${component.title}</h4>` : ""}
+		case 'callout':
+			const variants = {
+				info: 'border-blue-500 bg-blue-500/10 text-blue-100',
+				warning: 'border-yellow-500 bg-yellow-500/10 text-yellow-100',
+				error: 'border-red-500 bg-red-500/10 text-red-100',
+				success: 'border-green-500 bg-green-500/10 text-green-100',
+			};
+			const variantKey =
+				typeof component.variant === 'string'
+					? component.variant
+					: 'info';
+			const variant = variants[variantKey] || variants.info;
+			return `<div class="my-8 border-l-4 ${variant} p-6 rounded-r-lg">
+        ${component.title ? `<h4 class="font-semibold mb-2">${component.title}</h4>` : ''}
         <div>${component.content}</div>
       </div>`;
-    case "embed":
-      return `<div class="my-8">
+		case 'embed':
+			return `<div class="my-8">
         <div class="aspect-video bg-gray-800 rounded-lg flex items-center justify-center">
           ${component.url ? `<iframe src="${component.url}" class="w-full h-full rounded-lg" frameborder="0" allowfullscreen></iframe>` : '<p class="text-gray-400">Embed content</p>'}
         </div>
         ${
-          component.title || component.description
-            ? `<div class="mt-4 text-center">
-          ${component.title ? `<h4 class="font-medium text-gray-200">${component.title}</h4>` : ""}
-          ${component.description ? `<p class="text-gray-400 text-sm mt-1">${component.description}</p>` : ""}
+			component.title || component.description
+				? `<div class="mt-4 text-center">
+          ${component.title ? `<h4 class="font-medium text-gray-200">${component.title}</h4>` : ''}
+          ${component.description ? `<p class="text-gray-400 text-sm mt-1">${component.description}</p>` : ''}
         </div>`
-            : ""
-        }
+				: ''
+		}
       </div>`;
-    default:
-      return "";
-  }
+		default:
+			return '';
+	}
 }
 
 // Process content for display
 function processContent(content) {
-  if (!content) return "";
+	if (!content) return '';
 
-  if (Array.isArray(content)) {
-    return content
-      .map((component) => renderContentComponent(component))
-      .join("");
-  }
+	if (Array.isArray(content)) {
+		return content
+			.map((component) => renderContentComponent(component))
+			.join('');
+	}
 
-  if (typeof content === "string") {
-    const htmlTagCount = (content.match(/<[^>]+>/g) || []).length;
-    const markdownIndicators = (
-      content.match(/(#{1,6}\s|\*\*|\*|\[.*\]\(.*\)|^>|```|`|^\d+\.)/g) || []
-    ).length;
+	if (typeof content === 'string') {
+		const htmlTagCount = (content.match(/<[^>]+>/g) || []).length;
+		const markdownIndicators = (
+			content.match(/(#{1,6}\s|\*\*|\*|\[.*\]\(.*\)|^>|```|`|^\d+\.)/g) ||
+			[]
+		).length;
 
-    if (htmlTagCount > markdownIndicators * 2) {
-      return purify.sanitize(content, purifyOptions);
-    } else {
-      const parsedContent = marked.parse(content);
-      return purify.sanitize(String(parsedContent), purifyOptions);
-    }
-  }
+		if (htmlTagCount > markdownIndicators * 2) {
+			return purify.sanitize(content, purifyOptions);
+		} else {
+			const parsedContent = marked.parse(content);
+			return purify.sanitize(String(parsedContent), purifyOptions);
+		}
+	}
 
-  return "";
+	return '';
 }
 
 const processedContent = processContent(blogPost?.content);
 ---
 
 <Layout
-  title={title}
-  description={description}
-  image={image}
-  type="article"
-  publishedTime={publishedTime}
-  modifiedTime={modifiedTime}
-  author={author}
->
-  <!-- Structured Data -->
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify(structuredData)}
-  />
+	title={title}
+	description={description}
+	image={image}
+	type='article'
+	publishedTime={publishedTime}
+	modifiedTime={modifiedTime}
+	author={author}>
+	<!-- Structured Data -->
+	<script
+		type='application/ld+json'
+		set:html={JSON.stringify(structuredData)}
+	/>
 
-  <main
-    class="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black"
-  >
-    <!-- Background Pattern -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
-    >
-      <div
-        style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;"
-      >
-      </div>
-    </div>
+	<main
+		class='min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black'>
+		<!-- Background Pattern -->
+		<div
+			class='absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20'>
+			<div
+				style='background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;'>
+			</div>
+		</div>
 
-    {
-      blogPost && (
-        <article class="relative">
-          <header class="relative overflow-hidden">
-            {/* <!-- Hero Image --> */}
-            {blogPost.image && (
-              <div class="relative h-64 sm:h-80 lg:h-96 xl:h-[28rem]">
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent z-10" />
-                <Image
-                  src={blogPost.image}
-                  alt={blogPost.title}
-                  width={1200}
-                  height={675}
-                  class="w-full h-full object-cover"
-                  loading="eager"
-                  decoding="async"
-                />
-              </div>
-            )}
+		{
+			blogPost && (
+				<article class='relative'>
+					<header class='relative overflow-hidden'>
+						{/* <!-- Hero Image --> */}
+						{blogPost.image && (
+							<div class='relative h-64 sm:h-80 lg:h-96 xl:h-[28rem]'>
+								<div class='absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent z-10' />
+								<Image
+									src={blogPost.image}
+									alt={blogPost.title}
+									width={1200}
+									height={675}
+									class='w-full h-full object-cover'
+									loading='eager'
+									decoding='async'
+								/>
+							</div>
+						)}
 
-            {/* <!-- Article Meta --> */}
-            <div
-              class={`relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12 lg:py-16 ${blogPost.image ? "-mt-32" : "pt-20"}`}
-            >
-              {/* <!-- Breadcrumb --> */}
-              <nav class="mb-6" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-sm text-gray-400">
-                  <li>
-                    <a href="/" class="hover:text-white transition-colors">
-                      Home
-                    </a>
-                  </li>
-                  <li class="flex items-center">
-                    <svg
-                      class="w-4 h-4 mx-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <a href="/blog" class="hover:text-white transition-colors">
-                      Blog
-                    </a>
-                  </li>
-                  {blogPost.category && (
-                    <li class="flex items-center">
-                      <svg
-                        class="w-4 h-4 mx-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      <a
-                        href={`/blog?category=${blogPost.category.slug}`}
-                        class="hover:text-white transition-colors"
-                      >
-                        {blogPost.category.name}
-                      </a>
-                    </li>
-                  )}
-                  <li class="flex items-center">
-                    <svg
-                      class="w-4 h-4 mx-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="text-gray-300">{blogPost.title}</span>
-                  </li>
-                </ol>
-              </nav>
+						{/* <!-- Article Meta --> */}
+						<div
+							class={`relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12 lg:py-16 ${blogPost.image ? '-mt-32' : 'pt-20'}`}>
+							{/* <!-- Breadcrumb --> */}
+							<nav class='mb-6' aria-label='Breadcrumb'>
+								<ol class='flex items-center space-x-2 text-sm text-gray-400'>
+									<li>
+										<a
+											href='/'
+											class='hover:text-white transition-colors'>
+											Home
+										</a>
+									</li>
+									<li class='flex items-center'>
+										<svg
+											class='w-4 h-4 mx-2'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path
+												fill-rule='evenodd'
+												d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
+												clip-rule='evenodd'
+											/>
+										</svg>
+										<a
+											href='/blog'
+											class='hover:text-white transition-colors'>
+											Blog
+										</a>
+									</li>
+									{blogPost.category && (
+										<li class='flex items-center'>
+											<svg
+												class='w-4 h-4 mx-2'
+												fill='currentColor'
+												viewBox='0 0 20 20'>
+												<path
+													fill-rule='evenodd'
+													d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
+													clip-rule='evenodd'
+												/>
+											</svg>
+											<a
+												href={`/blog?category=${blogPost.category.slug}`}
+												class='hover:text-white transition-colors'>
+												{blogPost.category.name}
+											</a>
+										</li>
+									)}
+									<li class='flex items-center'>
+										<svg
+											class='w-4 h-4 mx-2'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path
+												fill-rule='evenodd'
+												d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
+												clip-rule='evenodd'
+											/>
+										</svg>
+										<span class='text-gray-300'>
+											{blogPost.title}
+										</span>
+									</li>
+								</ol>
+							</nav>
 
-              {/* <!-- Category Badge --> */}
-              {blogPost.category && (
-                <div class="mb-4">
-                  <a
-                    href={`/blog?category=${blogPost.category.slug}`}
-                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-all hover:scale-105"
-                    style={`background-color: ${blogPost.category.color}20; color: ${blogPost.category.color}; border: 1px solid ${blogPost.category.color}40;`}
-                  >
-                    {blogPost.category.name}
-                  </a>
-                </div>
-              )}
+							{/* <!-- Category Badge --> */}
+							{blogPost.category && (
+								<div class='mb-4'>
+									<a
+										href={`/blog?category=${blogPost.category.slug}`}
+										class='inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-all hover:scale-105'
+										style={`background-color: ${blogPost.category.color}20; color: ${blogPost.category.color}; border: 1px solid ${blogPost.category.color}40;`}>
+										{blogPost.category.name}
+									</a>
+								</div>
+							)}
 
-              {/* <!-- Title --> */}
-              <h1
-                class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight"
-                data-aos="fade-up"
-              >
-                {blogPost.title}
-              </h1>
+							{/* <!-- Title --> */}
+							<h1
+								class='text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight'
+								data-aos='fade-up'>
+								{blogPost.title}
+							</h1>
 
-              {/* <!-- Excerpt --> */}
-              {blogPost.excerpt && (
-                <p
-                  class="text-lg sm:text-xl text-gray-300 mb-8 max-w-4xl leading-relaxed"
-                  data-aos="fade-up"
-                  data-aos-delay="100"
-                >
-                  {blogPost.excerpt}
-                </p>
-              )}
+							{/* <!-- Excerpt --> */}
+							{blogPost.excerpt && (
+								<p
+									class='text-lg sm:text-xl text-gray-300 mb-8 max-w-4xl leading-relaxed'
+									data-aos='fade-up'
+									data-aos-delay='100'>
+									{blogPost.excerpt}
+								</p>
+							)}
 
-              {/* <!-- Article Meta Info --> */}
-              <div
-                class="flex flex-wrap items-center gap-6 text-sm text-gray-400 mb-8"
-                data-aos="fade-up"
-                data-aos-delay="200"
-              >
-                {/* <!-- Author --> */}
-                {blogPost.author && (
-                  <div class="flex items-center space-x-3">
-                    {blogPost.author.avatar && (
-                      <Image
-                        src={blogPost.author.avatar}
-                        alt={blogPost.author.name}
-                        width={40}
-                        height={40}
-                        class="w-10 h-10 rounded-full object-cover border-2 border-gray-600"
-                      />
-                    )}
-                    <div>
-                      <p class="text-white font-medium">
-                        {blogPost.author.name}
-                      </p>
-                      {blogPost.author.title && (
-                        <p class="text-xs text-gray-500">
-                          {blogPost.author.title}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
+							{/* <!-- Article Meta Info --> */}
+							<div
+								class='flex flex-wrap items-center gap-6 text-sm text-gray-400 mb-8'
+								data-aos='fade-up'
+								data-aos-delay='200'>
+								{/* <!-- Author --> */}
+								{blogPost.author && (
+									<div class='flex items-center space-x-3'>
+										{blogPost.author.avatar && (
+											<Image
+												src={blogPost.author.avatar}
+												alt={blogPost.author.name}
+												width={40}
+												height={40}
+												class='w-10 h-10 rounded-full object-cover border-2 border-gray-600'
+											/>
+										)}
+										<div>
+											<p class='text-white font-medium'>
+												{blogPost.author.name}
+											</p>
+											{blogPost.author.title && (
+												<p class='text-xs text-gray-500'>
+													{blogPost.author.title}
+												</p>
+											)}
+										</div>
+									</div>
+								)}
 
-                {/* <!-- Published Date --> */}
-                <div class="flex items-center space-x-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>{formatDate(blogPost.publishedAt)}</span>
-                </div>
+								{/* <!-- Published Date --> */}
+								<div class='flex items-center space-x-2'>
+									<svg
+										class='w-4 h-4'
+										fill='currentColor'
+										viewBox='0 0 20 20'>
+										<path
+											fill-rule='evenodd'
+											d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
+											clip-rule='evenodd'
+										/>
+									</svg>
+									<span>
+										{formatDate(blogPost.publishedAt)}
+									</span>
+								</div>
 
-                {/* <!-- Read Time --> */}
-                <div class="flex items-center space-x-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>{blogPost.readTime} min read</span>
-                </div>
-              </div>
+								{/* <!-- Read Time --> */}
+								<div class='flex items-center space-x-2'>
+									<svg
+										class='w-4 h-4'
+										fill='currentColor'
+										viewBox='0 0 20 20'>
+										<path
+											fill-rule='evenodd'
+											d='M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z'
+											clip-rule='evenodd'
+										/>
+									</svg>
+									<span>{blogPost.readTime} min read</span>
+								</div>
+							</div>
 
-              {/* <!-- Tags --> */}
-              {blogPost.tags && blogPost.tags.length > 0 && (
-                <div
-                  class="flex flex-wrap gap-2 mb-8"
-                  data-aos="fade-up"
-                  data-aos-delay="300"
-                >
-                  {blogPost.tags.map((tag) => (
-                    <a
-                      href={`/blog?tag=${tag.slug}`}
-                      class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-all hover:scale-105"
-                      style={`background-color: ${tag.color}20; color: ${tag.color}; border: 1px solid ${tag.color}40;`}
-                    >
-                      #{tag.name}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          </header>
+							{/* <!-- Tags --> */}
+							{blogPost.tags && blogPost.tags.length > 0 && (
+								<div
+									class='flex flex-wrap gap-2 mb-8'
+									data-aos='fade-up'
+									data-aos-delay='300'>
+									{blogPost.tags.map((tag) => (
+										<a
+											href={`/blog?tag=${tag.slug}`}
+											class='inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-all hover:scale-105'
+											style={`background-color: ${tag.color}20; color: ${tag.color}; border: 1px solid ${tag.color}40;`}>
+											#{tag.name}
+										</a>
+									))}
+								</div>
+							)}
+						</div>
+					</header>
 
-          {/* <!-- Article Content --> */}
-          <div class="relative container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12">
-            <div class="max-w-4xl mx-auto">
-              <div
-                class="prose prose-lg prose-invert prose-indigo max-w-none"
-                data-aos="fade-up"
-                set:html={processedContent}
-              />
+					{/* <!-- Article Content --> */}
+					<div class='relative container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12'>
+						<div class='max-w-4xl mx-auto'>
+							<div
+								class='prose prose-lg prose-invert prose-indigo max-w-none'
+								data-aos='fade-up'
+								set:html={processedContent}
+							/>
 
-              {/* <!-- Author Bio --> */}
-              {blogPost.author && blogPost.author.bio && (
-                <div
-                  class="mt-16 p-8 bg-gray-800/50 rounded-2xl border border-gray-700"
-                  data-aos="fade-up"
-                >
-                  <div class="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                    {blogPost.author.avatar && (
-                      <Image
-                        src={blogPost.author.avatar}
-                        alt={blogPost.author.name}
-                        width={80}
-                        height={80}
-                        class="w-20 h-20 rounded-full object-cover border-2 border-indigo-500"
-                      />
-                    )}
-                    <div class="flex-1">
-                      <h3 class="text-xl font-bold text-white mb-2">
-                        About {blogPost.author.name}
-                      </h3>
-                      {blogPost.author.title && (
-                        <p class="text-indigo-400 font-medium mb-3">
-                          {blogPost.author.title}
-                        </p>
-                      )}
-                      <p class="text-gray-300 leading-relaxed mb-4">
-                        {blogPost.author.bio}
-                      </p>
-                      {(blogPost.author.website || blogPost.author.social) && (
-                        <div class="flex flex-wrap gap-4">
-                          {blogPost.author.website && (
-                            <a
-                              href={blogPost.author.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="text-indigo-400 hover:text-indigo-300 transition-colors text-sm font-medium"
-                            >
-                              Visit Website →
-                            </a>
-                          )}
-                          {blogPost.author.social &&
-                            Object.entries(blogPost.author.social).map(
-                              ([platform, url]) => (
-                                <a
-                                  href={typeof url === "string" ? url : "#"}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  class="text-gray-400 hover:text-white transition-colors text-sm capitalize"
-                                >
-                                  {platform}
-                                </a>
-                              ),
-                            )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+							{/* <!-- Author Bio --> */}
+							{blogPost.author && blogPost.author.bio && (
+								<div
+									class='mt-16 p-8 bg-gray-800/50 rounded-2xl border border-gray-700'
+									data-aos='fade-up'>
+									<div class='flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6'>
+										{blogPost.author.avatar && (
+											<Image
+												src={blogPost.author.avatar}
+												alt={blogPost.author.name}
+												width={80}
+												height={80}
+												class='w-20 h-20 rounded-full object-cover border-2 border-indigo-500'
+											/>
+										)}
+										<div class='flex-1'>
+											<h3 class='text-xl font-bold text-white mb-2'>
+												About {blogPost.author.name}
+											</h3>
+											{blogPost.author.title && (
+												<p class='text-indigo-400 font-medium mb-3'>
+													{blogPost.author.title}
+												</p>
+											)}
+											<p class='text-gray-300 leading-relaxed mb-4'>
+												{blogPost.author.bio}
+											</p>
+											{(blogPost.author.website ||
+												blogPost.author.social) && (
+												<div class='flex flex-wrap gap-4'>
+													{blogPost.author
+														.website && (
+														<a
+															href={
+																blogPost.author
+																	.website
+															}
+															target='_blank'
+															rel='noopener noreferrer'
+															class='text-indigo-400 hover:text-indigo-300 transition-colors text-sm font-medium'>
+															Visit Website →
+														</a>
+													)}
+													{blogPost.author.social &&
+														Object.entries(
+															blogPost.author
+																.social,
+														).map(
+															([
+																platform,
+																url,
+															]) => (
+																<a
+																	href={
+																		typeof url ===
+																		'string'
+																			? url
+																			: '#'
+																	}
+																	target='_blank'
+																	rel='noopener noreferrer'
+																	class='text-gray-400 hover:text-white transition-colors text-sm capitalize'>
+																	{platform}
+																</a>
+															),
+														)}
+												</div>
+											)}
+										</div>
+									</div>
+								</div>
+							)}
 
-              {/* <!-- Related Posts --> */}
-              {relatedPosts.length > 0 && (
-                <section class="mt-16" data-aos="fade-up">
-                  <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8">
-                    Related Posts
-                  </h2>
-                  <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {relatedPosts.map((relatedPost) => (
-                      <article class="group bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-2">
-                        {relatedPost.image && (
-                          <div class="relative h-48 overflow-hidden">
-                            <Image
-                              src={relatedPost.image}
-                              alt={
-                                relatedPost.title
-                                  ? String(relatedPost.title)
-                                  : ""
-                              }
-                              width={400}
-                              height={250}
-                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent" />
-                          </div>
-                        )}
-                        <div class="p-6">
-                          {relatedPost.category && (
-                            <div class="mb-3">
-                              <span
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                style={`background-color: ${relatedPost.category.color}20; color: ${relatedPost.category.color};`}
-                              >
-                                {relatedPost.category.name}
-                              </span>
-                            </div>
-                          )}
-                          <h3 class="text-lg font-semibold text-white mb-3 line-clamp-2 group-hover:text-indigo-300 transition-colors">
-                            <a href={`/blog/${relatedPost.slug}`}>
-                              {relatedPost.title}
-                            </a>
-                          </h3>
-                          {relatedPost.excerpt && (
-                            <p class="text-gray-400 text-sm line-clamp-3 mb-4">
-                              {relatedPost.excerpt}
-                            </p>
-                          )}
-                          <div class="flex items-center justify-between text-xs text-gray-500">
-                            <span>{formatDate(relatedPost.publishedAt)}</span>
-                            <span>{relatedPost.readTime} min read</span>
-                          </div>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </section>
-              )}
+							{/* <!-- Related Posts --> */}
+							{relatedPosts.length > 0 && (
+								<section class='mt-16' data-aos='fade-up'>
+									<h2 class='text-2xl sm:text-3xl font-bold text-white mb-8'>
+										Related Posts
+									</h2>
+									<div class='grid gap-8 md:grid-cols-2 lg:grid-cols-3'>
+										{relatedPosts.map((relatedPost) => (
+											<article class='group bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-2'>
+												{relatedPost.image && (
+													<div class='relative h-48 overflow-hidden'>
+														<Image
+															src={
+																relatedPost.image
+															}
+															alt={
+																relatedPost.title
+																	? String(
+																			relatedPost.title,
+																		)
+																	: ''
+															}
+															width={400}
+															height={250}
+															class='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
+														/>
+														<div class='absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent' />
+													</div>
+												)}
+												<div class='p-6'>
+													{relatedPost.category && (
+														<div class='mb-3'>
+															<span
+																class='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium'
+																style={`background-color: ${relatedPost.category.color}20; color: ${relatedPost.category.color};`}>
+																{
+																	relatedPost
+																		.category
+																		.name
+																}
+															</span>
+														</div>
+													)}
+													<h3 class='text-lg font-semibold text-white mb-3 line-clamp-2 group-hover:text-indigo-300 transition-colors'>
+														<a
+															href={`/blog/${relatedPost.slug}`}>
+															{relatedPost.title}
+														</a>
+													</h3>
+													{relatedPost.excerpt && (
+														<p class='text-gray-400 text-sm line-clamp-3 mb-4'>
+															{
+																relatedPost.excerpt
+															}
+														</p>
+													)}
+													<div class='flex items-center justify-between text-xs text-gray-500'>
+														<span>
+															{formatDate(
+																relatedPost.publishedAt,
+															)}
+														</span>
+														<span>
+															{
+																relatedPost.readTime
+															}{' '}
+															min read
+														</span>
+													</div>
+												</div>
+											</article>
+										))}
+									</div>
+								</section>
+							)}
 
-              {/* <!-- Navigation --> */}
-              <div class="mt-16 flex justify-center" data-aos="fade-up">
-                <a
-                  href="/blog"
-                  class="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  <svg
-                    class="w-4 h-4 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  Back to Blog
-                </a>
-              </div>
-            </div>
-          </div>
-        </article>
-      )
-    }
+							{/* <!-- Navigation --> */}
+							<div
+								class='mt-16 flex justify-center'
+								data-aos='fade-up'>
+								<a
+									href='/blog'
+									class='inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors'>
+									<svg
+										class='w-4 h-4 mr-2'
+										fill='currentColor'
+										viewBox='0 0 20 20'>
+										<path
+											fill-rule='evenodd'
+											d='M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z'
+											clip-rule='evenodd'
+										/>
+									</svg>
+									Back to Blog
+								</a>
+							</div>
+						</div>
+					</div>
+				</article>
+			)
+		}
 
-    {
-      !blogPost && (
-        <div class="flex items-center justify-center min-h-screen">
-          <div class="text-center">
-            <h1 class="text-2xl text-white mb-4">Blog post not found</h1>
-            <a href="/blog" class="text-indigo-400 hover:text-indigo-300">
-              ← Back to Blog
-            </a>
-          </div>
-        </div>
-      )
-    }
-  </main>
+		{
+			!blogPost && (
+				<div class='flex items-center justify-center min-h-screen'>
+					<div class='text-center'>
+						<h1 class='text-2xl text-white mb-4'>
+							Blog post not found
+						</h1>
+						<a
+							href='/blog'
+							class='text-indigo-400 hover:text-indigo-300'>
+							← Back to Blog
+						</a>
+					</div>
+				</div>
+			)
+		}
+	</main>
 </Layout>
 
 <style>
-  /* Enhanced prose styles for better readability */
-  .prose {
-    color: #e5e7eb;
-    max-width: none;
-  }
+	/* Enhanced prose styles for better readability */
+	.prose {
+		color: #e5e7eb;
+		max-width: none;
+	}
 
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    color: #ffffff;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-  }
+	.prose h1,
+	.prose h2,
+	.prose h3,
+	.prose h4,
+	.prose h5,
+	.prose h6 {
+		color: #ffffff;
+		font-weight: 700;
+		line-height: 1.2;
+		margin-top: 2rem;
+		margin-bottom: 1rem;
+	}
 
-  .prose h1 {
-    font-size: 2.25rem;
-  }
+	.prose h1 {
+		font-size: 2.25rem;
+	}
 
-  .prose h2 {
-    font-size: 1.875rem;
-    border-bottom: 2px solid #4f46e5;
-    padding-bottom: 0.5rem;
-  }
+	.prose h2 {
+		font-size: 1.875rem;
+		border-bottom: 2px solid #4f46e5;
+		padding-bottom: 0.5rem;
+	}
 
-  .prose h3 {
-    font-size: 1.5rem;
-  }
+	.prose h3 {
+		font-size: 1.5rem;
+	}
 
-  .prose h4 {
-    font-size: 1.25rem;
-  }
+	.prose h4 {
+		font-size: 1.25rem;
+	}
 
-  .prose p {
-    margin-bottom: 1.5rem;
-    line-height: 1.75;
-  }
+	.prose p {
+		margin-bottom: 1.5rem;
+		line-height: 1.75;
+	}
 
-  .prose strong {
-    color: #ffffff;
-    font-weight: 600;
-  }
+	.prose strong {
+		color: #ffffff;
+		font-weight: 600;
+	}
 
-  .prose em {
-    color: #d1d5db;
-  }
+	.prose em {
+		color: #d1d5db;
+	}
 
-  .prose a {
-    color: #6366f1;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
+	.prose a {
+		color: #6366f1;
+		text-decoration: none;
+		font-weight: 500;
+		transition: color 0.2s ease;
+	}
 
-  .prose a:hover {
-    color: #8b5cf6;
-    text-decoration: underline;
-  }
+	.prose a:hover {
+		color: #8b5cf6;
+		text-decoration: underline;
+	}
 
-  .prose ul,
-  .prose ol {
-    margin: 1.5rem 0;
-    padding-left: 1.5rem;
-  }
+	.prose ul,
+	.prose ol {
+		margin: 1.5rem 0;
+		padding-left: 1.5rem;
+	}
 
-  .prose li {
-    margin: 0.5rem 0;
-    line-height: 1.6;
-  }
+	.prose li {
+		margin: 0.5rem 0;
+		line-height: 1.6;
+	}
 
-  .prose blockquote {
-    border-left: 4px solid #6366f1;
-    padding-left: 1.5rem;
-    margin: 2rem 0;
-    font-style: italic;
-    color: #d1d5db;
-  }
+	.prose blockquote {
+		border-left: 4px solid #6366f1;
+		padding-left: 1.5rem;
+		margin: 2rem 0;
+		font-style: italic;
+		color: #d1d5db;
+	}
 
-  .prose code {
-    background-color: #374151;
-    color: #f9fafb;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
+	.prose code {
+		background-color: #374151;
+		color: #f9fafb;
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
 
-  .prose pre {
-    background-color: #1f2937;
-    color: #f9fafb;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    overflow-x: auto;
-    margin: 2rem 0;
-    border: 1px solid #374151;
-  }
+	.prose pre {
+		background-color: #1f2937;
+		color: #f9fafb;
+		padding: 1.5rem;
+		border-radius: 0.75rem;
+		overflow-x: auto;
+		margin: 2rem 0;
+		border: 1px solid #374151;
+	}
 
-  .prose pre code {
-    background: none;
-    padding: 0;
-    border-radius: 0;
-    font-size: 0.875rem;
-  }
+	.prose pre code {
+		background: none;
+		padding: 0;
+		border-radius: 0;
+		font-size: 0.875rem;
+	}
 
-  .prose img {
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
-    margin: 2rem 0;
-  }
+	.prose img {
+		border-radius: 0.75rem;
+		box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
+		margin: 2rem 0;
+	}
 
-  .prose hr {
-    border: none;
-    height: 1px;
-    background: linear-gradient(to right, transparent, #4b5563, transparent);
-    margin: 3rem 0;
-  }
+	.prose hr {
+		border: none;
+		height: 1px;
+		background: linear-gradient(
+			to right,
+			transparent,
+			#4b5563,
+			transparent
+		);
+		margin: 3rem 0;
+	}
 
-  /* Enhanced markdown content styling */
-  .prose-content h1 {
-    font-size: 2.25rem;
-    margin-top: 2.5rem;
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.2;
-  }
+	/* Enhanced markdown content styling */
+	.prose-content h1 {
+		font-size: 2.25rem;
+		margin-top: 2.5rem;
+		margin-bottom: 1.5rem;
+		font-weight: 700;
+		color: #ffffff;
+		line-height: 1.2;
+	}
 
-  .prose-content h2 {
-    font-size: 1.875rem;
-    margin-top: 2.25rem;
-    margin-bottom: 1.25rem;
-    font-weight: 700;
-    color: #ffffff;
-    border-bottom: 2px solid #4f46e5;
-    padding-bottom: 0.5rem;
-    line-height: 1.3;
-  }
+	.prose-content h2 {
+		font-size: 1.875rem;
+		margin-top: 2.25rem;
+		margin-bottom: 1.25rem;
+		font-weight: 700;
+		color: #ffffff;
+		border-bottom: 2px solid #4f46e5;
+		padding-bottom: 0.5rem;
+		line-height: 1.3;
+	}
 
-  .prose-content h3 {
-    font-size: 1.5rem;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-    color: #ffffff;
-    line-height: 1.4;
-  }
+	.prose-content h3 {
+		font-size: 1.5rem;
+		margin-top: 2rem;
+		margin-bottom: 1rem;
+		font-weight: 600;
+		color: #ffffff;
+		line-height: 1.4;
+	}
 
-  .prose-content pre {
-    margin: 1.5rem 0;
-    overflow-x: auto;
-    border-radius: 0.5rem;
-    background-color: #1f2937;
-    padding: 1rem;
-    border: 1px solid #374151;
-  }
+	.prose-content pre {
+		margin: 1.5rem 0;
+		overflow-x: auto;
+		border-radius: 0.5rem;
+		background-color: #1f2937;
+		padding: 1rem;
+		border: 1px solid #374151;
+	}
 
-  .prose-content pre code {
-    background: none;
-    padding: 0;
-    border-radius: 0;
-    font-family:
-      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-      "Courier New", monospace;
-    font-size: 0.875rem;
-    color: #f9fafb;
-  }
+	.prose-content pre code {
+		background: none;
+		padding: 0;
+		border-radius: 0;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			'Liberation Mono', 'Courier New', monospace;
+		font-size: 0.875rem;
+		color: #f9fafb;
+	}
 
-  .prose-content code {
-    background-color: #374151;
-    color: #f9fafb;
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-family:
-      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-      "Courier New", monospace;
-  }
+	.prose-content code {
+		background-color: #374151;
+		color: #f9fafb;
+		padding: 0.2rem 0.4rem;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			'Liberation Mono', 'Courier New', monospace;
+	}
 
-  .prose table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 2rem 0;
-    background-color: #374151;
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
+	.prose table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 2rem 0;
+		background-color: #374151;
+		border-radius: 0.75rem;
+		overflow: hidden;
+	}
 
-  .prose th,
-  .prose td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #4b5563;
-  }
+	.prose th,
+	.prose td {
+		padding: 0.75rem 1rem;
+		text-align: left;
+		border-bottom: 1px solid #4b5563;
+	}
 
-  .prose th {
-    background-color: #4b5563;
-    font-weight: 600;
-    color: #ffffff;
-  }
+	.prose th {
+		background-color: #4b5563;
+		font-weight: 600;
+		color: #ffffff;
+	}
 
-  /* Line clamping utility */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+	/* Line clamping utility */
+	.line-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
 
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+	.line-clamp-3 {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
+	/* Custom scrollbar */
+	::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
 
-  ::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.5);
-    border-radius: 8px;
-  }
+	::-webkit-scrollbar-track {
+		background: rgba(55, 65, 81, 0.5);
+		border-radius: 8px;
+	}
 
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 8px;
-  }
+	::-webkit-scrollbar-thumb {
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 8px;
+	}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  }
+	::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(135deg, #4f46e5, #7c3aed);
+	}
 
-  /* Focus styles */
-  a:focus,
-  button:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-  }
+	/* Focus styles */
+	a:focus,
+	button:focus {
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+	}
 
-  /* Smooth transitions */
-  * {
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
+	/* Smooth transitions */
+	* {
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	}
 </style>
 
 <script>
-  // Enhanced functionality for blog post page
-  document.addEventListener("DOMContentLoaded", function () {
-    // Add copy functionality to code blocks
-    const codeBlocks = document.querySelectorAll("pre code");
-    codeBlocks.forEach(function (block) {
-      const button = document.createElement("button");
-      button.className =
-        "absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100";
-      button.textContent = "Copy";
-      button.onclick = function () {
-        navigator.clipboard.writeText(block.textContent || "");
-        button.textContent = "Copied!";
-        setTimeout(function () {
-          button.textContent = "Copy";
-        }, 2000);
-      };
+	// Enhanced functionality for blog post page
+	document.addEventListener('DOMContentLoaded', function () {
+		// Add copy functionality to code blocks
+		const codeBlocks = document.querySelectorAll('pre code');
+		codeBlocks.forEach(function (block) {
+			const button = document.createElement('button');
+			button.className =
+				'absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100';
+			button.textContent = 'Copy';
+			button.onclick = function () {
+				navigator.clipboard.writeText(block.textContent || '');
+				button.textContent = 'Copied!';
+				setTimeout(function () {
+					button.textContent = 'Copy';
+				}, 2000);
+			};
 
-      const pre = block.parentElement;
-      if (pre && pre.tagName === "PRE") {
-        pre.className += " relative group";
-        pre.appendChild(button);
-      }
-    });
+			const pre = block.parentElement;
+			if (pre && pre.tagName === 'PRE') {
+				pre.className += ' relative group';
+				pre.appendChild(button);
+			}
+		});
 
-    // Add reading progress indicator
-    const progressBar = document.createElement("div");
-    progressBar.className =
-      "fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 z-50 transition-all duration-150";
-    progressBar.style.width = "0%";
-    document.body.appendChild(progressBar);
+		// Add reading progress indicator
+		const progressBar = document.createElement('div');
+		progressBar.className =
+			'fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 z-50 transition-all duration-150';
+		progressBar.style.width = '0%';
+		document.body.appendChild(progressBar);
 
-    function updateReadingProgress() {
-      const scrollTop = window.pageYOffset;
-      const docHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = (scrollTop / docHeight) * 100;
-      progressBar.style.width = Math.min(scrollPercent, 100) + "%";
-    }
+		function updateReadingProgress() {
+			const scrollTop = window.pageYOffset;
+			const docHeight =
+				document.documentElement.scrollHeight - window.innerHeight;
+			const scrollPercent = (scrollTop / docHeight) * 100;
+			progressBar.style.width = Math.min(scrollPercent, 100) + '%';
+		}
 
-    window.addEventListener("scroll", updateReadingProgress, { passive: true });
+		window.addEventListener('scroll', updateReadingProgress, {
+			passive: true,
+		});
 
-    // Add smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-      anchor.addEventListener("click", function (e) {
-        e.preventDefault();
-        const element = e.currentTarget;
-        const href = element.getAttribute("href");
-        if (href) {
-          const target = document.querySelector(href);
-          if (target) {
-            target.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        }
-      });
-    });
+		// Add smooth scrolling for anchor links
+		document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+			anchor.addEventListener('click', function (e) {
+				e.preventDefault();
+				const element = e.currentTarget;
+				const href = element.getAttribute('href');
+				if (href) {
+					const target = document.querySelector(href);
+					if (target) {
+						target.scrollIntoView({
+							behavior: 'smooth',
+							block: 'start',
+						});
+					}
+				}
+			});
+		});
 
-    // Add image zoom functionality
-    const images = document.querySelectorAll(".prose img");
-    images.forEach(function (img) {
-      if (img instanceof HTMLImageElement) {
-        img.style.cursor = "zoom-in";
-        img.addEventListener("click", function () {
-          const overlay = document.createElement("div");
-          overlay.className =
-            "fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-zoom-out";
-          const imgEl = this;
-          overlay.innerHTML =
-            '<img src="' +
-            imgEl.src +
-            '" alt="' +
-            imgEl.alt +
-            '" class="max-w-full max-h-full object-contain">';
+		// Add image zoom functionality
+		const images = document.querySelectorAll('.prose img');
+		images.forEach(function (img) {
+			if (img instanceof HTMLImageElement) {
+				img.style.cursor = 'zoom-in';
+				img.addEventListener('click', function () {
+					const overlay = document.createElement('div');
+					overlay.className =
+						'fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-zoom-out';
+					const imgEl = this;
+					overlay.innerHTML =
+						'<img src="' +
+						imgEl.src +
+						'" alt="' +
+						imgEl.alt +
+						'" class="max-w-full max-h-full object-contain">';
 
-          overlay.addEventListener("click", function () {
-            document.body.removeChild(overlay);
-          });
+					overlay.addEventListener('click', function () {
+						document.body.removeChild(overlay);
+					});
 
-          document.body.appendChild(overlay);
-        });
-      }
-    });
+					document.body.appendChild(overlay);
+				});
+			}
+		});
 
-    // Process any HTML elements that need additional styling
-    // Apply prose styling to elements that might be in HTML content
-    document.querySelectorAll(".prose-content").forEach(function (container) {
-      // Apply basic styling to HTML tables if they don't have classes
-      container
-        .querySelectorAll("table:not([class])")
-        .forEach(function (tableEl) {
-          if (tableEl instanceof HTMLTableElement) {
-            tableEl.classList.add("prose-table");
-            // Add table styling with CSS classes instead of inline styles
-            tableEl.classList.add("w-full", "border-collapse", "my-6");
-          }
-        });
+		// Process any HTML elements that need additional styling
+		// Apply prose styling to elements that might be in HTML content
+		document
+			.querySelectorAll('.prose-content')
+			.forEach(function (container) {
+				// Apply basic styling to HTML tables if they don't have classes
+				container
+					.querySelectorAll('table:not([class])')
+					.forEach(function (tableEl) {
+						if (tableEl instanceof HTMLTableElement) {
+							tableEl.classList.add('prose-table');
+							// Add table styling with CSS classes instead of inline styles
+							tableEl.classList.add(
+								'w-full',
+								'border-collapse',
+								'my-6',
+							);
+						}
+					});
 
-      // Style HTML headings that might be missing styling
-      ["h1", "h2", "h3", "h4", "h5", "h6"].forEach(function (tag) {
-        container
-          .querySelectorAll(tag + ":not([class])")
-          .forEach(function (heading) {
-            heading.classList.add("prose-" + tag);
-          });
-      });
-    });
+				// Style HTML headings that might be missing styling
+				['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(function (tag) {
+					container
+						.querySelectorAll(tag + ':not([class])')
+						.forEach(function (heading) {
+							heading.classList.add('prose-' + tag);
+						});
+				});
+			});
 
-    // Add table of contents generation
-    const headings = document.querySelectorAll(
-      ".prose h2, .prose h3, .prose-content h2, .prose-content h3",
-    );
-    if (headings.length > 2) {
-      const toc = document.createElement("nav");
-      toc.className =
-        "sticky top-24 float-right ml-8 mb-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700 max-w-xs hidden lg:block";
-      toc.innerHTML =
-        "<h3 class='text-white font-semibold mb-3'>Table of Contents</h3>";
+		// Add table of contents generation
+		const headings = document.querySelectorAll(
+			'.prose h2, .prose h3, .prose-content h2, .prose-content h3',
+		);
+		if (headings.length > 2) {
+			const toc = document.createElement('nav');
+			toc.className =
+				'sticky top-24 float-right ml-8 mb-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700 max-w-xs hidden lg:block';
+			toc.innerHTML =
+				"<h3 class='text-white font-semibold mb-3'>Table of Contents</h3>";
 
-      const tocList = document.createElement("ul");
-      tocList.className = "space-y-1 text-sm";
+			const tocList = document.createElement('ul');
+			tocList.className = 'space-y-1 text-sm';
 
-      headings.forEach(function (heading, index) {
-        const id = "heading-" + index;
-        heading.id = id;
+			headings.forEach(function (heading, index) {
+				const id = 'heading-' + index;
+				heading.id = id;
 
-        const listItem = document.createElement("li");
-        listItem.innerHTML =
-          '<a href="#' +
-          id +
-          '" class="text-gray-400 hover:text-white transition-colors ' +
-          (heading.tagName === "H3" ? "ml-4" : "") +
-          '">' +
-          heading.textContent +
-          "</a>";
-        tocList.appendChild(listItem);
-      });
+				const listItem = document.createElement('li');
+				listItem.innerHTML =
+					'<a href="#' +
+					id +
+					'" class="text-gray-400 hover:text-white transition-colors ' +
+					(heading.tagName === 'H3' ? 'ml-4' : '') +
+					'">' +
+					heading.textContent +
+					'</a>';
+				tocList.appendChild(listItem);
+			});
 
-      toc.appendChild(tocList);
+			toc.appendChild(tocList);
 
-      const firstParagraph = document.querySelector(".prose p");
-      if (firstParagraph && firstParagraph.parentNode) {
-        firstParagraph.parentNode.insertBefore(toc, firstParagraph);
-      }
-    }
-  });
+			const firstParagraph = document.querySelector('.prose p');
+			if (firstParagraph && firstParagraph.parentNode) {
+				firstParagraph.parentNode.insertBefore(toc, firstParagraph);
+			}
+		}
+	});
 </script>
 
 <script is:inline>
-  // Add Prism.js for code highlighting
-  document.addEventListener("DOMContentLoaded", function () {
-    // Only load Prism if we have code blocks
-    if (document.querySelector("pre code")) {
-      // Load Prism.js dynamically
-      const prismCSS = document.createElement("link");
-      prismCSS.rel = "stylesheet";
-      prismCSS.href =
-        "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css";
-      document.head.appendChild(prismCSS);
+	// Add Prism.js for code highlighting
+	document.addEventListener('DOMContentLoaded', function () {
+		// Only load Prism if we have code blocks
+		if (document.querySelector('pre code')) {
+			// Load Prism.js dynamically
+			const prismCSS = document.createElement('link');
+			prismCSS.rel = 'stylesheet';
+			prismCSS.href =
+				'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';
+			document.head.appendChild(prismCSS);
 
-      const prismScript = document.createElement("script");
-      prismScript.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js";
-      document.body.appendChild(prismScript);
+			const prismScript = document.createElement('script');
+			prismScript.src =
+				'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';
+			document.body.appendChild(prismScript);
 
-      // Add language support for common languages
-      const languages = [
-        "javascript",
-        "css",
-        "html",
-        "typescript",
-        "python",
-        "bash",
-        "json",
-      ];
-      languages.forEach(function (lang) {
-        const script = document.createElement("script");
-        script.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-" +
-          lang +
-          ".min.js";
-        document.body.appendChild(script);
-      });
+			// Add language support for common languages
+			const languages = [
+				'javascript',
+				'css',
+				'html',
+				'typescript',
+				'python',
+				'bash',
+				'json',
+			];
+			languages.forEach(function (lang) {
+				const script = document.createElement('script');
+				script.src =
+					'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-' +
+					lang +
+					'.min.js';
+				document.body.appendChild(script);
+			});
 
-      // Initialize Prism when scripts are loaded
-      prismScript.onload = function () {
-        if (window.Prism) {
-          window.Prism.highlightAll();
-        }
-      };
-    }
-  });
+			// Initialize Prism when scripts are loaded
+			prismScript.onload = function () {
+				if (window.Prism) {
+					window.Prism.highlightAll();
+				}
+			};
+		}
+	});
 </script>
