@@ -1,895 +1,1600 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import strapiAPI from "@lib/strapi.js";
+import Layout from '@layouts/Layout.astro';
+import strapiAPI from '@lib/strapi.js';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 export const prerender = false;
+
+// Global declarations for TypeScript
+declare global {
+	interface Window {
+		copyToClipboard: (text: string) => void;
+	}
+}
+
+// Initialize DOMPurify with JSDOM for server-side use
+const window = new JSDOM('').window;
+const purify = DOMPurify(window as any);
+
+// Configure DOMPurify options
+const purifyOptions = {
+	ALLOWED_TAGS: [
+		'p',
+		'br',
+		'strong',
+		'em',
+		'u',
+		'strike',
+		'a',
+		'ul',
+		'ol',
+		'li',
+		'h1',
+		'h2',
+		'h3',
+		'h4',
+		'h5',
+		'h6',
+		'blockquote',
+		'code',
+		'pre',
+		'img',
+		'figure',
+		'figcaption',
+		'table',
+		'thead',
+		'tbody',
+		'tr',
+		'th',
+		'td',
+		'div',
+		'span',
+		'hr',
+	],
+	ALLOWED_ATTR: [
+		'href',
+		'title',
+		'target',
+		'rel',
+		'src',
+		'alt',
+		'class',
+		'id',
+		'width',
+		'height',
+		'loading',
+		'style',
+	],
+	ALLOW_DATA_ATTR: false,
+	KEEP_CONTENT: true,
+};
+
+// Configure marked with custom renderer
+const renderer = new marked.Renderer();
+
+// Custom heading renderer with anchor links
+renderer.heading = function (token: any) {
+	const level = token.depth;
+	const text = this.parser.parseInline(token.tokens);
+	const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+	const gradients = [
+		'from-blue-400 to-purple-600',
+		'from-purple-400 to-pink-600',
+		'from-green-400 to-blue-600',
+		'from-yellow-400 to-red-600',
+		'from-indigo-400 to-purple-600',
+		'from-pink-400 to-red-600',
+	];
+
+	const gradient = gradients[(level - 1) % gradients.length];
+	const sizes = [
+		'text-4xl',
+		'text-3xl',
+		'text-2xl',
+		'text-xl',
+		'text-lg',
+		'text-base',
+	];
+	const size = sizes[Math.min(level - 1, sizes.length - 1)];
+
+	return `<h${level} id="${escapedText}" class="group ${size} font-bold mb-6 mt-8 bg-clip-text bg-gradient-to-r ${gradient} hover:scale-105 transition-transform duration-200">
+		<a href="#${escapedText}" class="flex items-center group-hover:opacity-100 opacity-80">
+			${text}
+			<svg class="w-5 h-5 ml-2 opacity-0 group-hover:opacity-50 transition-opacity text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+				<path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+			</svg>
+		</a>
+	</h${level}>`;
+};
+
+// Custom code block renderer
+renderer.code = function (token: any) {
+	const lang = token.lang || 'text';
+	const code = token.text;
+	return `<div class="my-8 rounded-xl overflow-hidden border border-gray-700 shadow-2xl group relative">
+		<div class="bg-gray-800 px-6 py-3 flex items-center justify-between text-sm border-b border-gray-700">
+			<div class="flex items-center text-gray-300">
+				<svg class="w-4 h-4 mr-2 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+					<path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+				</svg>
+				<span class="font-medium">${lang}</span>
+			</div>
+			<button onclick="copyToClipboard(\`${code.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+				Copy
+			</button>
+		</div>
+		<pre class="bg-gray-900 p-6 overflow-x-auto text-sm leading-relaxed"><code class="language-${lang}">${code}</code></pre>
+	</div>`;
+};
+
+// Custom inline code renderer
+renderer.codespan = function (token: any) {
+	return `<code class="bg-gray-800/80 text-indigo-300 px-2 py-1 rounded-md text-sm font-mono border border-gray-700/50">${token.text}</code>`;
+};
+
+// Custom blockquote renderer
+renderer.blockquote = function (token: any) {
+	const text = this.parser.parse(token.tokens);
+	return `<blockquote class="my-8 relative">
+		<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+		<div class="pl-8 py-6 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent rounded-r-2xl">
+			<div class="relative">
+				<svg class="absolute -top-2 -left-4 w-8 h-8 text-indigo-400/30" fill="currentColor" viewBox="0 0 24 24">
+					<path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
+				</svg>
+				<div class="text-gray-200 leading-relaxed relative z-10">${text}</div>
+			</div>
+		</div>
+	</blockquote>`;
+};
+
+// Custom list renderer
+renderer.list = function (token: any) {
+	const tag = token.ordered ? 'ol' : 'ul';
+	const classes = token.ordered
+		? 'list-decimal pl-6'
+		: 'list-disc pl-6';
+
+	// Render list items so marker and text are on the same line
+	const itemsHtml = token.items
+		.map((item: any) => {
+			// Use <li> directly, don't wrap with flex or block
+			const text = this.parser.parse(item.tokens);
+			return `<li class="mb-2">${text}</li>`;
+		})
+		.join('');
+
+	return `<${tag} class="my-6 ${classes} text-gray-300 rounded-md p-4">${itemsHtml}</${tag}>`;
+};
+
+// Custom list item renderer to support task lists
+renderer.listitem = function (token: any) {
+	const text = this.parser.parseInline(token.tokens);
+	if (token.task) {
+		return `<li class="mb-2 flex items-center">
+			<input type="checkbox"${token.checked ? ' checked' : ''} disabled class="mr-2 text-indigo-400 focus:ring-indigo-500 rounded border-gray-600">
+			<span>${text}</span>
+		</li>`;
+	}
+	return `<li class="mb-2">${text}</li>`;
+};
+
+// Custom table renderer
+renderer.table = function (token: any) {
+	const header = this.parser.parse(token.header);
+	const body = this.parser.parse(token.rows);
+	return `<div class="my-8 overflow-x-auto">
+		<table class="w-full border-collapse bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700">
+			<thead class="bg-gray-700">${header}</thead>
+			<tbody>${body}</tbody>
+		</table>
+	</div>`;
+};
+
+// Custom table header renderer
+renderer.tablecell = function (token: any) {
+	const content = this.parser.parseInline(token.tokens);
+	const tag = token.header ? 'th' : 'td';
+	const classes = token.header
+		? 'px-6 py-3 text-left text-xs font-bold text-gray-200 uppercase tracking-wider border-b border-gray-600'
+		: 'px-6 py-4 text-sm text-gray-300 border-b border-gray-700';
+	return `<${tag} class="${classes}">${content}</${tag}>`;
+};
+
+// Custom table header renderer
+renderer.tablecell = function (token: any) {
+	const content = this.parser.parseInline(token.tokens);
+	const tag = token.header ? 'th' : 'td';
+	const classes = token.header
+		? 'px-6 py-3 text-left text-xs font-bold text-gray-200 uppercase tracking-wider border-b border-gray-600'
+		: 'px-6 py-4 text-sm text-gray-300 border-b border-gray-700';
+	return `<${tag} class="${classes}">${content}</${tag}>`;
+};
+
+// Custom link renderer
+renderer.link = function (token: any) {
+	const href = token.href || '#';
+	const title = token.title || '';
+	const text = this.parser.parseInline(token.tokens);
+
+	// Ensure href is always a string and handle potential objects
+	const safeHref = typeof href === 'string' ? href : href?.toString() || '#';
+	const titleAttr = title ? ` title="${title}"` : '';
+	const isExternal =
+		safeHref.startsWith('http') &&
+		!safeHref.includes(globalThis.location?.hostname || '');
+	const external = isExternal
+		? ' target="_blank" rel="noopener noreferrer"'
+		: '';
+
+	return `<a href="${safeHref}"${titleAttr}${external} class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 decoration-indigo-500/50 hover:decoration-indigo-400 transition-all duration-200 font-medium">${text}</a>`;
+};
+
+// Custom image renderer
+renderer.image = function (token: any) {
+	const href = token.href || '';
+	const title = token.title || '';
+	const text = token.text || '';
+
+	// Ensure href is always a string and handle potential objects
+	const safeHref = typeof href === 'string' ? href : href?.toString() || '';
+	const titleAttr = title ? ` title="${title}"` : '';
+	const altAttr = text ? ` alt="${text}"` : '';
+
+	return `<figure class="my-8">
+		<img src="${safeHref}"${altAttr}${titleAttr} class="w-full rounded-xl shadow-2xl hover:shadow-indigo-500/10 transition-shadow duration-300 cursor-zoom-in" loading="lazy" />
+		${text ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm">${text}</figcaption>` : ''}
+	</figure>`;
+};
+
+// Custom horizontal rule renderer
+renderer.hr = function () {
+	return `<hr class="my-12 border-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />`;
+};
+
+// Custom paragraph renderer to ensure proper spacing
+renderer.paragraph = function (token: any) {
+	const text = this.parser.parseInline(token.tokens);
+	return `<p class="mb-6 leading-relaxed">${text}</p>`;
+};
+
+// Apply custom renderer to marked
+marked.use({ renderer });
+
+// Helper function to format date
+function formatDate(dateString: string) {
+	return new Date(dateString).toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+	});
+}
+
+// Helper function to render content components
+function renderContentComponent(component: any) {
+	switch (component.type) {
+		case 'rich-text':
+			if (component.content) {
+				// Always treat rich-text as Markdown, never as HTML
+				const markdownContent = String(component.content);
+				const htmlContent = marked.parse(markdownContent);
+				const sanitizedContent = purify.sanitize(
+					String(htmlContent),
+					purifyOptions,
+				);
+				return `<div class="prose prose-content markdown-content">${sanitizedContent}</div>`;
+			}
+			return '';
+		case 'media-block':
+			return `<figure class="my-10 group">
+				${
+					component.media
+						? `
+					<div class="relative overflow-hidden rounded-xl shadow-2xl">
+						<img src="${component.media.url}" alt="${component.media.alternativeText || ''}"
+							class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
+							loading="lazy" />
+						<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+					</div>
+				`
+						: ''
+				}
+				${component.caption ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm leading-relaxed">${component.caption}</figcaption>` : ''}
+			</figure>`;
+		case 'code-block':
+			const filename = component.filename
+				? `
+				<div class="bg-gray-800 px-6 py-3 rounded-t-xl text-sm text-gray-300 border-b border-gray-700 flex items-center justify-between">
+					<div class="flex items-center">
+						<svg class="w-4 h-4 mr-2 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+						</svg>
+						<span class="font-medium">${component.filename}</span>
+					</div>
+					<span class="text-xs text-gray-500 uppercase tracking-wide">${component.language || 'text'}</span>
+				</div>
+			`
+				: '';
+
+			return `<div class="my-10 rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
+				${filename}
+				<pre class="bg-gray-900 p-6 overflow-x-auto ${component.filename ? 'rounded-b-xl' : 'rounded-xl'} text-sm leading-relaxed"><code class="language-${component.language || 'text'}">${component.code}</code></pre>
+				${component.caption ? `<p class="text-center text-gray-400 mt-4 mb-2 text-sm italic">${component.caption}</p>` : ''}
+			</div>`;
+		default:
+			return '';
+	}
+}
+
+// Process content for display - Always treat as Markdown
+function processContent(content: any): string {
+	if (!content) return '';
+
+	if (Array.isArray(content)) {
+		return content
+			.map((component) => renderContentComponent(component))
+			.join('');
+	}
+
+	if (typeof content === 'string') {
+		// Always parse as Markdown, never as HTML
+		// Ensure proper paragraph spacing by normalizing line breaks
+		const normalizedContent = content
+			.replace(/\r\n/g, '\n') // Normalize line endings
+			.replace(/\n{3,}/g, '\n\n') // Convert multiple newlines to double newlines
+			.trim();
+
+		const parsedContent = marked.parse(normalizedContent);
+		return purify.sanitize(String(parsedContent), purifyOptions);
+	}
+
+	return '';
+}
 
 //  Get the slug from the URL parameters
 const { slug } = Astro.params;
 
 if (!slug) {
-  console.error("No slug provided in URL parameters");
-  throw Astro.redirect("/projects");
+	console.error('No slug provided in URL parameters');
+	throw Astro.redirect('/projects');
 }
 
 // Validate slug format (basic validation)
 if (!/^[a-z0-9-]+$/i.test(slug)) {
-  console.error(`Invalid slug format: ${slug}`);
-  throw Astro.redirect("/404");
+	console.error(`Invalid slug format: ${slug}`);
+	throw Astro.redirect('/404');
 }
 
 let project: any;
 try {
-  const rawProject = await strapiAPI.getProject(slug);
-  if (!rawProject) {
-    return Astro.redirect("/404");
-  }
-  project = strapiAPI.formatProject(rawProject);
+	const rawProject = await strapiAPI.getProject(slug);
+	if (!rawProject) {
+		return Astro.redirect('/404');
+	}
+	project = strapiAPI.formatProject(rawProject);
 } catch (error) {
-  console.error("Error fetching project:", error);
-  return Astro.redirect("/404");
+	console.error('Error fetching project:', error);
+	return Astro.redirect('/404');
 }
 
 const title = project.title;
 const description =
-  project.seo?.metaDescription ||
-  project.summary ||
-  project.description?.substring(0, 160);
+	project.seo?.metaDescription ||
+	project.summary ||
+	project.description?.substring(0, 160);
 const image = project.seo?.metaImage || project.image;
+const author = 'Gideon Maina';
+
+// Generate structured data for SEO
+const structuredData = {
+	'@context': 'https://schema.org',
+	'@type': 'CreativeWork',
+	'headline': project.title,
+	'description': project.summary || description,
+	'image': image || '',
+	'author': {
+		'@type': 'Person',
+		'name': author,
+		'url': 'https://gideonmaina.com',
+	},
+	'creator': {
+		'@type': 'Person',
+		'name': author,
+	},
+	'dateCreated': project.startDate,
+	'dateModified': project.updatedAt,
+	'datePublished': project.publishedAt || project.startDate,
+	'keywords':
+		project.tags?.map((tag: any) => tag.name || tag).join(', ') || '',
+	'url': `https://gideonmaina.com/projects/${slug}`,
+	'mainEntityOfPage': {
+		'@type': 'WebPage',
+		'@id': `https://gideonmaina.com/projects/${slug}`,
+	},
+};
+
+// Process content for display
+const processedContent = processContent(project?.description);
 ---
 
 <Layout
-  title={title}
-  description={description}
-  image={image}
-  type="article"
-  publishedTime={project.publishedAt}
-  modifiedTime={project.updatedAt}
->
-  <!-- Project Hero Section -->
-  <section
-    class="relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black pt-24 pb-20"
-  >
-    <!-- Same background pattern as AppFooter -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
-    >
-    </div>
+	title={title}
+	description={description}
+	image={image}
+	type='article'
+	publishedTime={project.publishedAt}
+	modifiedTime={project.updatedAt}>
+	<!-- Structured Data -->
+	<script
+		type='application/ld+json'
+		set:html={JSON.stringify(structuredData)}
+	/>
+	<!-- Project Hero Section -->
+	<section
+		class='relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black pt-24 pb-20'>
+		<!-- Same background pattern as AppFooter -->
+		<div
+			class='absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20'>
+		</div>
 
-    <!-- SVG Background Pattern (same as AppFooter) -->
-    <div class="absolute inset-0 opacity-20">
-      <svg
-        class="absolute inset-0 h-full w-full"
-        fill="none"
-        viewBox="0 0 400 400"
-        aria-hidden="true"
-      >
-        <defs>
-          <pattern
-            id="project-hero-pattern"
-            x="0"
-            y="0"
-            width="20"
-            height="20"
-            patternUnits="userSpaceOnUse"
-          >
-            <rect
-              x="0"
-              y="0"
-              width="4"
-              height="4"
-              class="text-blue-500/30"
-              fill="currentColor"></rect>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#project-hero-pattern)"
-        ></rect>
-      </svg>
-    </div>
+		<!-- SVG Background Pattern (same as AppFooter) -->
+		<div class='absolute inset-0 opacity-20'>
+			<svg
+				class='absolute inset-0 h-full w-full'
+				fill='none'
+				viewBox='0 0 400 400'
+				aria-hidden='true'>
+				<defs>
+					<pattern
+						id='project-hero-pattern'
+						x='0'
+						y='0'
+						width='20'
+						height='20'
+						patternUnits='userSpaceOnUse'>
+						<rect
+							x='0'
+							y='0'
+							width='4'
+							height='4'
+							class='text-blue-500/30'
+							fill='currentColor'></rect>
+					</pattern>
+				</defs>
+				<rect
+					width='100%'
+					height='100%'
+					fill='url(#project-hero-pattern)'></rect>
+			</svg>
+		</div>
 
-    <!-- Animated floating particles -->
-    <div class="absolute inset-0 overflow-hidden">
-      <div
-        class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
-      >
-      </div>
-      <div
-        class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
-        style="animation-delay: 2s;"
-      >
-      </div>
-      <div
-        class="absolute top-1/2 left-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl animate-pulse"
-        style="animation-delay: 4s;"
-      >
-      </div>
-      <div
-        class="absolute bottom-1/4 right-1/3 w-48 h-48 bg-violet-500/10 rounded-full blur-2xl animate-pulse"
-        style="animation-delay: 6s;"
-      >
-      </div>
-    </div>
+		<!-- Animated floating particles -->
+		<div class='absolute inset-0 overflow-hidden'>
+			<div
+				class='absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse'>
+			</div>
+			<div
+				class='absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse'
+				style='animation-delay: 2s;'>
+			</div>
+			<div
+				class='absolute top-1/2 left-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl animate-pulse'
+				style='animation-delay: 4s;'>
+			</div>
+			<div
+				class='absolute bottom-1/4 right-1/3 w-48 h-48 bg-violet-500/10 rounded-full blur-2xl animate-pulse'
+				style='animation-delay: 6s;'>
+			</div>
+		</div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div
-          data-aos="fade-right"
-          data-aos-duration="1000"
-          data-aos-delay="200"
-        >
-          <!-- Breadcrumb -->
-          <nav
-            class="flex items-center space-x-2 text-sm text-gray-400 mb-6"
-            data-aos="fade-in"
-            data-aos-delay="100"
-          >
-            <a
-              href="/projects"
-              class="hover:text-blue-400 transition-colors flex items-center"
-            >
-              <svg
-                class="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"></path>
-              </svg>
-              Projects
-            </a>
-            <span>/</span>
-            <span class="text-white font-medium">{project.title}</span>
-          </nav>
+		<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+			<div class='grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
+				<div
+					data-aos='fade-right'
+					data-aos-duration='1000'
+					data-aos-delay='200'>
+					<!-- Breadcrumb -->
+					<nav
+						class='flex items-center space-x-2 text-sm text-gray-400 mb-6'
+						data-aos='fade-in'
+						data-aos-delay='100'>
+						<a
+							href='/projects'
+							class='hover:text-blue-400 transition-colors flex items-center'>
+							<svg
+								class='w-4 h-4 mr-1'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'>
+								<path
+									stroke-linecap='round'
+									stroke-linejoin='round'
+									stroke-width='2'
+									d='M15 19l-7-7 7-7'></path>
+							</svg>
+							Projects
+						</a>
+						<span>/</span>
+						<span class='text-white font-medium'
+							>{project.title}</span
+						>
+					</nav>
 
-          <!-- Project Meta -->
-          <div
-            class="flex flex-wrap items-center gap-3 mb-8"
-            data-aos="fade-up"
-            data-aos-delay="300"
-          >
-            {
-              project.category && (
-                <span
-                  class="px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm border border-opacity-30 transform hover:scale-105 transition-all duration-300"
-                  style={`background-color: ${project.category.color}20; color: ${project.category.color}; border-color: ${project.category.color};`}
-                >
-                  {project.category.name}
-                </span>
-              )
-            }
-            {
-              project.completed ? (
-                <span class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300">
-                  ✓ Completed
-                </span>
-              ) : (
-                <span class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse">
-                  🚧 In Progress
-                </span>
-              )
-            }
-          </div>
+					<!-- Project Meta -->
+					<div
+						class='flex flex-wrap items-center gap-3 mb-8'
+						data-aos='fade-up'
+						data-aos-delay='300'>
+						{
+							project.category && (
+								<span
+									class='px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm border border-opacity-30 transform hover:scale-105 transition-all duration-300'
+									style={`background-color: ${project.category.color}20; color: ${project.category.color}; border-color: ${project.category.color};`}>
+									{project.category.name}
+								</span>
+							)
+						}
+						{
+							project.completed ? (
+								<span class='bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300'>
+									✓ Completed
+								</span>
+							) : (
+								<span class='bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse'>
+									🚧 In Progress
+								</span>
+							)
+						}
+					</div>
 
-          <!-- Project Title -->
-          <h1
-            class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
-            data-aos="fade-up"
-            data-aos-delay="400"
-          >
-            <span
-              class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500"
-            >
-              {project.title}
-            </span>
-          </h1>
+					<!-- Project Title -->
+					<h1
+						class='text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight'
+						data-aos='fade-up'
+						data-aos-delay='400'>
+						<span
+							class='text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500'>
+							{project.title}
+						</span>
+					</h1>
 
-          <!-- Project Summary -->
-          {
-            project.summary && (
-              <p
-                class="text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl"
-                data-aos="fade-up"
-                data-aos-delay="500"
-              >
-                {project.summary}
-              </p>
-            )
-          }
+					<!-- Project Summary -->
+					{
+						project.summary && (
+							<p
+								class='text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl'
+								data-aos='fade-up'
+								data-aos-delay='500'>
+								{project.summary}
+							</p>
+						)
+					}
 
-          <!-- Project Stats -->
-          <div
-            class="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8"
-            data-aos="fade-up"
-            data-aos-delay="600"
-          >
-            <div
-              class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-blue-500/30 transition-all duration-300 group"
-            >
-              <div
-                class="text-blue-400 text-sm font-semibold mb-1 group-hover:text-blue-300 transition-colors"
-              >
-                Started
-              </div>
-              <div class="text-white font-bold">
-                {
-                  new Date(project.startDate).toLocaleDateString("en-US", {
-                    month: "short",
-                    year: "numeric",
-                  })
-                }
-              </div>
-            </div>
-            {
-              project.endDate && (
-                <div class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-green-500/30 transition-all duration-300 group">
-                  <div class="text-green-400 text-sm font-semibold mb-1 group-hover:text-green-300 transition-colors">
-                    Completed
-                  </div>
-                  <div class="text-white font-bold">
-                    {new Date(project.endDate).toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </div>
-                </div>
-              )
-            }
-            {
-              project.technologies && Array.isArray(project.technologies) && (
-                <div class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-purple-500/30 transition-all duration-300 group">
-                  <div class="text-purple-400 text-sm font-semibold mb-1 group-hover:text-purple-300 transition-colors">
-                    Technologies
-                  </div>
-                  <div class="text-white font-bold">
-                    {project.technologies.length}
-                  </div>
-                </div>
-              )
-            }
-          </div>
+					<!-- Project Stats -->
+					<div
+						class='grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8'
+						data-aos='fade-up'
+						data-aos-delay='600'>
+						<div
+							class='bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-blue-500/30 transition-all duration-300 group'>
+							<div
+								class='text-blue-400 text-sm font-semibold mb-1 group-hover:text-blue-300 transition-colors'>
+								Started
+							</div>
+							<div class='text-white font-bold'>
+								{
+									new Date(
+										project.startDate,
+									).toLocaleDateString('en-US', {
+										month: 'short',
+										year: 'numeric',
+									})
+								}
+							</div>
+						</div>
+						{
+							project.endDate && (
+								<div class='bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-green-500/30 transition-all duration-300 group'>
+									<div class='text-green-400 text-sm font-semibold mb-1 group-hover:text-green-300 transition-colors'>
+										Completed
+									</div>
+									<div class='text-white font-bold'>
+										{new Date(
+											project.endDate,
+										).toLocaleDateString('en-US', {
+											month: 'short',
+											year: 'numeric',
+										})}
+									</div>
+								</div>
+							)
+						}
+						{
+							project.technologies &&
+								Array.isArray(project.technologies) && (
+									<div class='bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-800/60 hover:border-purple-500/30 transition-all duration-300 group'>
+										<div class='text-purple-400 text-sm font-semibold mb-1 group-hover:text-purple-300 transition-colors'>
+											Technologies
+										</div>
+										<div class='text-white font-bold'>
+											{project.technologies.length}
+										</div>
+									</div>
+								)
+						}
+					</div>
 
-          <!-- Project Links -->
-          <div
-            class="flex flex-col sm:flex-row gap-4"
-            data-aos="fade-up"
-            data-aos-delay="700"
-          >
-            {
-              project.github && (
-                <a
-                  href={project.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group inline-flex items-center justify-center bg-gray-800/80 hover:bg-gray-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50"
-                >
-                  <svg
-                    class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                  </svg>
-                  View on GitHub
-                </a>
-              )
-            }
-            {
-              project.website && (
-                <a
-                  href={project.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group inline-flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                >
-                  <svg
-                    class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                  Visit Website
-                </a>
-              )
-            }
-          </div>
-        </div>
+					<!-- Project Links -->
+					<div
+						class='flex flex-col sm:flex-row gap-4'
+						data-aos='fade-up'
+						data-aos-delay='700'>
+						{
+							project.github && (
+								<a
+									href={project.github}
+									target='_blank'
+									rel='noopener noreferrer'
+									class='group inline-flex items-center justify-center bg-gray-800/80 hover:bg-gray-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50'>
+									<svg
+										class='w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300'
+										fill='currentColor'
+										viewBox='0 0 24 24'>
+										<path d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z' />
+									</svg>
+									View on GitHub
+								</a>
+							)
+						}
+						{
+							project.website && (
+								<a
+									href={project.website}
+									target='_blank'
+									rel='noopener noreferrer'
+									class='group inline-flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl'>
+									<svg
+										class='w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300'
+										fill='none'
+										stroke='currentColor'
+										viewBox='0 0 24 24'>
+										<path
+											stroke-linecap='round'
+											stroke-linejoin='round'
+											stroke-width='2'
+											d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+										/>
+									</svg>
+									Visit Website
+								</a>
+							)
+						}
+					</div>
+				</div>
 
-        <!-- Project Image -->
-        <div data-aos="fade-left" data-aos-duration="1000" data-aos-delay="400">
-          {
-            project.image && (
-              <div class="relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-500 group">
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  class="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700"
-                  loading="eager"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-transparent group-hover:from-gray-900/20 transition-all duration-500" />
-                {/* <!-- Decorative border effect --> */}
-                <div class="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-            )
-          }
-        </div>
-      </div>
-    </div>
-  </section>
+				<!-- Project Image -->
+				<div
+					data-aos='fade-left'
+					data-aos-duration='1000'
+					data-aos-delay='400'>
+					{
+						project.image && (
+							<div class='relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-500 group'>
+								<img
+									src={project.image}
+									alt={project.title}
+									class='w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700'
+									loading='eager'
+								/>
+								<div class='absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-transparent group-hover:from-gray-900/20 transition-all duration-500' />
+								{/* <!-- Decorative border effect --> */}
+								<div class='absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500' />
+							</div>
+						)
+					}
+				</div>
+			</div>
+		</div>
+	</section>
 
-  <!-- Project Details Section -->
-  <section
-    class="relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black"
-  >
-    <!-- Same background pattern as AppFooter -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10"
-    >
-    </div>
+	<!-- Project Details Section -->
+	<section
+		class='relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black'>
+		<!-- Same background pattern as AppFooter -->
+		<div
+			class='absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10'>
+		</div>
 
-    <!-- SVG Background Pattern -->
-    <div class="absolute inset-0 opacity-10">
-      <svg
-        class="absolute inset-0 h-full w-full"
-        fill="none"
-        viewBox="0 0 400 400"
-        aria-hidden="true"
-      >
-        <defs>
-          <pattern
-            id="project-details-pattern"
-            x="0"
-            y="0"
-            width="20"
-            height="20"
-            patternUnits="userSpaceOnUse"
-          >
-            <rect
-              x="0"
-              y="0"
-              width="4"
-              height="4"
-              class="text-blue-500/30"
-              fill="currentColor"></rect>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#project-details-pattern)"
-        ></rect>
-      </svg>
-    </div>
+		<!-- SVG Background Pattern -->
+		<div class='absolute inset-0 opacity-10'>
+			<svg
+				class='absolute inset-0 h-full w-full'
+				fill='none'
+				viewBox='0 0 400 400'
+				aria-hidden='true'>
+				<defs>
+					<pattern
+						id='project-details-pattern'
+						x='0'
+						y='0'
+						width='20'
+						height='20'
+						patternUnits='userSpaceOnUse'>
+						<rect
+							x='0'
+							y='0'
+							width='4'
+							height='4'
+							class='text-blue-500/30'
+							fill='currentColor'></rect>
+					</pattern>
+				</defs>
+				<rect
+					width='100%'
+					height='100%'
+					fill='url(#project-details-pattern)'></rect>
+			</svg>
+		</div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <!-- Main Content -->
-        <div class="lg:col-span-2" data-aos="fade-up" data-aos-delay="200">
-          <div
-            class="bg-gray-800/20 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/30"
-          >
-            <div class="prose prose-invert prose-lg max-w-none">
-              <div
-                class="text-gray-300 leading-relaxed"
-                set:html={project.description}
-              />
-            </div>
-          </div>
-        </div>
+		<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+			<div class='grid grid-cols-1 lg:grid-cols-3 gap-12'>
+				<!-- Main Content -->
+				<div
+					class='lg:col-span-2'
+					data-aos='fade-up'
+					data-aos-delay='200'>
+					<div
+						class='bg-gray-800/20 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/30'>
+						<div class='prose prose-invert prose-lg max-w-none'>
+							<div
+								class='text-gray-300 leading-relaxed prose prose-content markdown-content'
+								set:html={processedContent}
+							/>
+						</div>
+					</div>
+				</div>
 
-        <!-- Sidebar -->
-        <div class="space-y-8" data-aos="fade-up" data-aos-delay="400">
-          <!-- Technologies -->
-          {
-            project?.technologies &&
-              Array.isArray(project.technologies) &&
-              project.technologies.length > 0 && (
-                <div class="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-blue-500/30 transition-all duration-300 group">
-                  <h3 class="text-xl font-semibold text-white mb-4 flex items-center group-hover:text-blue-300 transition-colors">
-                    <svg
-                      class="w-5 h-5 mr-2 text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                      />
-                    </svg>
-                    Technologies Used
-                  </h3>
+				<!-- Sidebar -->
+				<div class='space-y-8' data-aos='fade-up' data-aos-delay='400'>
+					<!-- Technologies -->
+					{
+						project?.technologies &&
+							Array.isArray(project.technologies) &&
+							project.technologies.length > 0 && (
+								<div class='bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-blue-500/30 transition-all duration-300 group'>
+									<h3 class='text-xl font-semibold text-white mb-4 flex items-center group-hover:text-blue-300 transition-colors'>
+										<svg
+											class='w-5 h-5 mr-2 text-blue-400'
+											fill='none'
+											stroke='currentColor'
+											viewBox='0 0 24 24'>
+											<path
+												stroke-linecap='round'
+												stroke-linejoin='round'
+												stroke-width='2'
+												d='M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'
+											/>
+										</svg>
+										Technologies Used
+									</h3>
 
-                  {/* Show categorized technologies if available, otherwise show flat list */}
-                  {project.technologiesByCategory &&
-                  Object.keys(project.technologiesByCategory).length > 0 ? (
-                    <div class="space-y-4">
-                      {Object.entries(project.technologiesByCategory).map(
-                        ([category, techs]) => (
-                          <div key={category}>
-                            <h4 class="text-sm font-semibold text-blue-400 mb-2 capitalize">
-                              {category.replace(/[_-]/g, " ")}
-                            </h4>
-                            <div class="flex flex-wrap gap-2">
-                              {Array.isArray(techs) &&
-                                techs.map((tech: string) => (
-                                  <span
-                                    key={tech}
-                                    class="bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default"
-                                  >
-                                    {tech}
-                                  </span>
-                                ))}
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  ) : (
-                    <div class="flex flex-wrap gap-2">
-                      {project.technologies.map((tech: string) => (
-                        <span
-                          key={tech}
-                          class="bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-          }
+									{/* Show categorized technologies if available, otherwise show flat list */}
+									{project.technologiesByCategory &&
+									Object.keys(project.technologiesByCategory)
+										.length > 0 ? (
+										<div class='space-y-4'>
+											{Object.entries(
+												project.technologiesByCategory,
+											).map(
+												([category, techs]: [
+													string,
+													any,
+												]) => (
+													<div>
+														<h4 class='text-sm font-semibold text-blue-400 mb-2 capitalize'>
+															{category.replace(
+																/[_-]/g,
+																' ',
+															)}
+														</h4>
+														<div class='flex flex-wrap gap-2'>
+															{Array.isArray(
+																techs,
+															) &&
+																techs.map(
+																	(
+																		tech: string,
+																	) => (
+																		<span class='bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default'>
+																			{
+																				tech
+																			}
+																		</span>
+																	),
+																)}
+														</div>
+													</div>
+												),
+											)}
+										</div>
+									) : (
+										<div class='flex flex-wrap gap-2'>
+											{project.technologies.map(
+												(tech: string) => (
+													<span class='bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-600/50 hover:text-white transition-all duration-200 cursor-default'>
+														{tech}
+													</span>
+												),
+											)}
+										</div>
+									)}
+								</div>
+							)
+					}
 
-          <!-- Tags -->
-          {
-            project.tags && project.tags.length > 0 && (
-              <div class="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-purple-500/30 transition-all duration-300 group">
-                <h3 class="text-xl font-semibold text-white mb-4 flex items-center group-hover:text-purple-300 transition-colors">
-                  <svg
-                    class="w-5 h-5 mr-2 text-purple-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                  Tags
-                </h3>
-                <div class="flex flex-wrap gap-2">
-                  {project.tags.map((tag: any) => (
-                    <span
-                      class="px-3 py-1 rounded-full text-sm font-medium hover:scale-105 transition-all duration-300 cursor-default"
-                      style={`background-color: ${tag.color}20; color: ${tag.color}; border: 1px solid ${tag.color}40;`}
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )
-          }
+					<!-- Tags -->
+					{
+						project.tags && project.tags.length > 0 && (
+							<div class='bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-purple-500/30 transition-all duration-300 group'>
+								<h3 class='text-xl font-semibold text-white mb-4 flex items-center group-hover:text-purple-300 transition-colors'>
+									<svg
+										class='w-5 h-5 mr-2 text-purple-400'
+										fill='none'
+										stroke='currentColor'
+										viewBox='0 0 24 24'>
+										<path
+											stroke-linecap='round'
+											stroke-linejoin='round'
+											stroke-width='2'
+											d='M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
+										/>
+									</svg>
+									Tags
+								</h3>
+								<div class='flex flex-wrap gap-2'>
+									{project.tags.map((tag: any) => (
+										<span
+											class='px-3 py-1 rounded-full text-sm font-medium hover:scale-105 transition-all duration-300 cursor-default'
+											style={`background-color: ${tag.color}20; color: ${tag.color}; border: 1px solid ${tag.color}40;`}>
+											{tag.name}
+										</span>
+									))}
+								</div>
+							</div>
+						)
+					}
 
-          <!-- Project Info -->
-          <div
-            class="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-green-500/30 transition-all duration-300 group"
-          >
-            <h3
-              class="text-xl font-semibold text-white mb-4 flex items-center group-hover:text-green-300 transition-colors"
-            >
-              <svg
-                class="w-5 h-5 mr-2 text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              Project Info
-            </h3>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <span class="text-gray-400 font-medium">Status:</span>
-                <span
-                  class={`text-white ml-2 px-2 py-1 rounded-full text-sm ${project.completed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}
-                >
-                  {project.completed ? "✓ Completed" : "🚧 In Progress"}
-                </span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-gray-400 font-medium">Started:</span>
-                <span class="text-white ml-2">
-                  {
-                    new Date(project.startDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                    })
-                  }
-                </span>
-              </div>
-              {
-                project.endDate && (
-                  <div class="flex items-center justify-between">
-                    <span class="text-gray-400 font-medium">Completed:</span>
-                    <span class="text-white ml-2">
-                      {new Date(project.endDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                      })}
-                    </span>
-                  </div>
-                )
-              }
-              {
-                project.category && (
-                  <div class="flex items-center justify-between">
-                    <span class="text-gray-400 font-medium">Category:</span>
-                    <span class="text-white ml-2">{project.category.name}</span>
-                  </div>
-                )
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+					<!-- Project Info -->
+					<div
+						class='bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:bg-gray-800/40 hover:border-green-500/30 transition-all duration-300 group'>
+						<h3
+							class='text-xl font-semibold text-white mb-4 flex items-center group-hover:text-green-300 transition-colors'>
+							<svg
+								class='w-5 h-5 mr-2 text-green-400'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'>
+								<path
+									stroke-linecap='round'
+									stroke-linejoin='round'
+									stroke-width='2'
+									d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+								></path>
+							</svg>
+							Project Info
+						</h3>
+						<div class='space-y-4'>
+							<div class='flex items-center justify-between'>
+								<span class='text-gray-400 font-medium'
+									>Status:</span
+								>
+								<span
+									class={`text-white ml-2 px-2 py-1 rounded-full text-sm ${project.completed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+									{
+										project.completed
+											? '✓ Completed'
+											: '🚧 In Progress'
+									}
+								</span>
+							</div>
+							<div class='flex items-center justify-between'>
+								<span class='text-gray-400 font-medium'
+									>Started:</span
+								>
+								<span class='text-white ml-2'>
+									{
+										new Date(
+											project.startDate,
+										).toLocaleDateString('en-US', {
+											year: 'numeric',
+											month: 'long',
+										})
+									}
+								</span>
+							</div>
+							{
+								project.endDate && (
+									<div class='flex items-center justify-between'>
+										<span class='text-gray-400 font-medium'>
+											Completed:
+										</span>
+										<span class='text-white ml-2'>
+											{new Date(
+												project.endDate,
+											).toLocaleDateString('en-US', {
+												year: 'numeric',
+												month: 'long',
+											})}
+										</span>
+									</div>
+								)
+							}
+							{
+								project.category && (
+									<div class='flex items-center justify-between'>
+										<span class='text-gray-400 font-medium'>
+											Category:
+										</span>
+										<span class='text-white ml-2'>
+											{project.category.name}
+										</span>
+									</div>
+								)
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 
-  <!-- Project Gallery with Infinite Carousel -->
-  {
-    project.gallery && project.gallery.length > 0 && (
-      <section class="relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black">
-        {/* <!-- Same background pattern as AppFooter --> */}
-        <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10" />
+	<!-- Project Gallery with Infinite Carousel -->
+	{
+		project.gallery && project.gallery.length > 0 && (
+			<section class='relative py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-black'>
+				{/* <!-- Same background pattern as AppFooter --> */}
+				<div class='absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-gray-900/10' />
 
-        {/* <!-- SVG Background Pattern --> */}
-        <div class="absolute inset-0 opacity-10">
-          <svg
-            class="absolute inset-0 h-full w-full"
-            fill="none"
-            viewBox="0 0 400 400"
-            aria-hidden="true"
-          >
-            <defs>
-              <pattern
-                id="project-gallery-pattern"
-                x="0"
-                y="0"
-                width="20"
-                height="20"
-                patternUnits="userSpaceOnUse"
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  width="4"
-                  height="4"
-                  class="text-blue-500/30"
-                  fill="currentColor"
-                />
-              </pattern>
-            </defs>
-            <rect
-              width="100%"
-              height="100%"
-              fill="url(#project-gallery-pattern)"
-            />
-          </svg>
-        </div>
+				{/* <!-- SVG Background Pattern --> */}
+				<div class='absolute inset-0 opacity-10'>
+					<svg
+						class='absolute inset-0 h-full w-full'
+						fill='none'
+						viewBox='0 0 400 400'
+						aria-hidden='true'>
+						<defs>
+							<pattern
+								id='project-gallery-pattern'
+								x='0'
+								y='0'
+								width='20'
+								height='20'
+								patternUnits='userSpaceOnUse'>
+								<rect
+									x='0'
+									y='0'
+									width='4'
+									height='4'
+									class='text-blue-500/30'
+									fill='currentColor'
+								/>
+							</pattern>
+						</defs>
+						<rect
+							width='100%'
+							height='100%'
+							fill='url(#project-gallery-pattern)'
+						/>
+					</svg>
+				</div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2
-            class="text-3xl font-bold text-white mb-12 text-center"
-            data-aos="fade-up"
-          >
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-              Project Gallery
-            </span>
-          </h2>
+				<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+					<h2
+						class='text-3xl font-bold text-white mb-12 text-center'
+						data-aos='fade-up'>
+						<span class='text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600'>
+							Project Gallery
+						</span>
+					</h2>
 
-          <div class="relative" data-aos="fade-up" data-aos-delay="200">
-            {/* <!-- Carousel Container --> */}
-            <div class="overflow-hidden rounded-2xl">
-              <div
-                id="gallery-carousel-track"
-                class="flex transition-transform duration-500 ease-in-out"
-                style="width: calc(100% * {project.gallery.length});"
-              >
-                {project.gallery.map((image, index) => (
-                  <div class="w-full flex-shrink-0 px-4">
-                    <div class="relative group rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                      <img
-                        src={image.url}
-                        alt={
-                          image.alternativeText ||
-                          `${project.title} - Gallery Image ${index + 1}`
-                        }
-                        class="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      {image.caption && (
-                        <div class="absolute bottom-4 left-4 right-4 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-900/80 backdrop-blur-sm rounded-lg p-3">
-                          {image.caption}
-                        </div>
-                      )}
-                      {/* <!-- Image counter --> */}
-                      <div class="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {index + 1} / {project.gallery.length}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+					<div
+						class='relative'
+						data-aos='fade-up'
+						data-aos-delay='200'>
+						{/* <!-- Carousel Container --> */}
+						<div class='overflow-hidden rounded-2xl'>
+							<div
+								id='gallery-carousel-track'
+								class='flex transition-transform duration-500 ease-in-out'
+								style='width: calc(100% * {project.gallery.length});'>
+								{project.gallery.map(
+									(image: any, index: number) => (
+										<div class='w-full flex-shrink-0 px-4'>
+											<div class='relative group rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105'>
+												<img
+													src={image.url}
+													alt={
+														image.alternativeText ||
+														`${project.title} - Gallery Image ${index + 1}`
+													}
+													class='w-full h-96 object-cover group-hover:scale-110 transition-transform duration-300'
+													loading='lazy'
+												/>
+												<div class='absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+												{image.caption && (
+													<div class='absolute bottom-4 left-4 right-4 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-900/80 backdrop-blur-sm rounded-lg p-3'>
+														{image.caption}
+													</div>
+												)}
+												{/* <!-- Image counter --> */}
+												<div class='absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold'>
+													{index + 1} /{' '}
+													{project.gallery.length}
+												</div>
+											</div>
+										</div>
+									),
+								)}
+							</div>
+						</div>
 
-            {/* <!-- Navigation Buttons --> */}
-            <button
-              id="gallery-prev"
-              class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10"
-              aria-label="Previous image"
-            >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <button
-              id="gallery-next"
-              class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10"
-              aria-label="Next image"
-            >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+						{/* <!-- Navigation Buttons --> */}
+						<button
+							id='gallery-prev'
+							class='absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10'
+							aria-label='Previous image'>
+							<svg
+								class='w-6 h-6'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'>
+								<path
+									stroke-linecap='round'
+									stroke-linejoin='round'
+									stroke-width='2'
+									d='M15 19l-7-7 7-7'
+								/>
+							</svg>
+						</button>
+						<button
+							id='gallery-next'
+							class='absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm border border-gray-600/50 hover:border-blue-500/50 z-10'
+							aria-label='Next image'>
+							<svg
+								class='w-6 h-6'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'>
+								<path
+									stroke-linecap='round'
+									stroke-linejoin='round'
+									stroke-width='2'
+									d='M9 5l7 7-7 7'
+								/>
+							</svg>
+						</button>
 
-            {/* <!-- Carousel Indicators --> */}
-            <div
-              class="flex justify-center mt-6 space-x-2"
-              id="gallery-indicators"
-            >
-              {project.gallery.map((_, index) => (
-                <button
-                  class={`w-3 h-3 rounded-full transition-all duration-300 ${index === 0 ? "bg-blue-500" : "bg-gray-600 hover:bg-gray-500"}`}
-                  data-slide={index}
-                  aria-label={`Go to image ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    )
-  }
+						{/* <!-- Carousel Indicators --> */}
+						<div
+							class='flex justify-center mt-6 space-x-2'
+							id='gallery-indicators'>
+							{project.gallery.map((_: any, index: number) => (
+								<button
+									class={`w-3 h-3 rounded-full transition-all duration-300 ${index === 0 ? 'bg-blue-500' : 'bg-gray-600 hover:bg-gray-500'}`}
+									data-slide={index}
+									aria-label={`Go to image ${index + 1}`}
+								/>
+							))}
+						</div>
+					</div>
+				</div>
+			</section>
+		)
+	}
 </Layout>
 
 <style>
-  .prose {
-    color: #d1d5db;
-  }
+	/* Enhanced prose styles for better readability */
+	.prose {
+		color: #e5e7eb;
+		max-width: none;
+		line-height: 1.8;
+	}
 
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    color: #ffffff;
-    margin-bottom: 1rem;
-  }
+	.prose h1,
+	.prose h2,
+	.prose h3,
+	.prose h4,
+	.prose h5,
+	.prose h6 {
+		color: #ffffff;
+		margin-bottom: 1rem;
+		font-weight: 700;
+	}
 
-  .prose a {
-    color: #60a5fa;
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
+	.prose h1 {
+		font-size: 2.25rem;
+		margin-top: 2rem;
+	}
 
-  .prose a:hover {
-    color: #93c5fd;
-  }
+	.prose h2 {
+		font-size: 1.875rem;
+		margin-top: 1.75rem;
+	}
 
-  .prose code {
-    background-color: #374151;
-    color: #e5e7eb;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-  }
+	.prose h3 {
+		font-size: 1.5rem;
+		margin-top: 1.5rem;
+	}
 
-  .prose pre {
-    background-color: #1f2937;
-    color: #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    overflow-x: auto;
-  }
+	.prose a {
+		color: #60a5fa;
+		text-decoration: none;
+		transition: color 0.3s ease;
+	}
 
-  .prose blockquote {
-    border-left: 4px solid #3b82f6;
-    color: #d1d5db;
-    padding-left: 1rem;
-    margin: 1.5rem 0;
-    font-style: italic;
-  }
+	.prose a:hover {
+		color: #93c5fd;
+	}
+
+	.prose code {
+		background-color: #374151;
+		color: #e5e7eb;
+		padding: 0.125rem 0.5rem;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+	}
+
+	.prose pre {
+		background-color: #1f2937;
+		color: #e5e7eb;
+		border-radius: 0.5rem;
+		padding: 1rem;
+		overflow-x: auto;
+		border: 1px solid #374151;
+	}
+
+	.prose pre code {
+		background: transparent;
+		padding: 0;
+		border-radius: 0;
+		font-size: inherit;
+	}
+
+	.prose blockquote {
+		border-left: 4px solid #3b82f6;
+		color: #d1d5db;
+		padding-left: 1rem;
+		margin: 1.5rem 0;
+		font-style: italic;
+		background: rgba(59, 130, 246, 0.05);
+		padding: 1rem 1rem 1rem 2rem;
+		border-radius: 0 0.5rem 0.5rem 0;
+	}
+
+	.prose strong {
+		color: #ffffff;
+		font-weight: 600;
+	}
+
+	.prose em {
+		color: #d1d5db;
+		font-style: italic;
+	}
+
+	.prose table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 1.5rem 0;
+		background: rgba(31, 41, 55, 0.5);
+		border: 1px solid #374151;
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
+
+	.prose th {
+		background: #374151;
+		color: #f9fafb;
+		font-weight: 600;
+		padding: 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid #4b5563;
+	}
+
+	.prose td {
+		padding: 0.75rem;
+		border-bottom: 1px solid #374151;
+		color: #d1d5db;
+	}
+
+	.prose tr:last-child td {
+		border-bottom: none;
+	}
+
+	.prose img {
+		border-radius: 0.75rem;
+		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+		transition:
+			transform 0.3s ease,
+			box-shadow 0.3s ease;
+	}
+
+	.prose img:hover {
+		transform: scale(1.02);
+		box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+	}
+
+	.prose hr {
+		border: none;
+		height: 1px;
+		background: linear-gradient(
+			to right,
+			transparent,
+			#6366f1,
+			transparent
+		);
+		margin: 3rem 0;
+	}
+
+	.prose p {
+		margin-bottom: 1.5rem;
+		color: #d1d5db;
+	}
 
   .prose ul,
-  .prose ol {
-    color: #d1d5db;
-  }
+	.prose ol {
+		margin: 2rem 0;
+		padding-left: 2rem;
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 0.5rem;
+	}
 
-  .prose strong {
-    color: #ffffff;
-    font-weight: 600;
-  }
+	.prose li {
+		margin: 0.75rem 0;
+		line-height: 1.7;
+		color: #d1d5db;
+	}
 
-  /* Gallery Carousel Styles */
-  #gallery-carousel-track {
-    transition: transform 0.5s ease-in-out;
-  }
+
+	/* Code block enhancements */
+	.prose-content pre {
+		position: relative;
+		background: #0f172a;
+		border: 1px solid #1e293b;
+	}
+
+	.prose-content pre:hover {
+		border-color: #3b82f6;
+	}
+
+	/* Gallery Carousel Styles */
+	#gallery-carousel-track {
+		transition: transform 0.5s ease-in-out;
+	}
+
+	/* Custom scrollbar for better UX */
+	.prose-content::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.prose-content::-webkit-scrollbar-track {
+		background: rgba(31, 41, 55, 0.3);
+		border-radius: 4px;
+	}
+
+	.prose-content::-webkit-scrollbar-thumb {
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 4px;
+	}
+
+	.prose-content::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(135deg, #4f46e5, #7c3aed);
+	}
 </style>
 
-<script>
-  // Gallery Carousel Functionality
-  class GalleryCarousel {
-    constructor() {
-      this.currentSlide = 0;
-      this.track = document.getElementById("gallery-carousel-track");
-      this.prevBtn = document.getElementById("gallery-prev");
-      this.nextBtn = document.getElementById("gallery-next");
-      this.indicators = document.querySelectorAll("#gallery-indicators button");
-      this.totalSlides = this.indicators.length;
-      this.autoplayInterval = null;
+<script is:inline>
+	// Enhanced functionality for project page
+	document.addEventListener('DOMContentLoaded', function () {
+		// Copy to clipboard fallback for code blocks
+		window.copyToClipboard = function (text) {
+			navigator.clipboard.writeText(text).then(function () {
+				// Create a temporary toast notification
+				const toast = document.createElement('div');
+				toast.className =
+					'fixed bottom-24 right-8 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+				toast.textContent = 'Code copied to clipboard!';
+				document.body.appendChild(toast);
 
-      if (this.totalSlides > 0) {
-        this.init();
-      }
-    }
+				setTimeout(function () {
+					toast.classList.add('opacity-0', 'translate-y-4');
+					setTimeout(function () {
+						document.body.removeChild(toast);
+					}, 300);
+				}, 2000);
+			});
+		};
 
-    init() {
-      // Add event listeners
-      this.prevBtn?.addEventListener("click", () => this.prevSlide());
-      this.nextBtn?.addEventListener("click", () => this.nextSlide());
+		// Add copy functionality to code blocks
+		const codeBlocks = document.querySelectorAll('pre code');
+		codeBlocks.forEach(function (block) {
+			const button = document.createElement('button');
+			button.className =
+				'absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100';
+			button.textContent = 'Copy';
+			button.onclick = function () {
+				navigator.clipboard.writeText(block.textContent || '');
+				button.textContent = 'Copied!';
+				setTimeout(function () {
+					button.textContent = 'Copy';
+				}, 2000);
+			};
 
-      // Indicator click handlers
-      this.indicators.forEach((indicator, index) => {
-        indicator.addEventListener("click", () => this.goToSlide(index));
-      });
+			const pre = block.parentElement;
+			if (pre && pre.tagName === 'PRE') {
+				pre.className += ' relative group';
+				pre.appendChild(button);
+			}
+		});
 
-      // Auto-play functionality (slower for gallery)
-      this.startAutoplay();
+		// Add smooth scrolling for anchor links
+		document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+			anchor.addEventListener('click', function (e) {
+				e.preventDefault();
+				const element = e.currentTarget;
+				if (element && element instanceof HTMLAnchorElement) {
+					const href = element.getAttribute('href');
+					if (href) {
+						const target = document.querySelector(href);
+						if (target) {
+							target.scrollIntoView({
+								behavior: 'smooth',
+								block: 'start',
+							});
+						}
+					}
+				}
+			});
+		});
 
-      // Pause on hover
-      const carousel = this.track?.parentElement?.parentElement;
-      carousel?.addEventListener("mouseenter", () => this.stopAutoplay());
-      carousel?.addEventListener("mouseleave", () => this.startAutoplay());
+		// Add image zoom functionality
+		const images = document.querySelectorAll(
+			'.prose img, .prose-content img',
+		);
+		images.forEach(function (img) {
+			if (img instanceof HTMLImageElement) {
+				img.style.cursor = 'zoom-in';
+				img.addEventListener('click', function (event) {
+					const overlay = document.createElement('div');
+					overlay.className =
+						'fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-zoom-out';
+					const imgEl = event.target;
+					overlay.innerHTML =
+						'<img src="' +
+						imgEl.src +
+						'" alt="' +
+						imgEl.alt +
+						'" class="max-w-full max-h-full object-contain">';
 
-      // Keyboard navigation
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft") {
-          e.preventDefault();
-          this.prevSlide();
-        }
-        if (e.key === "ArrowRight") {
-          e.preventDefault();
-          this.nextSlide();
-        }
-      });
+					overlay.addEventListener('click', function () {
+						document.body.removeChild(overlay);
+					});
 
-      // Touch/swipe support
-      let startX = 0;
-      let endX = 0;
+					document.body.appendChild(overlay);
+				});
+			}
+		});
 
-      carousel?.addEventListener("touchstart", (e) => {
-        startX = e.touches[0].clientX;
-      });
+		// Process any HTML elements that need additional styling
+		document
+			.querySelectorAll('.prose-content')
+			.forEach(function (container) {
+				// Apply basic styling to HTML tables if they don't have classes
+				container
+					.querySelectorAll('table:not([class])')
+					.forEach(function (tableEl) {
+						if (tableEl instanceof HTMLTableElement) {
+							tableEl.classList.add('prose-table');
+							// Add table styling with CSS classes instead of inline styles
+							tableEl.classList.add(
+								'w-full',
+								'border-collapse',
+								'my-6',
+							);
+						}
+					});
 
-      carousel?.addEventListener("touchend", (e) => {
-        endX = e.changedTouches[0].clientX;
-        const diff = startX - endX;
+				// Style HTML headings that might be missing styling
+				['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(function (tag) {
+					container
+						.querySelectorAll(tag + ':not([class])')
+						.forEach(function (heading) {
+							heading.classList.add('prose-' + tag);
+						});
+				});
+			});
+	});
 
-        if (Math.abs(diff) > 50) {
-          // Minimum swipe distance
-          if (diff > 0) {
-            this.nextSlide();
-          } else {
-            this.prevSlide();
-          }
-        }
-      });
-    }
+	// Gallery Carousel Functionality
+	class GalleryCarousel {
+		constructor() {
+			this.currentSlide = 0;
+			this.track = document.getElementById('gallery-carousel-track');
+			this.prevBtn = document.getElementById('gallery-prev');
+			this.nextBtn = document.getElementById('gallery-next');
+			this.indicators = document.querySelectorAll(
+				'#gallery-indicators button',
+			);
+			this.totalSlides = this.indicators.length;
+			this.autoplayInterval = null;
 
-    goToSlide(index) {
-      this.currentSlide = index;
-      this.updateCarousel();
-    }
+			if (this.totalSlides > 0) {
+				this.init();
+			}
+		}
 
-    nextSlide() {
-      this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
-      this.updateCarousel();
-    }
+		init() {
+			// Add event listeners
+			this.prevBtn?.addEventListener('click', () => this.prevSlide());
+			this.nextBtn?.addEventListener('click', () => this.nextSlide());
 
-    prevSlide() {
-      this.currentSlide =
-        (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-      this.updateCarousel();
-    }
+			// Indicator click handlers
+			this.indicators.forEach((indicator, index) => {
+				indicator.addEventListener('click', () =>
+					this.goToSlide(index),
+				);
+			});
 
-    updateCarousel() {
-      if (this.track) {
-        const translateX = -this.currentSlide * 100;
-        this.track.style.transform = `translateX(${translateX}%)`;
-      }
+			// Auto-play functionality (slower for gallery)
+			this.startAutoplay();
 
-      // Update indicators
-      this.indicators.forEach((indicator, index) => {
-        indicator.classList.toggle("bg-blue-500", index === this.currentSlide);
-        indicator.classList.toggle("bg-gray-600", index !== this.currentSlide);
-      });
-    }
+			// Pause on hover
+			const carousel = this.track?.parentElement?.parentElement;
+			carousel?.addEventListener('mouseenter', () => this.stopAutoplay());
+			carousel?.addEventListener('mouseleave', () =>
+				this.startAutoplay(),
+			);
 
-    startAutoplay() {
-      this.stopAutoplay();
-      if (this.totalSlides > 1) {
-        this.autoplayInterval = setInterval(() => {
-          this.nextSlide();
-        }, 7000); // Change slide every 7 seconds
-      }
-    }
+			// Keyboard navigation
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'ArrowLeft') {
+					e.preventDefault();
+					this.prevSlide();
+				}
+				if (e.key === 'ArrowRight') {
+					e.preventDefault();
+					this.nextSlide();
+				}
+			});
 
-    stopAutoplay() {
-      if (this.autoplayInterval) {
-        clearInterval(this.autoplayInterval);
-        this.autoplayInterval = null;
-      }
-    }
-  }
+			// Touch/swipe support
+			let startX = 0;
+			let endX = 0;
 
-  // Initialize when DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
-    new GalleryCarousel();
-  });
+			carousel?.addEventListener('touchstart', (e) => {
+				startX = e.touches[0].clientX;
+			});
 
-  // Also initialize on Astro page transitions
-  document.addEventListener("astro:page-load", () => {
-    new GalleryCarousel();
-  });
+			carousel?.addEventListener('touchend', (e) => {
+				endX = e.changedTouches[0].clientX;
+				const diff = startX - endX;
+
+				if (Math.abs(diff) > 50) {
+					// Minimum swipe distance
+					if (diff > 0) {
+						this.nextSlide();
+					} else {
+						this.prevSlide();
+					}
+				}
+			});
+		}
+
+		goToSlide(index) {
+			this.currentSlide = index;
+			this.updateCarousel();
+		}
+
+		nextSlide() {
+			this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+			this.updateCarousel();
+		}
+
+		prevSlide() {
+			this.currentSlide =
+				(this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+			this.updateCarousel();
+		}
+
+		updateCarousel() {
+			if (this.track) {
+				const translateX = -this.currentSlide * 100;
+				this.track.style.transform = `translateX(${translateX}%)`;
+			}
+
+			// Update indicators
+			this.indicators.forEach((indicator, index) => {
+				indicator.classList.toggle(
+					'bg-blue-500',
+					index === this.currentSlide,
+				);
+				indicator.classList.toggle(
+					'bg-gray-600',
+					index !== this.currentSlide,
+				);
+			});
+		}
+
+		startAutoplay() {
+			this.stopAutoplay();
+			if (this.totalSlides > 1) {
+				this.autoplayInterval = setInterval(() => {
+					this.nextSlide();
+				}, 7000); // Change slide every 7 seconds
+			}
+		}
+
+		stopAutoplay() {
+			if (this.autoplayInterval) {
+				clearInterval(this.autoplayInterval);
+				this.autoplayInterval = null;
+			}
+		}
+	}
+
+	// Initialize when DOM is ready
+	document.addEventListener('DOMContentLoaded', () => {
+		new GalleryCarousel();
+	});
+
+	// Also initialize on Astro page transitions
+	document.addEventListener('astro:page-load', () => {
+		new GalleryCarousel();
+	});
+
+	// Add Prism.js for code highlighting
+	document.addEventListener('DOMContentLoaded', function () {
+		// Only load Prism if we have code blocks
+		if (document.querySelector('pre code')) {
+			// Load Prism.js dynamically
+			const prismCSS = document.createElement('link');
+			prismCSS.rel = 'stylesheet';
+			prismCSS.href =
+				'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';
+			document.head.appendChild(prismCSS);
+
+			const prismScript = document.createElement('script');
+			prismScript.src =
+				'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';
+			document.body.appendChild(prismScript);
+
+			// Add language support for common languages
+			const languages = [
+				'javascript',
+				'css',
+				'html',
+				'typescript',
+				'python',
+				'bash',
+				'json',
+			];
+			languages.forEach(function (lang) {
+				const script = document.createElement('script');
+				script.src =
+					'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-' +
+					lang +
+					'.min.js';
+				document.body.appendChild(script);
+			});
+
+			// Initialize Prism when scripts are loaded
+			prismScript.onload = function () {
+				if (window.Prism) {
+					window.Prism.highlightAll();
+				}
+			};
+		}
+	});
 </script>
