@@ -1,10 +1,16 @@
 ---
 import { AstroSeo } from "@astrolib/seo";
 import { Schema } from "astro-seo-schema";
+import { Fragment } from "astro/jsx-runtime";
+
+const siteName = "Gideon Maina";
+const siteUrl = "https://gideonmaina.me";
+const authorName = "Gideon Maina";
+const profileImage = `${siteUrl}/profile.jpg`;
 
 const {
   title,
-  description = "Gideon Maina - A passionate full-stack developer, creative thinker, and problem solver building digital experiences that make a difference.",
+  description = `${authorName} - A passionate full-stack developer, creative thinker, and problem solver building digital experiences that make a difference.`,
   image = "/og-image.jpg",
   url = Astro.url.href,
   type = "website",
@@ -16,9 +22,8 @@ const {
   nofollow = false,
 } = Astro.props;
 
-const fullTitle = `Gideon Maina | ${title}`;
+const fullTitle = `${authorName} | ${title}`;
 
-// SEO configuration
 const seoConfig = {
   title: fullTitle,
   description,
@@ -38,12 +43,12 @@ const seoConfig = {
         alt: title,
       },
     ],
-    site_name: "Gideon Maina",
+    site_name: siteName,
     ...(type === "article" && {
       article: {
-        publishedTime: publishedTime,
-        modifiedTime: modifiedTime,
-        authors: [author || "Gideon Maina"],
+        publishedTime,
+        modifiedTime,
+        authors: [author || authorName],
       },
     }),
   },
@@ -53,27 +58,13 @@ const seoConfig = {
     site: "@gideon_maina",
   },
   additionalMetaTags: [
-    {
-      name: "author",
-      content: "Gideon Maina",
-    },
-    {
-      name: "theme-color",
-      content: "#1f2937",
-    },
+    { name: "author", content: authorName },
+    { name: "theme-color", content: "#1f2937" },
     ...(keywords ? [{ name: "keywords", content: keywords }] : []),
   ],
   additionalLinkTags: [
-    {
-      rel: "icon",
-      type: "image/svg+xml",
-      href: "/favicon.svg",
-    },
-    {
-      rel: "icon",
-      type: "image/x-icon",
-      href: "/favicon.ico",
-    },
+    { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+    { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     {
       rel: "apple-touch-icon",
       sizes: "180x180",
@@ -83,20 +74,26 @@ const seoConfig = {
 };
 ---
 
-<head>
+<head lang="en">
+  <!-- ✅ UTF-8 Fix for emoji rendering -->
+  <meta charset="UTF-8" />
+
+  <!-- Responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO meta -->
   <AstroSeo {...seoConfig} />
 
-  <!-- Structured Data using astro-seo-schema -->
+  <!-- Structured Data for Person -->
   <Schema
     item={{
       "@context": "https://schema.org",
       "@type": "Person",
-      name: "Gideon Maina",
-      url: "https://gideonmaina.me",
-      image: "https://gideonmaina.me/profile.jpg",
+      name: authorName,
+      url: siteUrl,
+      image: profileImage,
       jobTitle: "Full-Stack Developer",
-      description:
-        "Passionate full-stack developer, creative thinker, and problem solver building digital experiences that make a difference.",
+      description,
       sameAs: [
         "https://github.com/gideonmaina",
         "https://linkedin.com/in/gideonmaina",
@@ -126,63 +123,68 @@ const seoConfig = {
 
   {
     type === "article" && (
-      <Schema
-        item={{
-          "@context": "https://schema.org",
-          "@type": "Article",
-          headline: title,
-          description: description,
-          image: image,
-          datePublished: publishedTime,
-          dateModified: modifiedTime || publishedTime,
-          author: {
-            "@type": "Person",
-            name: author || "Gideon Maina",
-            url: "https://gideonmaina.me",
-          },
-          publisher: {
-            "@type": "Person",
-            name: "Gideon Maina",
-            url: "https://gideonmaina.me",
-          },
-          mainEntityOfPage: {
-            "@type": "WebPage",
-            "@id": url,
-          },
-        }}
-      />
+      <Fragment>
+        <Schema
+          item={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: title,
+            description,
+            image,
+            datePublished: publishedTime,
+            dateModified: modifiedTime || publishedTime,
+            author: {
+              "@type": "Person",
+              name: author || authorName,
+              url: siteUrl,
+            },
+            publisher: {
+              "@type": "Person",
+              name: authorName,
+              url: siteUrl,
+            },
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": url,
+            },
+          }}
+        />
+      </Fragment>
     )
   }
 
   {
     type === "website" && (
-      <Schema
-        item={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Gideon Maina",
-          url: "https://gideonmaina.me",
-          description: description,
-          author: {
-            "@type": "Person",
-            name: "Gideon Maina",
-          },
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://gideonmaina.me/search?q={search_term_string}",
-            "query-input": "required name=search_term_string",
-          },
-        }}
-      />
+      <Fragment>
+        <Schema
+          item={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: siteName,
+            url: siteUrl,
+            description,
+            author: {
+              "@type": "Person",
+              name: authorName,
+            },
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${siteUrl}/search?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          }}
+        />
+      </Fragment>
     )
   }
+
   <!-- Font Awesome -->
   <link
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     rel="stylesheet"
   />
 
-  <!-- manifest -->
+  <!-- Manifest -->
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#a592a3" />
 </head>

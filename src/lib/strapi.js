@@ -110,16 +110,52 @@ class StrapiAPI {
     });
   }
 
+  // Helper method to add blog post population parameters
+  addBlogPostPopulation(params) {
+    // Populate all top-level fields
+    params.append("populate[0]", "image");
+    params.append("populate[1]", "category");
+    params.append("populate[2]", "author");
+    params.append("populate[3]", "author.avatar");
+    params.append("populate[4]", "tags");
+    params.append("populate[5]", "seo");
+    params.append("populate[6]", "seo.metaImage");
+
+    // Populate dynamic zone content with nested media fields
+    params.append("populate[7]", "content");
+    params.append("populate[8]", "content.media");
+    params.append("populate[9]", "content.authorImage");
+  }
+
   // Get all blog posts
   async getBlogPosts(options = {}) {
-    const queryString = this.buildQueryParams({
-      populate: "*",
-      sort: options.sort || "publishedAt:desc",
-      filters: options.filters || {},
-      pagination: options.pagination || { pageSize: 10 },
-    });
+    const params = new URLSearchParams();
 
-    const data = await this.fetch(`/blog-posts?${queryString}`);
+    // Sort
+    if (options.sort) {
+      params.append("sort", options.sort);
+    } else {
+      params.append("sort", "publishedAt:desc");
+    }
+
+    // Pagination
+    const pagination = options.pagination || { pageSize: 10 };
+    if (pagination.page) {
+      params.append("pagination[page]", pagination.page);
+    }
+    if (pagination.pageSize) {
+      params.append("pagination[pageSize]", pagination.pageSize);
+    }
+
+    // Filters
+    if (options.filters) {
+      this.addFiltersToParams(params, options.filters);
+    }
+
+    // Add blog post population
+    this.addBlogPostPopulation(params);
+
+    const data = await this.fetch(`/blog-posts?${params.toString()}`);
     return {
       posts: data.data || [],
       meta: data.meta || {},
@@ -128,10 +164,12 @@ class StrapiAPI {
 
   // Get a single blog post by slug
   async getBlogPost(slug) {
-    // Use simple populate=* approach first
+    // Use explicit population for dynamic zone components with media fields
     const params = new URLSearchParams();
     params.append("filters[slug][$eq]", slug);
-    params.append("populate", "*");
+
+    // Add blog post population
+    this.addBlogPostPopulation(params);
 
     console.log("post url params:", params);
 
@@ -163,14 +201,21 @@ class StrapiAPI {
 
   // Get featured blog posts
   async getFeaturedBlogPosts(limit = 3) {
-    const queryString = this.buildQueryParams({
-      populate: "*",
-      sort: "publishedAt:desc",
-      filters: { featured: { $eq: true } },
-      pagination: { pageSize: limit },
-    });
+    const params = new URLSearchParams();
 
-    const data = await this.fetch(`/blog-posts?${queryString}`);
+    // Sort
+    params.append("sort", "publishedAt:desc");
+
+    // Pagination
+    params.append("pagination[pageSize]", limit);
+
+    // Filters
+    params.append("filters[featured][$eq]", "true");
+
+    // Add blog post population
+    this.addBlogPostPopulation(params);
+
+    const data = await this.fetch(`/blog-posts?${params.toString()}`);
     return data.data || [];
   }
 
@@ -215,24 +260,27 @@ class StrapiAPI {
 
   // Search blog posts
   async searchBlogPosts(query, limit = 10) {
-    const queryString = this.buildQueryParams({
-      populate: "*",
-      sort: "publishedAt:desc",
-      filters: {
-        $or: [
-          { title: { $containsi: query } },
-          { excerpt: { $containsi: query } },
-          { category: { name: { $containsi: query } } },
-          { tags: { name: { $containsi: query } } },
-          { author: { name: { $containsi: query } } },
-        ],
-      },
-      pagination: { pageSize: limit },
-    });
+    const params = new URLSearchParams();
 
-    console.log("Search query string:", queryString);
+    // Sort
+    params.append("sort", "publishedAt:desc");
 
-    const data = await this.fetch(`/blog-posts?${queryString}`);
+    // Pagination
+    params.append("pagination[pageSize]", limit);
+
+    // Search filters using $or operator
+    params.append("filters[$or][0][title][$containsi]", query);
+    params.append("filters[$or][1][excerpt][$containsi]", query);
+    params.append("filters[$or][2][category][name][$containsi]", query);
+    params.append("filters[$or][3][tags][name][$containsi]", query);
+    params.append("filters[$or][4][author][name][$containsi]", query);
+
+    // Add blog post population
+    this.addBlogPostPopulation(params);
+
+    console.log("Search query string:", params.toString());
+
+    const data = await this.fetch(`/blog-posts?${params.toString()}`);
     return data.data || [];
   }
 
