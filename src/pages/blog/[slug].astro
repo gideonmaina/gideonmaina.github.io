@@ -152,7 +152,7 @@ renderer.heading = function (token: any) {
   const id = text.toLowerCase().replace(/[^\w]+/g, "-");
   const classes: Record<number, string> = {
     1: "text-4xl font-bold text-white mt-12 mb-6 border-b-2 border-indigo-500 pb-4",
-    2: "text-3xl font-bold text-white mt-10 mb-5 border-b border-indigo-400 pb-3",
+    2: "text-3xl font-bold mt-10 mb-5 border-b border-indigo-400 pb-3",
     3: "text-2xl font-semibold text-white mt-8 mb-4",
     4: "text-xl font-semibold text-gray-100 mt-6 mb-3",
     5: "text-lg font-medium text-gray-100 mt-5 mb-2",
@@ -833,6 +833,26 @@ const processedContent = processContent(blogPost?.content);
                                 </a>
                               ),
                             )}
+                          {/* Author email */}
+                          {blogPost.author.email && (
+                            <a
+                              href={`mailto:${blogPost.author.email}`}
+                              class="group inline-flex items-center px-3 py-2 text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg transition-all duration-300 text-sm font-medium"
+                            >
+                              <svg
+                                class="w-4 h-4 mr-2"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fill-rule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
+                                  clip-rule="evenodd"
+                                />
+                              </svg>
+                              Email
+                            </a>
+                          )}
                         </div>
                       )}
                     </div>
@@ -842,99 +862,28 @@ const processedContent = processContent(blogPost?.content);
             </div>
           </div>
 
-          {/* <!-- Table of Contents Sidebar --> */}
-          <div
-            id="tocSidebar"
-            class="fixed left-8 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block"
-          >
-            <nav class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-md rounded-2xl border border-gray-700/50 p-6 max-w-xs shadow-2xl">
-              <h3 class="text-white font-bold mb-4 text-lg flex items-center">
-                <svg
-                  class="w-5 h-5 mr-2 text-indigo-400"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                Table of Contents
-              </h3>
-              <ul
-                id="tocList"
-                class="space-y-2 text-sm max-h-96 overflow-y-auto custom-scrollbar"
-              >
-                {/* <!-- TOC items will be populated by JavaScript --> */}
-              </ul>
-            </nav>
-          </div>
-
-          {/* <!-- Mobile TOC Button --> */}
-          <button
-            id="tocToggle"
-            class="fixed top-24 left-4 w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 z-50 lg:hidden"
-            title="Table of Contents"
-          >
-            <svg
-              class="w-6 h-6 mx-auto"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-
-          {/* <!-- Mobile TOC Popup --> */}
-          <div
-            id="tocPopup"
-            class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-all duration-300 lg:hidden"
-          >
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-6 max-w-sm w-11/12 max-h-[70vh] overflow-hidden shadow-2xl scale-95 transition-transform duration-300">
-              <div class="flex items-center justify-between mb-6">
-                <h3 class="text-white font-bold text-lg flex items-center">
-                  <svg
-                    class="w-5 h-5 mr-2 text-indigo-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  Table of Contents
-                </h3>
-                <button
-                  id="tocClose"
-                  class="text-gray-400 hover:text-white transition-colors p-1"
-                >
-                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <ul
-                id="tocListMobile"
-                class="space-y-2 text-sm max-h-96 overflow-y-auto custom-scrollbar"
-              >
-                {/* <!-- TOC items will be populated by JavaScript --> */}
-              </ul>
-            </div>
-          </div>
-
           {/* <!-- Floating Action Buttons --> */}
           <div class="fixed bottom-8 right-8 flex flex-col space-y-3 z-50">
+            {/* <!-- Table of Contents Button --> */}
+            <button
+              id="toc-button"
+              onclick="toggleTOC()"
+              class="group w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+              title="Table of Contents"
+            >
+              <svg
+                class="w-6 h-6 mx-auto transition-transform group-hover:scale-110"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+
             {/* <!-- Share Button --> */}
             <button
               onclick="navigator.share && navigator.share({title: document.title, url: window.location.href}) || copyToClipboard(window.location.href)"
@@ -949,6 +898,63 @@ const processedContent = processContent(blogPost?.content);
                 <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
               </svg>
             </button>
+          </div>
+
+          {/* <!-- Table of Contents Modal --> */}
+          <div
+            id="toc-modal"
+            class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden opacity-0 transition-all duration-300"
+            onclick="closeTOC(event)"
+          >
+            <div class="flex items-center justify-center min-h-screen p-4">
+              <div
+                class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border border-gray-700 shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden transform scale-95 transition-transform duration-300"
+                onclick="event.stopPropagation()"
+              >
+                {/* <!-- Modal Header --> */}
+                <div class="flex items-center justify-between p-6 border-b border-gray-700">
+                  <h3 class="text-xl font-bold text-white flex items-center">
+                    <svg
+                      class="w-5 h-5 mr-2 text-indigo-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Table of Contents
+                  </h3>
+                  <button
+                    onclick="closeTOC()"
+                    class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* <!-- Modal Body --> */}
+                <div class="p-6 overflow-y-auto max-h-[60vh]">
+                  <nav id="toc-content" class="space-y-2">
+                    <p class="text-gray-400 text-sm">
+                      Loading table of contents...
+                    </p>
+                  </nav>
+                </div>
+              </div>
+            </div>
           </div>
         </article>
       )
@@ -1467,6 +1473,43 @@ const processedContent = processContent(blogPost?.content);
   .toc-popup-show > div {
     transform: translate(-50%, -50%) scale(1) !important;
   }
+  /* Table of Contents Modal Styles */
+  #toc-modal {
+    backdrop-filter: blur(8px);
+  }
+
+  #toc-modal .bg-gradient-to-br {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  #toc-content a {
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  #toc-content a:hover {
+    border-left-color: #6366f1;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), transparent);
+  }
+
+  /* Scrollbar styling for TOC content */
+  #toc-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  #toc-content::-webkit-scrollbar-track {
+    background: rgba(55, 65, 81, 0.3);
+    border-radius: 2px;
+  }
+
+  #toc-content::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.5);
+    border-radius: 2px;
+  }
+
+  #toc-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.7);
+  }
 </style>
 
 <script>
@@ -1759,6 +1802,120 @@ const processedContent = processContent(blogPost?.content);
           });
       });
     });
+  });
+</script>
+
+<script is:inline>
+  // Table of Contents functionality
+  function toggleTOC() {
+    const modal = document.getElementById("toc-modal");
+    const modalContent = modal.querySelector(".bg-gradient-to-br");
+
+    if (modal.classList.contains("hidden")) {
+      // Show modal
+      modal.classList.remove("hidden");
+      setTimeout(() => {
+        modal.classList.remove("opacity-0");
+        modalContent.classList.remove("scale-95");
+        modalContent.classList.add("scale-100");
+      }, 10);
+
+      // Generate TOC if not already generated
+      generateTOC();
+    } else {
+      closeTOC();
+    }
+  }
+
+  function closeTOC(event) {
+    const modal = document.getElementById("toc-modal");
+    const modalContent = modal.querySelector(".bg-gradient-to-br");
+
+    // Close modal
+    modal.classList.add("opacity-0");
+    modalContent.classList.remove("scale-100");
+    modalContent.classList.add("scale-95");
+
+    setTimeout(() => {
+      modal.classList.add("hidden");
+    }, 300);
+  }
+
+  function generateTOC() {
+    const tocContent = document.getElementById("toc-content");
+    const headings = document.querySelectorAll(
+      ".prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6",
+    );
+
+    if (headings.length === 0) {
+      tocContent.innerHTML =
+        '<p class="text-gray-400 text-sm">No headings found in this article.</p>';
+      return;
+    }
+
+    let tocHTML = "";
+
+    headings.forEach((heading, index) => {
+      const level = parseInt(heading.tagName.charAt(1));
+      const text = heading.textContent || heading.innerText;
+      const id = heading.id || text.toLowerCase().replace(/[^\w]+/g, "-");
+
+      // Ensure heading has an ID for smooth scrolling
+      if (!heading.id) {
+        heading.id = id;
+      }
+
+      // Calculate indentation based on heading level
+      const indentation = (level - 1) * 1; // 1rem per level
+      const textSize =
+        level <= 2 ? "text-base" : level <= 4 ? "text-sm" : "text-xs";
+      const fontWeight =
+        level <= 2
+          ? "font-semibold"
+          : level <= 4
+            ? "font-medium"
+            : "font-normal";
+      const textColor =
+        level <= 2
+          ? "text-white"
+          : level <= 4
+            ? "text-gray-200"
+            : "text-gray-300";
+
+      tocHTML += `
+        <a
+          href="#${id}"
+          onclick="scrollToHeading('${id}'); closeTOC();"
+          class="block py-2 px-3 rounded-lg hover:bg-gray-700/50 transition-colors duration-200 ${textSize} ${fontWeight} ${textColor} hover:text-indigo-400"
+          style="margin-left: ${indentation}rem;"
+        >
+          <span class="flex items-center">
+            <span class="w-2 h-2 bg-indigo-500 rounded-full mr-3 opacity-60"></span>
+            ${text}
+          </span>
+        </a>
+      `;
+    });
+
+    tocContent.innerHTML = tocHTML;
+  }
+
+  function scrollToHeading(id) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
+  // Generate TOC on page load
+  document.addEventListener("DOMContentLoaded", function () {
+    // Pre-generate TOC for faster display
+    setTimeout(() => {
+      generateTOC();
+    }, 1000);
   });
 </script>
 

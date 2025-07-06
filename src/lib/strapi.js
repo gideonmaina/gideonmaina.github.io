@@ -315,7 +315,7 @@ class StrapiAPI {
       publishedAt: post.publishedAt,
       updatedAt: post.updatedAt,
       featured: post.featured || false,
-      readTime: post.readTime || this.calculateReadTime(post.content),
+      readTime: this.calculateReadTime(post.content),
       image: post.image?.url ? this.getMediaURL(post.image) : null,
       category: post.category
         ? {
