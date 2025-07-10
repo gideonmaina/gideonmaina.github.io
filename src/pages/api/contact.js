@@ -73,7 +73,7 @@ function getPersonalizedResponse(subject) {
 const transporter = nodemailer.createTransport({
   host: EMAIL_CONFIG.SMTP_HOST,
   port: EMAIL_CONFIG.SMTP_PORT,
-  secure: false, // true for 465, false for other ports
+  secure: EMAIL_CONFIG.SMTP_PORT == 465 ? true : false, // true for 465, false for other ports
   auth: {
     user: EMAIL_CONFIG.SMTP_USER,
     pass: EMAIL_CONFIG.SMTP_PASSWORD,
