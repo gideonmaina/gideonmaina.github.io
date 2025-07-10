@@ -46,8 +46,9 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-        run: vercel link --yes --token=$VERCEL_TOKEN
+        # run: echo "Linking to Vercel project..."
+        # run: echo $VERCEL_TOKEN
+        run: echo "Linking to Vercel project..." && echo $VERCEL_TOKEN && vercel link --yes --token=$VERCEL_TOKEN
 
       # Deploy to Vercel
       - name: Deploy to Vercel
