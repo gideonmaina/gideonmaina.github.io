@@ -2,11 +2,11 @@ import nodemailer from "nodemailer";
 
 // Email configuration
 const EMAIL_CONFIG = {
-  SMTP_HOST: "us2.smtp.mailhostbox.com",
-  SMTP_PORT: 587,
-  SMTP_USER: "gideon@yebei.tech",
-  SMTP_PASSWORD: "nNfdO^C4", // In production, use environment variables
-  RECIPIENT_EMAIL: "gideon@yebei.tech",
+  SMTP_HOST: import.meta.env.SMTP_HOST,
+  SMTP_PORT: import.meta.env.SMTP_PORT,
+  SMTP_USER: import.meta.env.SMTP_USER,
+  SMTP_PASSWORD: import.meta.env.SMTP_PASSWORD, // In production, use environment variables
+  RECIPIENT_EMAIL: import.meta.env.RECIPIENT_EMAIL,
 };
 
 console.log("[DEBUG] Email configuration loaded:", {
