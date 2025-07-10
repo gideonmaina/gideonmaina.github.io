@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-// Email configuration
+// Email configuration using Gmail
 const EMAIL_CONFIG = {
   SMTP_HOST: import.meta.env.SMTP_HOST,
   SMTP_PORT: import.meta.env.SMTP_PORT,
@@ -77,9 +77,6 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: EMAIL_CONFIG.SMTP_USER,
     pass: EMAIL_CONFIG.SMTP_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
   },
 });
 
@@ -408,7 +405,7 @@ Timestamp: ${new Date().toLocaleString()}
     </div>
 
     <div class="footer">
-      <p>📧 gideon@yebei.tech | 🌐 gmainapro@gmail.com</p>
+      <p> 🌐 gideonmaina.me</p>
       <p>This is an automated response. Please don't reply to this email.</p>
     </div>
   </div>
@@ -435,7 +432,7 @@ Best regards,
 Gideon Maina
 Electrical Engineer & IoT Developer
 
-gideon@yebei.tech | gmainapro@gmail.com
+gideonmaina.me
       `.trim(),
     };
 
