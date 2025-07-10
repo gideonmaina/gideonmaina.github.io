@@ -1,16 +1,16 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import { Image } from "astro:assets";
-import strapiAPI from "@lib/strapi.js";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-import { JSDOM } from "jsdom";
+import Layout from '@layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import strapiAPI from '@lib/strapi.js';
+import { marked } from 'marked';
+import  DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 // Global declarations for TypeScript
 declare global {
-  interface Window {
-    copyToClipboard: (text: string) => void;
-  }
+	interface Window {
+		copyToClipboard: (text: string) => void;
+	}
 }
 
 export const prerender = false;
@@ -19,127 +19,127 @@ export const prerender = false;
 const { slug } = Astro.params;
 
 if (!slug) {
-  console.error("No slug provided in URL parameters");
-  throw Astro.redirect("/blog");
+	console.error('No slug provided in URL parameters');
+	throw Astro.redirect('/blog');
 }
 
 // Validate slug format (basic validation)
 if (!/^[a-z0-9-]+$/i.test(slug)) {
-  console.error(`Invalid slug format: ${slug}`);
-  throw Astro.redirect("/404");
+	console.error(`Invalid slug format: ${slug}`);
+	throw Astro.redirect('/404');
 }
 
 // Fetch the blog post
 let blogPost = null;
 let relatedPosts = [];
 let title,
-  description,
-  image,
-  publishedTime,
-  modifiedTime,
-  author,
-  structuredData;
+	description,
+	image,
+	publishedTime,
+	modifiedTime,
+	author,
+	structuredData;
 
 try {
-  console.log(`Fetching blog post with slug: ${slug}`);
-  let post = await strapiAPI.getBlogPost(slug);
+	console.log(`Fetching blog post with slug: ${slug}`);
+	let post = await strapiAPI.getBlogPost(slug);
 
-  if (!post) {
-    console.error(`Blog post not found for slug: ${slug}`);
-    throw Astro.redirect("/404");
-  }
+	if (!post) {
+		console.error(`Blog post not found for slug: ${slug}`);
+		throw Astro.redirect('/404');
+	}
 
-  console.log(`Successfully fetched post: ${post.title}`);
+	console.log(`Successfully fetched post: ${post.title}`);
 
-  // Format the post data
-  post = strapiAPI.formatBlogPost(post);
+	// Format the post data
+	post = strapiAPI.formatBlogPost(post);
 
-  if (!post) {
-    console.error(`Failed to format blog post for slug: ${slug}`);
-    throw Astro.redirect("/404");
-  }
+	if (!post) {
+		console.error(`Failed to format blog post for slug: ${slug}`);
+		throw Astro.redirect('/404');
+	}
 
-  // At this point, post is guaranteed to be non-null
-  blogPost = post;
+	// At this point, post is guaranteed to be non-null
+	blogPost = post;
 
-  // Fetch related posts (same category, excluding current post)
-  if (blogPost.category) {
-    try {
-      const relatedResult = await strapiAPI.getBlogPosts({
-        pagination: { pageSize: 3 },
-        filters: {
-          category: { slug: { $eq: blogPost.category.slug } },
-          slug: { $ne: slug },
-        },
-        sort: "publishedAt:desc",
-      });
-      relatedPosts = relatedResult.posts.map((p: any) =>
-        strapiAPI.formatBlogPost(p),
-      );
-    } catch (error) {
-      console.error("Failed to fetch related posts:", error);
-    }
-  }
+	// Fetch related posts (same category, excluding current post)
+	if (blogPost.category) {
+		try {
+			const relatedResult = await strapiAPI.getBlogPosts({
+				pagination: { pageSize: 3 },
+				filters: {
+					category: { slug: { $eq: blogPost.category.slug } },
+					slug: { $ne: slug },
+				},
+				sort: 'publishedAt:desc',
+			});
+			relatedPosts = relatedResult.posts.map((p: any) =>
+				strapiAPI.formatBlogPost(p),
+			);
+		} catch (error) {
+			console.error('Failed to fetch related posts:', error);
+		}
+	}
 
-  // SEO data
-  title = blogPost.seo?.metaTitle || blogPost.title;
-  description =
-    blogPost.seo?.metaDescription ||
-    blogPost.excerpt ||
-    `Read ${blogPost.title} by ${blogPost.author?.name || "Gideon Maina"}`;
-  image = blogPost.seo?.metaImage || blogPost.image;
-  publishedTime = blogPost.publishedAt;
-  modifiedTime = blogPost.updatedAt;
-  author = blogPost.author?.name || "Gideon Maina";
+	// SEO data
+	title = blogPost.seo?.metaTitle || blogPost.title;
+	description =
+		blogPost.seo?.metaDescription ||
+		blogPost.excerpt ||
+		`Read ${blogPost.title} by ${blogPost.author?.name || 'Gideon Maina'}`;
+	image = blogPost.seo?.metaImage || blogPost.image;
+	publishedTime = blogPost.publishedAt;
+	modifiedTime = blogPost.updatedAt;
+	author = blogPost.author?.name || 'Gideon Maina';
 
-  // Generate structured data for SEO
-  structuredData = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: blogPost.title,
-    description: blogPost.excerpt || description,
-    image: image,
-    author: {
-      "@type": "Person",
-      name: author,
-      url: blogPost.author?.website || Astro.site?.toString(),
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Gideon Maina",
-      logo: {
-        "@type": "ImageObject",
-        url: `${Astro.site}favicon.svg`,
-      },
-    },
-    datePublished: publishedTime,
-    dateModified: modifiedTime,
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": Astro.url.toString(),
-    },
-  };
+	// Generate structured data for SEO
+	structuredData = {
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		'headline': blogPost.title,
+		'description': blogPost.excerpt || description,
+		'image': image,
+		'author': {
+			'@type': 'Person',
+			'name': author,
+			'url': blogPost.author?.website || Astro.site?.toString(),
+		},
+		'publisher': {
+			'@type': 'Organization',
+			'name': 'Gideon Maina',
+			'logo': {
+				'@type': 'ImageObject',
+				'url': `${Astro.site}favicon.svg`,
+			},
+		},
+		'datePublished': publishedTime,
+		'dateModified': modifiedTime,
+		'mainEntityOfPage': {
+			'@type': 'WebPage',
+			'@id': Astro.url.toString(),
+		},
+	};
 } catch (error) {
-  console.error("Failed to fetch blog post:", error);
-  throw Astro.redirect("/404");
+	console.error('Failed to fetch blog post:', error);
+	throw Astro.redirect('/404');
 }
 
 // Set up DOMPurify with JSDOM for server-side sanitization
-const window = new JSDOM("").window;
+const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
 // Configure DOMPurify options
 const purifyOptions = {
-  ADD_ATTR: ["class"],
-  ADD_TAGS: ["iframe"],
-  FORBID_TAGS: ["style", "script"],
-  FORBID_ATTR: ["style", "onerror", "onload"],
+	ADD_ATTR: ['class'],
+	ADD_TAGS: ['iframe'],
+	FORBID_TAGS: ['style', 'script'],
+	FORBID_ATTR: ['style', 'onerror', 'onload'],
 };
 
 // Configure marked options for better Markdown processing
 marked.use({
-  gfm: true, // GitHub Flavored Markdown
-  breaks: true, // Convert \n to <br>
+	gfm: true, // GitHub Flavored Markdown
+	breaks: true, // Convert \n to <br>
 });
 
 //  Markdown renderer with custom styling
@@ -147,71 +147,71 @@ const renderer = new marked.Renderer();
 
 // Custom heading renderer
 renderer.heading = function (token: any) {
-  const text = this.parser.parseInline(token.tokens);
-  const level = token.depth;
-  const id = text.toLowerCase().replace(/[^\w]+/g, "-");
-  const classes: Record<number, string> = {
-    1: "text-4xl font-bold text-white mt-12 mb-6 border-b-2 border-indigo-500 pb-4",
-    2: "text-3xl font-bold mt-10 mb-5 border-b border-indigo-400 pb-3",
-    3: "text-2xl font-semibold text-white mt-8 mb-4",
-    4: "text-xl font-semibold text-gray-100 mt-6 mb-3",
-    5: "text-lg font-medium text-gray-100 mt-5 mb-2",
-    6: "text-base font-medium text-gray-200 mt-4 mb-2",
-  };
-  return `<h${level} id="${id}" class="${classes[level] || classes[6]}">${text}</h${level}>`;
+	const text = this.parser.parseInline(token.tokens);
+	const level = token.depth;
+	const id = text.toLowerCase().replace(/[^\w]+/g, '-');
+	const classes: Record<number, string> = {
+		1: 'text-4xl font-bold text-white mt-12 mb-6 border-b-2 border-indigo-500 pb-4',
+		2: 'text-3xl font-bold mt-10 mb-5 border-b border-indigo-400 pb-3',
+		3: 'text-2xl font-semibold text-white mt-8 mb-4',
+		4: 'text-xl font-semibold text-gray-100 mt-6 mb-3',
+		5: 'text-lg font-medium text-gray-100 mt-5 mb-2',
+		6: 'text-base font-medium text-gray-200 mt-4 mb-2',
+	};
+	return `<h${level} id="${id}" class="${classes[level] || classes[6]}">${text}</h${level}>`;
 };
 
 // Custom code block renderer
 renderer.code = function (token: any) {
-  const code = token.text;
-  const language = token.lang;
-  const lang = language || "text";
-  const langLabel = language
-    ? `<div class="bg-gray-800 px-4 py-2 rounded-t-lg text-sm text-gray-300 border-b border-gray-700 flex items-center">
+	const code = token.text;
+	const language = token.lang;
+	const lang = language || 'text';
+	const langLabel = language
+		? `<div class="bg-gray-800 px-4 py-2 rounded-t-lg text-sm text-gray-300 border-b border-gray-700 flex items-center">
 		<svg class="w-4 h-4 mr-2 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
 			<path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
 		</svg>
 		${lang}
 	</div>`
-    : "";
+		: '';
 
-  return `<div class="my-8 rounded-lg overflow-hidden border border-gray-700">
+	return `<div class="my-8 rounded-lg overflow-hidden border border-gray-700">
 		${langLabel}
-		<pre class="bg-gray-900 p-6 overflow-x-auto ${language ? "rounded-b-lg" : "rounded-lg"}"><code class="language-${lang} text-sm">${code}</code></pre>
+		<pre class="bg-gray-900 p-6 overflow-x-auto ${language ? 'rounded-b-lg' : 'rounded-lg'}"><code class="language-${lang} text-sm">${code}</code></pre>
 	</div>`;
 };
 
 // Custom blockquote renderer
 renderer.blockquote = function (token: any) {
-  const quote = this.parser.parse(token.tokens);
-  return `<blockquote class="my-8 border-l-4 border-indigo-500 pl-6 py-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/5 rounded-r-lg">
+	const quote = this.parser.parse(token.tokens);
+	return `<blockquote class="my-8 border-l-4 border-indigo-500 pl-6 py-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/5 rounded-r-lg">
 		<div class="text-lg italic text-gray-200 leading-relaxed">${quote}</div>
 	</blockquote>`;
 };
 
 // Custom list renderer
 renderer.list = function (token: any) {
-  const ordered = token.ordered;
-  const items = token.items;
-  const tag = ordered ? "ol" : "ul";
-  const classes = ordered ? "list-decimal pl-6" : "list-disc pl-6";
+	const ordered = token.ordered;
+	const items = token.items;
+	const tag = ordered ? 'ol' : 'ul';
+	const classes = ordered ? 'list-decimal pl-6' : 'list-disc pl-6';
 
-  // Render list items with default marker
-  const itemsHtml = items
-    .map((item: any) => {
-      const text = this.parser.parse(item.tokens);
-      return `<li class="leading-relaxed hover:text-gray-200 transition-colors">${text}</li>`;
-    })
-    .join("");
+	// Render list items with default marker
+	const itemsHtml = items
+		.map((item: any) => {
+			const text = this.parser.parse(item.tokens);
+			return `<li class="leading-relaxed hover:text-gray-200 transition-colors">${text}</li>`;
+		})
+		.join('');
 
-  return `<${tag} class="my-6 space-y-2 ${classes} text-gray-300">${itemsHtml}</${tag}>`;
+	return `<${tag} class="my-6 space-y-2 ${classes} text-gray-300">${itemsHtml}</${tag}>`;
 };
 
 // Custom table renderer
 renderer.table = function (token: any) {
-  const header = this.parser.parse(token.header);
-  const body = this.parser.parse(token.rows);
-  return `<div class="my-8 overflow-x-auto">
+	const header = this.parser.parse(token.header);
+	const body = this.parser.parse(token.rows);
+	return `<div class="my-8 overflow-x-auto">
 		<table class="w-full border-collapse bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700">
 			<thead class="bg-gray-700">${header}</thead>
 			<tbody>${body}</tbody>
@@ -221,59 +221,59 @@ renderer.table = function (token: any) {
 
 // Custom table header renderer
 renderer.tablecell = function (token: any) {
-  const content = this.parser.parseInline(token.tokens);
-  const tag = token.header ? "th" : "td";
-  const classes = token.header
-    ? "px-6 py-3 text-left text-xs font-bold text-gray-200 uppercase tracking-wider border-b border-gray-600"
-    : "px-6 py-4 text-sm text-gray-300 border-b border-gray-700";
-  return `<${tag} class="${classes}">${content}</${tag}>`;
+	const content = this.parser.parseInline(token.tokens);
+	const tag = token.header ? 'th' : 'td';
+	const classes = token.header
+		? 'px-6 py-3 text-left text-xs font-bold text-gray-200 uppercase tracking-wider border-b border-gray-600'
+		: 'px-6 py-4 text-sm text-gray-300 border-b border-gray-700';
+	return `<${tag} class="${classes}">${content}</${tag}>`;
 };
 
 // Custom link renderer - fixed to handle href properly
 renderer.link = function (token: any) {
-  const href = token.href || "#";
-  const title = token.title || "";
-  const text = this.parser.parseInline(token.tokens);
+	const href = token.href || '#';
+	const title = token.title || '';
+	const text = this.parser.parseInline(token.tokens);
 
-  // Ensure href is always a string and handle potential objects
-  const safeHref = typeof href === "string" ? href : href?.toString() || "#";
-  const titleAttr = title ? ` title="${title}"` : "";
-  const isExternal =
-    safeHref.startsWith("http") &&
-    !safeHref.includes(globalThis.location?.hostname || "");
-  const external = isExternal
-    ? ' target="_blank" rel="noopener noreferrer"'
-    : "";
+	// Ensure href is always a string and handle potential objects
+	const safeHref = typeof href === 'string' ? href : href?.toString() || '#';
+	const titleAttr = title ? ` title="${title}"` : '';
+	const isExternal =
+		safeHref.startsWith('http') &&
+		!safeHref.includes(globalThis.location?.hostname || '');
+	const external = isExternal
+		? ' target="_blank" rel="noopener noreferrer"'
+		: '';
 
-  return `<a href="${safeHref}"${titleAttr}${external} class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 decoration-indigo-500/50 hover:decoration-indigo-400 transition-all duration-200 font-medium">${text}</a>`;
+	return `<a href="${safeHref}"${titleAttr}${external} class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 decoration-indigo-500/50 hover:decoration-indigo-400 transition-all duration-200 font-medium">${text}</a>`;
 };
 
 // Custom image renderer - fixed to handle src properly
 renderer.image = function (token: any) {
-  const href = token.href || "";
-  const title = token.title || "";
-  const text = token.text || "";
+	const href = token.href || '';
+	const title = token.title || '';
+	const text = token.text || '';
 
-  // Ensure href is always a string and handle potential objects
-  const safeHref = typeof href === "string" ? href : href?.toString() || "";
-  const titleAttr = title ? ` title="${title}"` : "";
-  const altAttr = text ? ` alt="${text}"` : "";
+	// Ensure href is always a string and handle potential objects
+	const safeHref = typeof href === 'string' ? href : href?.toString() || '';
+	const titleAttr = title ? ` title="${title}"` : '';
+	const altAttr = text ? ` alt="${text}"` : '';
 
-  return `<figure class="my-8">
+	return `<figure class="my-8">
 		<img src="${safeHref}"${altAttr}${titleAttr} class="w-full rounded-xl shadow-2xl hover:shadow-indigo-500/10 transition-shadow duration-300 cursor-zoom-in" loading="lazy" />
-		${text ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm">${text}</figcaption>` : ""}
+		${text ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm">${text}</figcaption>` : ''}
 	</figure>`;
 };
 
 // Custom horizontal rule renderer
 renderer.hr = function () {
-  return `<hr class="my-12 border-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />`;
+	return `<hr class="my-12 border-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />`;
 };
 
 // Custom paragraph renderer to ensure proper spacing
 renderer.paragraph = function (token: any) {
-  const text = this.parser.parseInline(token.tokens);
-  return `<p class="mb-6 leading-relaxed">${text}</p>`;
+	const text = this.parser.parseInline(token.tokens);
+	return `<p class="mb-6 leading-relaxed">${text}</p>`;
 };
 
 // Apply custom renderer to marked
@@ -281,47 +281,53 @@ marked.use({ renderer });
 
 // Helper function to format date
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+	return new Date(dateString).toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+	});
+}
+
+function extractYouTubeID(url) {
+	const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/;
+	const match = url.match(regex);
+	return match ? match[1] : null;
 }
 
 // Helper function to render content components
 function renderContentComponent(component: any) {
-  switch (component.type) {
-    case "rich-text":
-      if (component.content) {
-        // Always treat rich-text as Markdown, never as HTML
-        const markdownContent = String(component.content);
-        const htmlContent = marked.parse(markdownContent);
-        const sanitizedContent = purify.sanitize(
-          String(htmlContent),
-          purifyOptions,
-        );
-        return `<div class="prose prose-content markdown-content">${sanitizedContent}</div>`;
-      }
-      return "";
-    case "media-block":
-      return `<figure class="my-10 group">
+	switch (component.type) {
+		case 'rich-text':
+			if (component.content) {
+				// Always treat rich-text as Markdown, never as HTML
+				const markdownContent = String(component.content);
+				const htmlContent = marked.parse(markdownContent);
+				const sanitizedContent = purify.sanitize(
+					String(htmlContent),
+					purifyOptions,
+				);
+				return `<div class="prose prose-content markdown-content">${sanitizedContent}</div>`;
+			}
+			return '';
+		case 'media-block':
+			return `<figure class="my-10 group">
 				${
-          component.media
-            ? `
+					component.media
+						? `
 					<div class="relative overflow-hidden rounded-xl shadow-2xl">
-						<img src="${component.media.url}" alt="${component.media.alternativeText || ""}"
+						<img src="${component.media.url}" alt="${component.media.alternativeText || ''}"
 							class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
 							loading="lazy" />
 						<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 					</div>
 				`
-            : ""
-        }
-				${component.caption ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm leading-relaxed">${component.caption}</figcaption>` : ""}
+						: ''
+				}
+				${component.caption ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm leading-relaxed">${component.caption}</figcaption>` : ''}
 			</figure>`;
-    case "code-block":
-      const filename = component.filename
-        ? `
+		case 'code-block':
+			const filename = component.filename
+				? `
 				<div class="bg-gray-800 px-6 py-3 rounded-t-xl text-sm text-gray-300 border-b border-gray-700 flex items-center justify-between">
 					<div class="flex items-center">
 						<svg class="w-4 h-4 mr-2 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
@@ -329,18 +335,18 @@ function renderContentComponent(component: any) {
 						</svg>
 						<span class="font-medium">${component.filename}</span>
 					</div>
-					<span class="text-xs text-gray-500 uppercase tracking-wide">${component.language || "text"}</span>
+					<span class="text-xs text-gray-500 uppercase tracking-wide">${component.language || 'text'}</span>
 				</div>
 			`
-        : "";
+				: '';
 
-      return `<div class="my-10 rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
+			return `<div class="my-10 rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
 				${filename}
-				<pre class="bg-gray-900 p-6 overflow-x-auto ${component.filename ? "rounded-b-xl" : "rounded-xl"} text-sm leading-relaxed"><code class="language-${component.language || "text"}">${component.code}</code></pre>
-				${component.caption ? `<p class="text-center text-gray-400 mt-4 mb-2 text-sm italic">${component.caption}</p>` : ""}
+				<pre class="bg-gray-900 p-6 overflow-x-auto ${component.filename ? 'rounded-b-xl' : 'rounded-xl'} text-sm leading-relaxed"><code class="language-${component.language || 'text'}">${component.code}</code></pre>
+				${component.caption ? `<p class="text-center text-gray-400 mt-4 mb-2 text-sm italic">${component.caption}</p>` : ''}
 			</div>`;
-    case "quote":
-      return `<blockquote class="my-10 relative">
+		case 'quote':
+			return `<blockquote class="my-10 relative">
 				<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
 				<div class="pl-8 py-6 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent rounded-r-2xl">
 					<div class="relative">
@@ -349,1256 +355,1278 @@ function renderContentComponent(component: any) {
 						</svg>
 						<p class="text-xl italic text-gray-200 mb-4 leading-relaxed relative z-10">"${component.text}"</p>
 						${
-              component.author
-                ? `
+							component.author
+								? `
 							<cite class="text-gray-400 not-italic font-medium flex items-center">
 								<div class="w-8 h-px bg-gradient-to-r from-indigo-500 to-transparent mr-3"></div>
-								${component.author}${component.authorTitle ? `, <span class="text-indigo-400">${component.authorTitle}</span>` : ""}
+								${component.author}${component.authorTitle ? `, <span class="text-indigo-400">${component.authorTitle}</span>` : ''}
 							</cite>
 						`
-                : ""
-            }
+								: ''
+						}
 					</div>
 				</div>
 			</blockquote>`;
-    case "callout":
-      const variants: Record<string, any> = {
-        info: {
-          border: "border-blue-500",
-          bg: "bg-blue-500/10",
-          text: "text-blue-100",
-          icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>`,
-        },
-        warning: {
-          border: "border-yellow-500",
-          bg: "bg-yellow-500/10",
-          text: "text-yellow-100",
-          icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`,
-        },
-        error: {
-          border: "border-red-500",
-          bg: "bg-red-500/10",
-          text: "text-red-100",
-          icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`,
-        },
-        success: {
-          border: "border-green-500",
-          bg: "bg-green-500/10",
-          text: "text-green-100",
-          icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
-        },
-      };
-      const variantKey =
-        typeof component.variant === "string" ? component.variant : "info";
-      const variant = variants[variantKey] || variants["info"];
+		case 'callout':
+			const variants: Record<string, any> = {
+				info: {
+					border: 'border-blue-500',
+					bg: 'bg-blue-500/10',
+					text: 'text-blue-100',
+					icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>`,
+				},
+				warning: {
+					border: 'border-yellow-500',
+					bg: 'bg-yellow-500/10',
+					text: 'text-yellow-100',
+					icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`,
+				},
+				error: {
+					border: 'border-red-500',
+					bg: 'bg-red-500/10',
+					text: 'text-red-100',
+					icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`,
+				},
+				success: {
+					border: 'border-green-500',
+					bg: 'bg-green-500/10',
+					text: 'text-green-100',
+					icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
+				},
+			};
+			const variantKey =
+				typeof component.variant === 'string'
+					? component.variant
+					: 'info';
+			const variant = variants[variantKey] || variants['info'];
 
-      return `<div class="my-10 border-l-4 ${variant.border} ${variant.bg} ${variant.text} p-6 rounded-r-2xl backdrop-blur-sm">
+			return `<div class="my-10 border-l-4 ${variant.border} ${variant.bg} ${variant.text} p-6 rounded-r-2xl backdrop-blur-sm">
 				<div class="flex items-start space-x-3">
-					<div class="flex-shrink-0 ${variant.border.replace("border-", "text-")}">${variant.icon}</div>
+					<div class="flex-shrink-0 ${variant.border.replace('border-', 'text-')}">${variant.icon}</div>
 					<div class="flex-1">
-						${component.title ? `<h4 class="font-bold mb-3 text-lg">${component.title}</h4>` : ""}
+						${component.title ? `<h4 class="font-bold mb-3 text-lg">${component.title}</h4>` : ''}
 						<div class="prose prose-sm">${component.content}</div>
 					</div>
 				</div>
 			</div>`;
-    case "embed":
-      return `<div class="my-10">
-				<div class="aspect-video bg-gray-800 rounded-xl flex items-center justify-center overflow-hidden border border-gray-700 shadow-2xl">
-					${
-            component.url
-              ? `<iframe src="${component.url}" class="w-full h-full rounded-xl" frameborder="0" allowfullscreen></iframe>`
-              : `
-						<div class="text-center text-gray-400">
-							<svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20">
-								<path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-							</svg>
-							<p>Embed content</p>
-						</div>
-					`
-          }
-				</div>
-				${
-          component.title || component.description
-            ? `
-					<div class="mt-6 text-center">
-						${component.title ? `<h4 class="font-semibold text-gray-200 text-lg mb-2">${component.title}</h4>` : ""}
-						${component.description ? `<p class="text-gray-400 text-sm leading-relaxed">${component.description}</p>` : ""}
-					</div>
-				`
-            : ""
-        }
-			</div>`;
-    default:
-      return "";
-  }
+		case 'embed':
+			return `
+  <div class="my-10">
+    <div class="aspect-video bg-gray-800 rounded-xl flex items-center justify-center overflow-hidden border border-gray-700 shadow-2xl">
+      ${
+			component.url && extractYouTubeID(component.url)
+				? `<iframe
+              src="https://www.youtube.com/embed/${extractYouTubeID(component.url)}"
+              class="w-full h-full rounded-xl"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>`
+				: `
+        <div class="text-center text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+          </svg>
+          <p>Embed content</p>
+        </div>
+      `
+		}
+    </div>
+    ${
+		component.title || component.description
+			? `
+      <div class="mt-6 text-center">
+        ${component.title ? `<h4 class="font-semibold text-gray-200 text-lg mb-2">${component.title}</h4>` : ''}
+        ${component.description ? `<p class="text-gray-400 text-sm leading-relaxed">${component.description}</p>` : ''}
+      </div>
+    `
+			: ''
+	}
+  </div>
+`;
+		default:
+			return '';
+	}
 }
 
 // Process content for display - Always treat as Markdown
 function processContent(content: any): string {
-  if (!content) return "";
+	if (!content) return '';
 
-  if (Array.isArray(content)) {
-    return content
-      .map((component) => renderContentComponent(component))
-      .join("");
-  }
+	if (Array.isArray(content)) {
+		return content
+			.map((component) => renderContentComponent(component))
+			.join('');
+	}
 
-  if (typeof content === "string") {
-    // Always parse as Markdown, never as HTML
-    // Ensure proper paragraph spacing by normalizing line breaks
-    const normalizedContent = content
-      .replace(/\r\n/g, "\n") // Normalize line endings
-      .replace(/\n{3,}/g, "\n\n") // Convert multiple newlines to double newlines
-      .trim();
+	if (typeof content === 'string') {
+		// Always parse as Markdown, never as HTML
+		// Ensure proper paragraph spacing by normalizing line breaks
+		const normalizedContent = content
+			.replace(/\r\n/g, '\n') // Normalize line endings
+			.replace(/\n{3,}/g, '\n\n') // Convert multiple newlines to double newlines
+			.trim();
 
-    const parsedContent = marked.parse(normalizedContent);
-    return purify.sanitize(String(parsedContent), purifyOptions);
-  }
+		const parsedContent = marked.parse(normalizedContent);
+		return purify.sanitize(String(parsedContent), purifyOptions);
+	}
 
-  return "";
+	return '';
 }
 
 const processedContent = processContent(blogPost?.content);
 ---
 
 <Layout
-  title={title}
-  description={description}
-  image={image}
-  type="article"
-  publishedTime={publishedTime}
-  modifiedTime={modifiedTime}
-  author={author}
->
-  <!-- Structured Data -->
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify(structuredData)}
-  />
+	title={title}
+	description={description}
+	image={image}
+	type='article'
+	publishedTime={publishedTime}
+	modifiedTime={modifiedTime}
+	author={author}>
+	<!-- Structured Data -->
+	<script
+		type='application/ld+json'
+		set:html={JSON.stringify(structuredData)}
+	/>
 
-  <main
-    class="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black"
-  >
-    <!-- Background Pattern -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
-    >
-      <div
-        style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;"
-      >
-      </div>
-    </div>
+	<main
+		class='min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black'>
+		<!-- Background Pattern -->
+		<div
+			class='absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20'>
+			<div
+				style='background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;'>
+			</div>
+		</div>
 
-    {
-      blogPost && (
-        <article class="relative">
-          <header class="relative overflow-hidden">
-            {/* <!-- Hero Image --> */}
-            {blogPost.image && (
-              <div class="relative h-72 sm:h-96 lg:h-[32rem] xl:h-[36rem] overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent z-10" />
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-transparent z-10" />
-                <Image
-                  src={blogPost.image}
-                  alt={blogPost.title}
-                  width={1400}
-                  height={800}
-                  class="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700"
-                  loading="eager"
-                  decoding="async"
-                />
-                <div class="absolute inset-0 backdrop-blur-[0.5px] opacity-20 z-5" />
-              </div>
-            )}
+		{
+			blogPost && (
+				<article class='relative'>
+					<header class='relative overflow-hidden'>
+						{/* <!-- Hero Image --> */}
+						{blogPost.image && (
+							<div class='relative h-72 sm:h-96 lg:h-[32rem] xl:h-[36rem] overflow-hidden'>
+								<div class='absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent z-10' />
+								<div class='absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-transparent z-10' />
+								<Image
+									src={blogPost.image}
+									alt={blogPost.title}
+									width={1400}
+									height={800}
+									class='w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700'
+									loading='eager'
+									decoding='async'
+								/>
+								<div class='absolute inset-0 backdrop-blur-[0.5px] opacity-20 z-5' />
+							</div>
+						)}
 
-            {/* <!-- Article Meta --> */}
-            <div
-              class={`relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12 sm:py-16 lg:py-20 ${blogPost.image ? "-mt-40" : "pt-24"}`}
-            >
-              {/* <!-- Breadcrumb --> */}
-              <nav class="mb-6" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-sm text-gray-400">
-                  <li>
-                    <a href="/" class="hover:text-white transition-colors">
-                      Home
-                    </a>
-                  </li>
-                  <li class="flex items-center">
-                    <svg
-                      class="w-4 h-4 mx-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <a href="/blog" class="hover:text-white transition-colors">
-                      Blog
-                    </a>
-                  </li>
-                  {blogPost.category && (
-                    <li class="flex items-center">
-                      <svg
-                        class="w-4 h-4 mx-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      <a
-                        href={`/blog?category=${blogPost.category.slug}`}
-                        class="hover:text-white transition-colors"
-                      >
-                        {blogPost.category.name}
-                      </a>
-                    </li>
-                  )}
-                  <li class="flex items-center">
-                    <svg
-                      class="w-4 h-4 mx-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="text-gray-300">{blogPost.title}</span>
-                  </li>
-                </ol>
-              </nav>
+						{/* <!-- Article Meta --> */}
+						<div
+							class={`relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12 sm:py-16 lg:py-20 ${blogPost.image ? '-mt-40' : 'pt-24'}`}>
+							{/* <!-- Breadcrumb --> */}
+							<nav class='mb-6' aria-label='Breadcrumb'>
+								<ol class='flex items-center space-x-2 text-sm text-gray-400'>
+									<li>
+										<a
+											href='/'
+											class='hover:text-white transition-colors'>
+											Home
+										</a>
+									</li>
+									<li class='flex items-center'>
+										<svg
+											class='w-4 h-4 mx-2'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path
+												fill-rule='evenodd'
+												d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
+												clip-rule='evenodd'
+											/>
+										</svg>
+										<a
+											href='/blog'
+											class='hover:text-white transition-colors'>
+											Blog
+										</a>
+									</li>
+									{blogPost.category && (
+										<li class='flex items-center'>
+											<svg
+												class='w-4 h-4 mx-2'
+												fill='currentColor'
+												viewBox='0 0 20 20'>
+												<path
+													fill-rule='evenodd'
+													d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
+													clip-rule='evenodd'
+												/>
+											</svg>
+											<a
+												href={`/blog?category=${blogPost.category.slug}`}
+												class='hover:text-white transition-colors'>
+												{blogPost.category.name}
+											</a>
+										</li>
+									)}
+									<li class='flex items-center'>
+										<svg
+											class='w-4 h-4 mx-2'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path
+												fill-rule='evenodd'
+												d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
+												clip-rule='evenodd'
+											/>
+										</svg>
+										<span class='text-gray-300'>
+											{blogPost.title}
+										</span>
+									</li>
+								</ol>
+							</nav>
 
-              {/* <!-- Category Badge --> */}
-              {blogPost.category && (
-                <div class="mb-6">
-                  <a
-                    href={`/blog?category=${blogPost.category.slug}`}
-                    class="group relative inline-flex items-center px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                    style={`background: linear-gradient(135deg, ${blogPost.category.color}20, ${blogPost.category.color}35); color: ${blogPost.category.color}; border: 2px solid ${blogPost.category.color}50; backdrop-filter: blur(15px);`}
-                  >
-                    <span
-                      class="absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-30 transition-opacity duration-300"
-                      style={`background: linear-gradient(135deg, ${blogPost.category.color}, ${blogPost.category.color}80);`}
-                    />
-                    <svg
-                      class="w-4 h-4 mr-2 opacity-80"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                    </svg>
-                    <span class="relative z-10">{blogPost.category.name}</span>
-                  </a>
-                </div>
-              )}
+							{/* <!-- Category Badge --> */}
+							{blogPost.category && (
+								<div class='mb-6'>
+									<a
+										href={`/blog?category=${blogPost.category.slug}`}
+										class='group relative inline-flex items-center px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl'
+										style={`background: linear-gradient(135deg, ${blogPost.category.color}20, ${blogPost.category.color}35); color: ${blogPost.category.color}; border: 2px solid ${blogPost.category.color}50; backdrop-filter: blur(15px);`}>
+										<span
+											class='absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-30 transition-opacity duration-300'
+											style={`background: linear-gradient(135deg, ${blogPost.category.color}, ${blogPost.category.color}80);`}
+										/>
+										<svg
+											class='w-4 h-4 mr-2 opacity-80'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path d='M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z' />
+										</svg>
+										<span class='relative z-10'>
+											{blogPost.category.name}
+										</span>
+									</a>
+								</div>
+							)}
 
-              {/* <!-- Title --> */}
-              <h1
-                class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-gray-300 mb-8 leading-tight tracking-tight"
-                data-aos="fade-up"
-              >
-                {blogPost.title}
-              </h1>
+							{/* <!-- Title --> */}
+							<h1
+								class='text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-gray-300 mb-8 leading-tight tracking-tight'
+								data-aos='fade-up'>
+								{blogPost.title}
+							</h1>
 
-              {/* <!-- Excerpt --> */}
-              {blogPost.excerpt && (
-                <div
-                  class="relative mb-10"
-                  data-aos="fade-up"
-                  data-aos-delay="100"
-                >
-                  <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full" />
-                  <p class="text-xl sm:text-2xl text-gray-200 font-light leading-relaxed pl-6 italic max-w-4xl">
-                    "{blogPost.excerpt}"
-                  </p>
-                </div>
-              )}
+							{/* <!-- Excerpt --> */}
+							{blogPost.excerpt && (
+								<div
+									class='relative mb-10'
+									data-aos='fade-up'
+									data-aos-delay='100'>
+									<div class='absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full' />
+									<p class='text-xl sm:text-2xl text-gray-200 font-light leading-relaxed pl-6 italic max-w-4xl'>
+										"{blogPost.excerpt}"
+									</p>
+								</div>
+							)}
 
-              {/* <!-- Article Meta Info --> */}
-              <div
-                class="flex flex-wrap items-center gap-8 text-sm text-gray-400 mb-10 p-6 bg-gradient-to-r from-gray-800/30 to-gray-900/30 rounded-2xl border border-gray-700/40 backdrop-blur-sm"
-                data-aos="fade-up"
-                data-aos-delay="200"
-              >
-                {/* <!-- Author --> */}
-                {blogPost.author && (
-                  <div class="flex items-center space-x-4">
-                    {blogPost.author.avatar && (
-                      <div class="relative">
-                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-full blur-sm" />
-                        <Image
-                          src={blogPost.author.avatar}
-                          alt={blogPost.author.name}
-                          width={48}
-                          height={48}
-                          class="relative w-12 h-12 rounded-full object-cover border-2 border-gray-600 shadow-lg"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <p class="text-white font-semibold text-base">
-                        {blogPost.author.name}
-                      </p>
-                      {blogPost.author.title && (
-                        <p class="text-xs text-indigo-400 font-medium">
-                          {blogPost.author.title}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
+							{/* <!-- Article Meta Info --> */}
+							<div
+								class='flex flex-wrap items-center gap-8 text-sm text-gray-400 mb-10 p-6 bg-gradient-to-r from-gray-800/30 to-gray-900/30 rounded-2xl border border-gray-700/40 backdrop-blur-sm'
+								data-aos='fade-up'
+								data-aos-delay='200'>
+								{/* <!-- Author --> */}
+								{blogPost.author && (
+									<div class='flex items-center space-x-4'>
+										{blogPost.author.avatar && (
+											<div class='relative'>
+												<div class='absolute inset-0 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-full blur-sm' />
+												<Image
+													src={blogPost.author.avatar}
+													alt={blogPost.author.name}
+													width={48}
+													height={48}
+													class='relative w-12 h-12 rounded-full object-cover border-2 border-gray-600 shadow-lg'
+												/>
+											</div>
+										)}
+										<div>
+											<p class='text-white font-semibold text-base'>
+												{blogPost.author.name}
+											</p>
+											{blogPost.author.title && (
+												<p class='text-xs text-indigo-400 font-medium'>
+													{blogPost.author.title}
+												</p>
+											)}
+										</div>
+									</div>
+								)}
 
-                {/* <!-- Published Date --> */}
-                <div class="flex items-center space-x-3 px-4 py-2 bg-gray-700/50 rounded-xl">
-                  <svg
-                    class="w-5 h-5 text-indigo-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span class="text-gray-300 font-medium">
-                    {formatDate(blogPost.publishedAt)}
-                  </span>
-                </div>
+								{/* <!-- Published Date --> */}
+								<div class='flex items-center space-x-3 px-4 py-2 bg-gray-700/50 rounded-xl'>
+									<svg
+										class='w-5 h-5 text-indigo-400'
+										fill='currentColor'
+										viewBox='0 0 20 20'>
+										<path
+											fill-rule='evenodd'
+											d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
+											clip-rule='evenodd'
+										/>
+									</svg>
+									<span class='text-gray-300 font-medium'>
+										{formatDate(blogPost.publishedAt)}
+									</span>
+								</div>
 
-                {/* <!-- Read Time --> */}
-                <div class="flex items-center space-x-3 px-4 py-2 bg-gray-700/50 rounded-xl">
-                  <svg
-                    class="w-5 h-5 text-purple-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span class="text-gray-300 font-medium">
-                    {blogPost.readTime} min read
-                  </span>
-                </div>
-              </div>
+								{/* <!-- Read Time --> */}
+								<div class='flex items-center space-x-3 px-4 py-2 bg-gray-700/50 rounded-xl'>
+									<svg
+										class='w-5 h-5 text-purple-400'
+										fill='currentColor'
+										viewBox='0 0 20 20'>
+										<path
+											fill-rule='evenodd'
+											d='M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z'
+											clip-rule='evenodd'
+										/>
+									</svg>
+									<span class='text-gray-300 font-medium'>
+										{blogPost.readTime} min read
+									</span>
+								</div>
+							</div>
 
-              {/* <!-- Tags --> */}
-              {blogPost.tags && blogPost.tags.length > 0 && (
-                <div
-                  class="flex flex-wrap gap-3 mb-8"
-                  data-aos="fade-up"
-                  data-aos-delay="300"
-                >
-                  {blogPost.tags.map((tag: any, index: number) => (
-                    <a
-                      href={`/blog?tag=${tag.slug}`}
-                      class="group relative inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25"
-                      style={`background: linear-gradient(135deg, ${tag.color}15, ${tag.color}25); color: ${tag.color}; border: 1.5px solid ${tag.color}30; backdrop-filter: blur(10px);`}
-                    >
-                      <span
-                        class="absolute inset-0 rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                        style={`background: linear-gradient(135deg, ${tag.color}, ${tag.color}80);`}
-                      />
-                      <svg
-                        class="w-3 h-3 mr-2 opacity-70"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      <span class="relative z-10">{tag.name}</span>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          </header>
+							{/* <!-- Tags --> */}
+							{blogPost.tags && blogPost.tags.length > 0 && (
+								<div
+									class='flex flex-wrap gap-3 mb-8'
+									data-aos='fade-up'
+									data-aos-delay='300'>
+									{blogPost.tags.map(
+										(tag: any, index: number) => (
+											<a
+												href={`/blog?tag=${tag.slug}`}
+												class='group relative inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25'
+												style={`background: linear-gradient(135deg, ${tag.color}15, ${tag.color}25); color: ${tag.color}; border: 1.5px solid ${tag.color}30; backdrop-filter: blur(10px);`}>
+												<span
+													class='absolute inset-0 rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-300'
+													style={`background: linear-gradient(135deg, ${tag.color}, ${tag.color}80);`}
+												/>
+												<svg
+													class='w-3 h-3 mr-2 opacity-70'
+													fill='currentColor'
+													viewBox='0 0 20 20'>
+													<path
+														fill-rule='evenodd'
+														d='M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z'
+														clip-rule='evenodd'
+													/>
+												</svg>
+												<span class='relative z-10'>
+													{tag.name}
+												</span>
+											</a>
+										),
+									)}
+								</div>
+							)}
+						</div>
+					</header>
 
-          {/* <!-- Article Content --> */}
+					{/* <!-- Article Content --> */}
 
-          <div class="relative w-full px-2 sm:px-4 py-16 sm:py-20 lg:py-24">
-            <div class="max-w-4xl mx-auto">
-              <div
-                class="prose prose-lg prose-invert prose-indigo max-w-none bg-gradient-to-br from-gray-900/20 to-gray-800/20 backdrop-blur-sm rounded-3xl p-2 sm:p-6 md:p-8 border border-gray-700/30 shadow-2xl"
-                data-aos="fade-up"
-              >
-                <div
-                  class="px-1 sm:px-2 md:px-4 py-2 sm:py-3 md:py-4"
-                  set:html={processedContent}
-                />
-              </div>
+					<div class='relative w-full px-2 sm:px-4 py-16 sm:py-20 lg:py-24'>
+						<div class='max-w-4xl mx-auto'>
+							<div
+								class='prose prose-lg prose-invert prose-indigo max-w-none bg-gradient-to-br from-gray-900/20 to-gray-800/20 backdrop-blur-sm rounded-3xl p-2 sm:p-6 md:p-8 border border-gray-700/30 shadow-2xl'
+								data-aos='fade-up'>
+								<div
+									class='px-1 sm:px-2 md:px-4 py-2 sm:py-3 md:py-4'
+									set:html={processedContent}
+								/>
+							</div>
 
-              {/* <!-- Author Bio --> */}
-              {blogPost.author && blogPost.author.bio && (
-                <div
-                  class="mt-20 p-8 sm:p-10 bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-3xl border border-gray-700/50 backdrop-blur-sm hover:border-indigo-500/30 transition-all duration-500"
-                  data-aos="fade-up"
-                >
-                  <div class="flex flex-col sm:flex-row items-start space-y-6 sm:space-y-0 sm:space-x-8">
-                    {blogPost.author.avatar && (
-                      <div class="relative flex-shrink-0">
-                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl" />
-                        <Image
-                          src={blogPost.author.avatar}
-                          alt={blogPost.author.name}
-                          width={96}
-                          height={96}
-                          class="relative w-24 h-24 rounded-full object-cover border-3 border-gradient-to-br from-indigo-500 to-purple-500 shadow-xl"
-                        />
-                      </div>
-                    )}
-                    <div class="flex-1">
-                      <h3 class="text-2xl font-bold text-white mb-3">
-                        About {blogPost.author.name}
-                      </h3>
-                      {blogPost.author.title && (
-                        <p class="text-indigo-400 font-semibold mb-4 text-lg">
-                          {blogPost.author.title}
-                        </p>
-                      )}
-                      <p class="text-gray-300 leading-relaxed mb-6 text-lg">
-                        {blogPost.author.bio}
-                      </p>
-                      {(blogPost.author.website || blogPost.author.social) && (
-                        <div class="flex flex-wrap gap-4">
-                          {blogPost.author.website && (
-                            <a
-                              href={blogPost.author.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="group inline-flex items-center px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded-xl transition-all duration-300 font-medium"
-                            >
-                              <svg
-                                class="w-4 h-4 mr-2"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fill-rule="evenodd"
-                                  d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"
-                                  clip-rule="evenodd"
-                                />
-                              </svg>
-                              Visit Website
-                              <svg
-                                class="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fill-rule="evenodd"
-                                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                                  clip-rule="evenodd"
-                                />
-                              </svg>
-                            </a>
-                          )}
-                          {blogPost.author.social &&
-                            Object.entries(blogPost.author.social).map(
-                              ([platform, url]) => (
-                                <a
-                                  href={typeof url === "string" ? url : "#"}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  class="group inline-flex items-center px-3 py-2 text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg transition-all duration-300 text-sm font-medium capitalize"
-                                >
-                                  <svg
-                                    class="w-4 h-4 mr-2"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fill-rule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
-                                      clip-rule="evenodd"
-                                    />
-                                  </svg>
-                                  {platform}
-                                </a>
-                              ),
-                            )}
-                          {/* Author email */}
-                          {blogPost.author.email && (
-                            <a
-                              href={`mailto:${blogPost.author.email}`}
-                              class="group inline-flex items-center px-3 py-2 text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg transition-all duration-300 text-sm font-medium"
-                            >
-                              <svg
-                                class="w-4 h-4 mr-2"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fill-rule="evenodd"
-                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
-                                  clip-rule="evenodd"
-                                />
-                              </svg>
-                              Email
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+							{/* <!-- Author Bio --> */}
+							{blogPost.author && blogPost.author.bio && (
+								<div
+									class='mt-20 p-8 sm:p-10 bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-3xl border border-gray-700/50 backdrop-blur-sm hover:border-indigo-500/30 transition-all duration-500'
+									data-aos='fade-up'>
+									<div class='flex flex-col sm:flex-row items-start space-y-6 sm:space-y-0 sm:space-x-8'>
+										{blogPost.author.avatar && (
+											<div class='relative flex-shrink-0'>
+												<div class='absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl' />
+												<Image
+													src={blogPost.author.avatar}
+													alt={blogPost.author.name}
+													width={96}
+													height={96}
+													class='relative w-24 h-24 rounded-full object-cover border-3 border-gradient-to-br from-indigo-500 to-purple-500 shadow-xl'
+												/>
+											</div>
+										)}
+										<div class='flex-1'>
+											<h3 class='text-2xl font-bold text-white mb-3'>
+												About {blogPost.author.name}
+											</h3>
+											{blogPost.author.title && (
+												<p class='text-indigo-400 font-semibold mb-4 text-lg'>
+													{blogPost.author.title}
+												</p>
+											)}
+											<p class='text-gray-300 leading-relaxed mb-6 text-lg'>
+												{blogPost.author.bio}
+											</p>
+											{(blogPost.author.website ||
+												blogPost.author.social) && (
+												<div class='flex flex-wrap gap-4'>
+													{blogPost.author
+														.website && (
+														<a
+															href={
+																blogPost.author
+																	.website
+															}
+															target='_blank'
+															rel='noopener noreferrer'
+															class='group inline-flex items-center px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded-xl transition-all duration-300 font-medium'>
+															<svg
+																class='w-4 h-4 mr-2'
+																fill='currentColor'
+																viewBox='0 0 20 20'>
+																<path
+																	fill-rule='evenodd'
+																	d='M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z'
+																	clip-rule='evenodd'
+																/>
+															</svg>
+															Visit Website
+															<svg
+																class='w-4 h-4 ml-1 transition-transform group-hover:translate-x-1'
+																fill='currentColor'
+																viewBox='0 0 20 20'>
+																<path
+																	fill-rule='evenodd'
+																	d='M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z'
+																	clip-rule='evenodd'
+																/>
+															</svg>
+														</a>
+													)}
+													{blogPost.author.social &&
+														Object.entries(
+															blogPost.author
+																.social,
+														).map(
+															([
+																platform,
+																url,
+															]) => (
+																<a
+																	href={
+																		typeof url ===
+																		'string'
+																			? url
+																			: '#'
+																	}
+																	target='_blank'
+																	rel='noopener noreferrer'
+																	class='group inline-flex items-center px-3 py-2 text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg transition-all duration-300 text-sm font-medium capitalize'>
+																	<svg
+																		class='w-4 h-4 mr-2'
+																		fill='currentColor'
+																		viewBox='0 0 20 20'>
+																		<path
+																			fill-rule='evenodd'
+																			d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z'
+																			clip-rule='evenodd'
+																		/>
+																	</svg>
+																	{platform}
+																</a>
+															),
+														)}
+													{/* Author email */}
+													{blogPost.author.email && (
+														<a
+															href={`mailto:${blogPost.author.email}`}
+															class='group inline-flex items-center px-3 py-2 text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg transition-all duration-300 text-sm font-medium'>
+															<svg
+																class='w-4 h-4 mr-2'
+																fill='currentColor'
+																viewBox='0 0 20 20'>
+																<path
+																	fill-rule='evenodd'
+																	d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z'
+																	clip-rule='evenodd'
+																/>
+															</svg>
+															Email
+														</a>
+													)}
+												</div>
+											)}
+										</div>
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
 
-          {/* <!-- Floating Action Buttons --> */}
-          <div class="fixed bottom-8 right-8 flex flex-col space-y-3 z-50">
-            {/* <!-- Table of Contents Button --> */}
-            <button
-              id="toc-button"
-              onclick="toggleTOC()"
-              class="group w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-              title="Table of Contents"
-            >
-              <svg
-                class="w-6 h-6 mx-auto transition-transform group-hover:scale-110"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
+					{/* <!-- Floating Action Buttons --> */}
+					<div class='fixed bottom-8 right-8 flex flex-col space-y-3 z-50'>
+						{/* <!-- Table of Contents Button --> */}
+						<button
+							id='toc-button'
+							onclick='toggleTOC()'
+							class='group w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110'
+							title='Table of Contents'>
+							<svg
+								class='w-6 h-6 mx-auto transition-transform group-hover:scale-110'
+								fill='currentColor'
+								viewBox='0 0 20 20'>
+								<path
+									fill-rule='evenodd'
+									d='M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z'
+									clip-rule='evenodd'
+								/>
+							</svg>
+						</button>
 
-            {/* <!-- Share Button --> */}
-            <button
-              onclick="navigator.share && navigator.share({title: document.title, url: window.location.href}) || copyToClipboard(window.location.href)"
-              class="group w-14 h-14 bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-              title="Share this post"
-            >
-              <svg
-                class="w-6 h-6 mx-auto transition-transform group-hover:scale-110"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-              </svg>
-            </button>
-          </div>
+						{/* <!-- Share Button --> */}
+						<button
+							onclick='navigator.share && navigator.share({title: document.title, url: window.location.href}) || copyToClipboard(window.location.href)'
+							class='group w-14 h-14 bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110'
+							title='Share this post'>
+							<svg
+								class='w-6 h-6 mx-auto transition-transform group-hover:scale-110'
+								fill='currentColor'
+								viewBox='0 0 20 20'>
+								<path d='M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z' />
+							</svg>
+						</button>
+					</div>
 
-          {/* <!-- Table of Contents Modal --> */}
-          <div
-            id="toc-modal"
-            class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden opacity-0 transition-all duration-300"
-            onclick="closeTOC(event)"
-          >
-            <div class="flex items-center justify-center min-h-screen p-4">
-              <div
-                class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border border-gray-700 shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden transform scale-95 transition-transform duration-300"
-                onclick="event.stopPropagation()"
-              >
-                {/* <!-- Modal Header --> */}
-                <div class="flex items-center justify-between p-6 border-b border-gray-700">
-                  <h3 class="text-xl font-bold text-white flex items-center">
-                    <svg
-                      class="w-5 h-5 mr-2 text-indigo-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    Table of Contents
-                  </h3>
-                  <button
-                    onclick="closeTOC()"
-                    class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors duration-200"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
+					{/* <!-- Table of Contents Modal --> */}
+					<div
+						id='toc-modal'
+						class='fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden opacity-0 transition-all duration-300'
+						onclick='closeTOC(event)'>
+						<div class='flex items-center justify-center min-h-screen p-4'>
+							<div
+								class='bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border border-gray-700 shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden transform scale-95 transition-transform duration-300'
+								onclick='event.stopPropagation()'>
+								{/* <!-- Modal Header --> */}
+								<div class='flex items-center justify-between p-6 border-b border-gray-700'>
+									<h3 class='text-xl font-bold text-white flex items-center'>
+										<svg
+											class='w-5 h-5 mr-2 text-indigo-400'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path
+												fill-rule='evenodd'
+												d='M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z'
+												clip-rule='evenodd'
+											/>
+										</svg>
+										Table of Contents
+									</h3>
+									<button
+										onclick='closeTOC()'
+										class='p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors duration-200'>
+										<svg
+											class='w-5 h-5'
+											fill='currentColor'
+											viewBox='0 0 20 20'>
+											<path
+												fill-rule='evenodd'
+												d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+												clip-rule='evenodd'
+											/>
+										</svg>
+									</button>
+								</div>
 
-                {/* <!-- Modal Body --> */}
-                <div class="p-6 overflow-y-auto max-h-[60vh]">
-                  <nav id="toc-content" class="space-y-2">
-                    <p class="text-gray-400 text-sm">
-                      Loading table of contents...
-                    </p>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
-      )
-    }
+								{/* <!-- Modal Body --> */}
+								<div class='p-6 overflow-y-auto max-h-[60vh]'>
+									<nav id='toc-content' class='space-y-2'>
+										<p class='text-gray-400 text-sm'>
+											Loading table of contents...
+										</p>
+									</nav>
+								</div>
+							</div>
+						</div>
+					</div>
+				</article>
+			)
+		}
 
-    {
-      !blogPost && (
-        <div class="flex items-center justify-center min-h-screen">
-          <div class="text-center">
-            <h1 class="text-2xl text-white mb-4">Blog post not found</h1>
-            <a href="/blog" class="text-indigo-400 hover:text-indigo-300">
-              ← Back to Blog
-            </a>
-          </div>
-        </div>
-      )
-    }
-  </main>
+		{
+			!blogPost && (
+				<div class='flex items-center justify-center min-h-screen'>
+					<div class='text-center'>
+						<h1 class='text-2xl text-white mb-4'>
+							Blog post not found
+						</h1>
+						<a
+							href='/blog'
+							class='text-indigo-400 hover:text-indigo-300'>
+							← Back to Blog
+						</a>
+					</div>
+				</div>
+			)
+		}
+	</main>
 </Layout>
 
 <style>
-  /*  prose styles for better readability */
-  .prose {
-    color: #e5e7eb;
-    max-width: none;
-    line-height: 1.8;
-  }
-
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    color: #ffffff;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-top: 2.5rem;
-    margin-bottom: 1.25rem;
-    scroll-margin-top: 6rem;
-  }
-
-  .prose h1 {
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, #ffffff, #e5e7eb);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .prose h2 {
-    font-size: 2rem;
-    border-bottom: 2px solid;
-    border-image: linear-gradient(90deg, #6366f1, #8b5cf6) 1;
-    padding-bottom: 0.75rem;
-  }
-
-  .prose h3 {
-    font-size: 1.75rem;
-    color: #f3f4f6;
-  }
-
-  .prose h4 {
-    font-size: 1.5rem;
-    color: #f3f4f6;
-  }
-
-  .prose h5 {
-    font-size: 1.25rem;
-    color: #f9fafb;
-  }
-
-  .prose h6 {
-    font-size: 1.125rem;
-    color: #f9fafb;
-  }
-
-  .prose p {
-    margin-bottom: 1.75rem;
-    line-height: 1.8;
-    color: #d1d5db;
-  }
-
-  .prose strong {
-    color: #ffffff;
-    font-weight: 700;
-  }
-
-  .prose em {
-    color: #e5e7eb;
-    font-style: italic;
-  }
-
-  .prose a {
-    color: #6366f1;
-    text-decoration: underline;
-    text-decoration-color: rgba(99, 102, 241, 0.4);
-    text-underline-offset: 3px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-
-  .prose a:hover {
-    color: #8b5cf6;
-    text-decoration-color: #8b5cf6;
-    text-underline-offset: 2px;
-  }
-
-  .prose ul,
-  .prose ol {
-    margin: 2rem 0;
-    padding-left: 2rem;
-  }
-
-  .prose li {
-    margin: 0.75rem 0;
-    line-height: 1.7;
-    color: #d1d5db;
-  }
-
-  .prose li::marker {
-    color: #6366f1;
-  }
-
-  .prose blockquote {
-    border-left: 4px solid #6366f1;
-    padding-left: 2rem;
-    margin: 2.5rem 0;
-    font-style: italic;
-    color: #e5e7eb;
-    background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), transparent);
-    padding: 1.5rem 0 1.5rem 2rem;
-    border-radius: 0 0.75rem 0.75rem 0;
-  }
-
-  .prose blockquote p {
-    font-size: 1.125rem;
-    font-weight: 500;
-  }
-
-  .prose code {
-    background: linear-gradient(135deg, #374151, #4b5563);
-    color: #f9fafb;
-    padding: 0.375rem 0.625rem;
-    border-radius: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border: 1px solid #6b7280;
-  }
-
-  .prose pre {
-    background: linear-gradient(135deg, #1f2937, #111827);
-    color: #f9fafb;
-    padding: 2rem;
-    border-radius: 1rem;
-    overflow-x: auto;
-    margin: 2.5rem 0;
-    border: 1px solid #374151;
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
-  }
-
-  .prose pre code {
-    background: none;
-    padding: 0;
-    border-radius: 0;
-    font-size: 0.9rem;
-    border: none;
-    line-height: 1.6;
-  }
-
-  .prose img {
-    border-radius: 1rem;
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
-    margin: 3rem 0;
-    transition: all 0.3s ease;
-  }
-
-  .prose img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.2);
-  }
-
-  .prose hr {
-    border: none;
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      #6366f1,
-      #8b5cf6,
-      transparent
-    );
-    margin: 4rem 0;
-    border-radius: 1px;
-  }
-
-  .prose table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 3rem 0;
-    background: linear-gradient(135deg, #374151, #4b5563);
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
-  }
-
-  .prose th,
-  .prose td {
-    padding: 1rem 1.5rem;
-    text-align: left;
-    border-bottom: 1px solid #4b5563;
-  }
-
-  .prose th {
-    background: linear-gradient(135deg, #4b5563, #6b7280);
-    font-weight: 700;
-    color: #ffffff;
-    text-transform: uppercase;
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-  }
-
-  .prose td {
-    color: #d1d5db;
-  }
-
-  .prose tr:hover td {
-    background-color: rgba(99, 102, 241, 0.05);
-  }
-
-  /*  markdown content styling */
-  .markdown-content {
-    line-height: 1.8;
-  }
-
-  .markdown-content h1,
-  .markdown-content h2,
-  .markdown-content h3,
-  .markdown-content h4,
-  .markdown-content h5,
-  .markdown-content h6 {
-    scroll-margin-top: 6rem;
-    position: relative;
-  }
-
-  .markdown-content h1::before,
-  .markdown-content h2::before,
-  .markdown-content h3::before {
-    content: "";
-    position: absolute;
-    left: -1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 60%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 2px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .markdown-content h1:hover::before,
-  .markdown-content h2:hover::before,
-  .markdown-content h3:hover::before {
-    opacity: 1;
-  }
-
-  .markdown-content pre {
-    position: relative;
-  }
-
-  .markdown-content pre::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-  }
-
-  /* Custom prose content wrapper */
-  .prose-content {
-    font-size: 1.125rem;
-    line-height: 1.8;
-  }
-
-  .prose-content p:first-child {
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #e5e7eb;
-  }
-
-  /* Line clamping utility */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.5);
-    border-radius: 8px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 8px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  }
-
-  /* Focus styles */
-  a:focus,
-  button:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-    border-radius: 8px;
-  }
-
-  /* Modern glass morphism effects */
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  /*  tag animations */
-  .tag-hover-effect {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .tag-hover-effect::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    );
-    transition: left 0.5s;
-  }
-
-  .tag-hover-effect:hover::before {
-    left: 100%;
-  }
-
-  /* Improved gradient backgrounds */
-  .gradient-border {
-    position: relative;
-    background: linear-gradient(
-      135deg,
-      rgba(99, 102, 241, 0.1),
-      rgba(139, 92, 246, 0.1)
-    );
-    border: 1px solid transparent;
-  }
-
-  .gradient-border::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    padding: 2px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
-    border-radius: inherit;
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask-composite: xor;
-  }
-
-  /* Smooth transitions */
-  * {
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /*  scrollbar */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.3);
-    border-radius: 10px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 10px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    border-radius: 10px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  /* Modern card effects */
-  .modern-card {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.05)
-    );
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  }
-
-  .modern-card:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.15),
-      rgba(255, 255, 255, 0.08)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
-  }
-
-  /* Custom scrollbar for TOC */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.3);
-    border-radius: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  }
-
-  /* TOC Styles */
-  .toc-item {
-    transition: all 0.2s ease;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    margin: 0.25rem 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .toc-item:hover {
-    background: rgba(99, 102, 241, 0.1);
-    transform: translateX(4px);
-  }
-
-  .toc-item.active {
-    background: linear-gradient(
-      135deg,
-      rgba(99, 102, 241, 0.2),
-      rgba(139, 92, 246, 0.1)
-    );
-    border-left: 3px solid #6366f1;
-    color: #a5b4fc;
-  }
-
-  .toc-item.active::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 0 2px 2px 0;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 1023px) {
-    .prose {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
-
-  /* Animation for TOC popup */
-  .toc-popup-show {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-
-  .toc-popup-show > div {
-    transform: translate(-50%, -50%) scale(1) !important;
-  }
-  /* Table of Contents Modal Styles */
-  #toc-modal {
-    backdrop-filter: blur(8px);
-  }
-
-  #toc-modal .bg-gradient-to-br {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  }
-
-  #toc-content a {
-    border-left: 2px solid transparent;
-    transition: all 0.2s ease;
-  }
-
-  #toc-content a:hover {
-    border-left-color: #6366f1;
-    background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), transparent);
-  }
-
-  /* Scrollbar styling for TOC content */
-  #toc-content::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  #toc-content::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.3);
-    border-radius: 2px;
-  }
-
-  #toc-content::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.5);
-    border-radius: 2px;
-  }
-
-  #toc-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.7);
-  }
+	/*  prose styles for better readability */
+	.prose {
+		color: #e5e7eb;
+		max-width: none;
+		line-height: 1.8;
+	}
+
+	.prose h1,
+	.prose h2,
+	.prose h3,
+	.prose h4,
+	.prose h5,
+	.prose h6 {
+		color: #ffffff;
+		font-weight: 700;
+		line-height: 1.3;
+		margin-top: 2.5rem;
+		margin-bottom: 1.25rem;
+		scroll-margin-top: 6rem;
+	}
+
+	.prose h1 {
+		font-size: 2.5rem;
+		background: linear-gradient(135deg, #ffffff, #e5e7eb);
+		background-clip: text;
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.prose h2 {
+		font-size: 2rem;
+		border-bottom: 2px solid;
+		border-image: linear-gradient(90deg, #6366f1, #8b5cf6) 1;
+		padding-bottom: 0.75rem;
+	}
+
+	.prose h3 {
+		font-size: 1.75rem;
+		color: #f3f4f6;
+	}
+
+	.prose h4 {
+		font-size: 1.5rem;
+		color: #f3f4f6;
+	}
+
+	.prose h5 {
+		font-size: 1.25rem;
+		color: #f9fafb;
+	}
+
+	.prose h6 {
+		font-size: 1.125rem;
+		color: #f9fafb;
+	}
+
+	.prose p {
+		margin-bottom: 1.75rem;
+		line-height: 1.8;
+		color: #d1d5db;
+	}
+
+	.prose strong {
+		color: #ffffff;
+		font-weight: 700;
+	}
+
+	.prose em {
+		color: #e5e7eb;
+		font-style: italic;
+	}
+
+	.prose a {
+		color: #6366f1;
+		text-decoration: underline;
+		text-decoration-color: rgba(99, 102, 241, 0.4);
+		text-underline-offset: 3px;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.prose a:hover {
+		color: #8b5cf6;
+		text-decoration-color: #8b5cf6;
+		text-underline-offset: 2px;
+	}
+
+	.prose ul,
+	.prose ol {
+		margin: 2rem 0;
+		padding-left: 2rem;
+	}
+
+	.prose li {
+		margin: 0.75rem 0;
+		line-height: 1.7;
+		color: #d1d5db;
+	}
+
+	.prose li::marker {
+		color: #6366f1;
+	}
+
+	.prose blockquote {
+		border-left: 4px solid #6366f1;
+		padding-left: 2rem;
+		margin: 2.5rem 0;
+		font-style: italic;
+		color: #e5e7eb;
+		background: linear-gradient(
+			90deg,
+			rgba(99, 102, 241, 0.1),
+			transparent
+		);
+		padding: 1.5rem 0 1.5rem 2rem;
+		border-radius: 0 0.75rem 0.75rem 0;
+	}
+
+	.prose blockquote p {
+		font-size: 1.125rem;
+		font-weight: 500;
+	}
+
+	.prose code {
+		background: linear-gradient(135deg, #374151, #4b5563);
+		color: #f9fafb;
+		padding: 0.375rem 0.625rem;
+		border-radius: 0.5rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+		border: 1px solid #6b7280;
+	}
+
+	.prose pre {
+		background: linear-gradient(135deg, #1f2937, #111827);
+		color: #f9fafb;
+		padding: 2rem;
+		border-radius: 1rem;
+		overflow-x: auto;
+		margin: 2.5rem 0;
+		border: 1px solid #374151;
+		box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
+	}
+
+	.prose pre code {
+		background: none;
+		padding: 0;
+		border-radius: 0;
+		font-size: 0.9rem;
+		border: none;
+		line-height: 1.6;
+	}
+
+	.prose img {
+		border-radius: 1rem;
+		box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
+		margin: 3rem 0;
+		transition: all 0.3s ease;
+	}
+
+	.prose img:hover {
+		transform: scale(1.02);
+		box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.2);
+	}
+
+	.prose hr {
+		border: none;
+		height: 2px;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			#6366f1,
+			#8b5cf6,
+			transparent
+		);
+		margin: 4rem 0;
+		border-radius: 1px;
+	}
+
+	.prose table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 3rem 0;
+		background: linear-gradient(135deg, #374151, #4b5563);
+		border-radius: 1rem;
+		overflow: hidden;
+		box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
+	}
+
+	.prose th,
+	.prose td {
+		padding: 1rem 1.5rem;
+		text-align: left;
+		border-bottom: 1px solid #4b5563;
+	}
+
+	.prose th {
+		background: linear-gradient(135deg, #4b5563, #6b7280);
+		font-weight: 700;
+		color: #ffffff;
+		text-transform: uppercase;
+		font-size: 0.875rem;
+		letter-spacing: 0.05em;
+	}
+
+	.prose td {
+		color: #d1d5db;
+	}
+
+	.prose tr:hover td {
+		background-color: rgba(99, 102, 241, 0.05);
+	}
+
+	/*  markdown content styling */
+	.markdown-content {
+		line-height: 1.8;
+	}
+
+	.markdown-content h1,
+	.markdown-content h2,
+	.markdown-content h3,
+	.markdown-content h4,
+	.markdown-content h5,
+	.markdown-content h6 {
+		scroll-margin-top: 6rem;
+		position: relative;
+	}
+
+	.markdown-content h1::before,
+	.markdown-content h2::before,
+	.markdown-content h3::before {
+		content: '';
+		position: absolute;
+		left: -1rem;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 4px;
+		height: 60%;
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 2px;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	.markdown-content h1:hover::before,
+	.markdown-content h2:hover::before,
+	.markdown-content h3:hover::before {
+		opacity: 1;
+	}
+
+	.markdown-content pre {
+		position: relative;
+	}
+
+	.markdown-content pre::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+	}
+
+	/* Custom prose content wrapper */
+	.prose-content {
+		font-size: 1.125rem;
+		line-height: 1.8;
+	}
+
+	.prose-content p:first-child {
+		font-size: 1.25rem;
+		font-weight: 500;
+		color: #e5e7eb;
+	}
+
+	/* Line clamping utility */
+	.line-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.line-clamp-3 {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	/* Custom scrollbar */
+	::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: rgba(55, 65, 81, 0.5);
+		border-radius: 8px;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 8px;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(135deg, #4f46e5, #7c3aed);
+	}
+
+	/* Focus styles */
+	a:focus,
+	button:focus {
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+		border-radius: 8px;
+	}
+
+	/* Modern glass morphism effects */
+	.glass-effect {
+		background: rgba(255, 255, 255, 0.05);
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	/*  tag animations */
+	.tag-hover-effect {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.tag-hover-effect::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			rgba(255, 255, 255, 0.1),
+			transparent
+		);
+		transition: left 0.5s;
+	}
+
+	.tag-hover-effect:hover::before {
+		left: 100%;
+	}
+
+	/* Improved gradient backgrounds */
+	.gradient-border {
+		position: relative;
+		background: linear-gradient(
+			135deg,
+			rgba(99, 102, 241, 0.1),
+			rgba(139, 92, 246, 0.1)
+		);
+		border: 1px solid transparent;
+	}
+
+	.gradient-border::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		padding: 2px;
+		background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+		border-radius: inherit;
+		mask:
+			linear-gradient(#fff 0 0) content-box,
+			linear-gradient(#fff 0 0);
+		mask-composite: exclude;
+		-webkit-mask-composite: xor;
+	}
+
+	/* Smooth transitions */
+	* {
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	/*  scrollbar */
+	::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: rgba(55, 65, 81, 0.3);
+		border-radius: 10px;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 10px;
+		border: 2px solid transparent;
+		background-clip: padding-box;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(135deg, #4f46e5, #7c3aed);
+		border-radius: 10px;
+		border: 2px solid transparent;
+		background-clip: padding-box;
+	}
+
+	/* Modern card effects */
+	.modern-card {
+		background: linear-gradient(
+			135deg,
+			rgba(255, 255, 255, 0.1),
+			rgba(255, 255, 255, 0.05)
+		);
+		backdrop-filter: blur(15px);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+	}
+
+	.modern-card:hover {
+		background: linear-gradient(
+			135deg,
+			rgba(255, 255, 255, 0.15),
+			rgba(255, 255, 255, 0.08)
+		);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+	}
+
+	/* Custom scrollbar for TOC */
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: rgba(55, 65, 81, 0.3);
+		border-radius: 4px;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 4px;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(135deg, #4f46e5, #7c3aed);
+	}
+
+	/* TOC Styles */
+	.toc-item {
+		transition: all 0.2s ease;
+		border-radius: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		margin: 0.25rem 0;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.toc-item:hover {
+		background: rgba(99, 102, 241, 0.1);
+		transform: translateX(4px);
+	}
+
+	.toc-item.active {
+		background: linear-gradient(
+			135deg,
+			rgba(99, 102, 241, 0.2),
+			rgba(139, 92, 246, 0.1)
+		);
+		border-left: 3px solid #6366f1;
+		color: #a5b4fc;
+	}
+
+	.toc-item.active::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 3px;
+		background: linear-gradient(135deg, #6366f1, #8b5cf6);
+		border-radius: 0 2px 2px 0;
+	}
+
+	/* Responsive adjustments */
+	@media (max-width: 1023px) {
+		.prose {
+			padding-left: 0;
+			padding-right: 0;
+		}
+	}
+
+	/* Animation for TOC popup */
+	.toc-popup-show {
+		opacity: 1 !important;
+		pointer-events: auto !important;
+	}
+
+	.toc-popup-show > div {
+		transform: translate(-50%, -50%) scale(1) !important;
+	}
+	/* Table of Contents Modal Styles */
+	#toc-modal {
+		backdrop-filter: blur(8px);
+	}
+
+	#toc-modal .bg-gradient-to-br {
+		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+	}
+
+	#toc-content a {
+		border-left: 2px solid transparent;
+		transition: all 0.2s ease;
+	}
+
+	#toc-content a:hover {
+		border-left-color: #6366f1;
+		background: linear-gradient(
+			90deg,
+			rgba(99, 102, 241, 0.1),
+			transparent
+		);
+	}
+
+	/* Scrollbar styling for TOC content */
+	#toc-content::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	#toc-content::-webkit-scrollbar-track {
+		background: rgba(55, 65, 81, 0.3);
+		border-radius: 2px;
+	}
+
+	#toc-content::-webkit-scrollbar-thumb {
+		background: rgba(99, 102, 241, 0.5);
+		border-radius: 2px;
+	}
+
+	#toc-content::-webkit-scrollbar-thumb:hover {
+		background: rgba(99, 102, 241, 0.7);
+	}
 </style>
 
 <script>
-  //  functionality for blog post page
-  document.addEventListener("DOMContentLoaded", function () {
-    // Handle floating action buttons
-    const scrollToTopBtn = document.getElementById("scrollToTop");
+	//  functionality for blog post page
+	document.addEventListener('DOMContentLoaded', function () {
+		// Handle floating action buttons
+		const scrollToTopBtn = document.getElementById('scrollToTop');
 
-    function toggleScrollButton() {
-      if (scrollToTopBtn) {
-        if (window.pageYOffset > 300) {
-          scrollToTopBtn.classList.remove("opacity-0", "translate-y-8");
-          scrollToTopBtn.classList.add("opacity-100", "translate-y-0");
-        } else {
-          scrollToTopBtn.classList.add("opacity-0", "translate-y-8");
-          scrollToTopBtn.classList.remove("opacity-100", "translate-y-0");
-        }
-      }
-    }
+		function toggleScrollButton() {
+			if (scrollToTopBtn) {
+				if (window.pageYOffset > 300) {
+					scrollToTopBtn.classList.remove(
+						'opacity-0',
+						'translate-y-8',
+					);
+					scrollToTopBtn.classList.add(
+						'opacity-100',
+						'translate-y-0',
+					);
+				} else {
+					scrollToTopBtn.classList.add('opacity-0', 'translate-y-8');
+					scrollToTopBtn.classList.remove(
+						'opacity-100',
+						'translate-y-0',
+					);
+				}
+			}
+		}
 
-    window.addEventListener("scroll", toggleScrollButton, {
-      passive: true,
-    });
+		window.addEventListener('scroll', toggleScrollButton, {
+			passive: true,
+		});
 
-    // Handle TOC functionality
-    const tocToggle = document.getElementById("tocToggle");
-    const tocPopup = document.getElementById("tocPopup");
-    const tocClose = document.getElementById("tocClose");
-    const tocSidebar = document.getElementById("tocSidebar");
-    const tocList = document.getElementById("tocList");
-    const tocListMobile = document.getElementById("tocListMobile");
+		// Handle TOC functionality
+		const tocToggle = document.getElementById('tocToggle');
+		const tocPopup = document.getElementById('tocPopup');
+		const tocClose = document.getElementById('tocClose');
+		const tocSidebar = document.getElementById('tocSidebar');
+		const tocList = document.getElementById('tocList');
+		const tocListMobile = document.getElementById('tocListMobile');
 
-    // Mobile TOC toggle
-    if (tocToggle && tocPopup && tocClose) {
-      tocToggle.addEventListener("click", function () {
-        tocPopup.classList.add("toc-popup-show");
-      });
+		// Mobile TOC toggle
+		if (tocToggle && tocPopup && tocClose) {
+			tocToggle.addEventListener('click', function () {
+				tocPopup.classList.add('toc-popup-show');
+			});
 
-      tocClose.addEventListener("click", function () {
-        tocPopup.classList.remove("toc-popup-show");
-      });
+			tocClose.addEventListener('click', function () {
+				tocPopup.classList.remove('toc-popup-show');
+			});
 
-      // Close on overlay click
-      tocPopup.addEventListener("click", function (e) {
-        if (e.target === tocPopup) {
-          tocPopup.classList.remove("toc-popup-show");
-        }
-      });
+			// Close on overlay click
+			tocPopup.addEventListener('click', function (e) {
+				if (e.target === tocPopup) {
+					tocPopup.classList.remove('toc-popup-show');
+				}
+			});
 
-      // Close on escape key
-      document.addEventListener("keydown", function (e) {
-        if (
-          e.key === "Escape" &&
-          tocPopup.classList.contains("toc-popup-show")
-        ) {
-          tocPopup.classList.remove("toc-popup-show");
-        }
-      });
-    }
+			// Close on escape key
+			document.addEventListener('keydown', function (e) {
+				if (
+					e.key === 'Escape' &&
+					tocPopup.classList.contains('toc-popup-show')
+				) {
+					tocPopup.classList.remove('toc-popup-show');
+				}
+			});
+		}
 
-    // Generate TOC
-    function generateTOC() {
-      const headings = document.querySelectorAll(
-        ".prose h2, .prose h3, .prose-content h2, .prose-content h3",
-      );
+		// Generate TOC
+		function generateTOC() {
+			const headings = document.querySelectorAll(
+				'.prose h2, .prose h3, .prose-content h2, .prose-content h3',
+			);
 
-      if (headings.length < 2) {
-        // Hide TOC if less than 2 headings
-        if (tocSidebar) tocSidebar.style.display = "none";
-        if (tocToggle) tocToggle.style.display = "none";
-        return;
-      }
+			if (headings.length < 2) {
+				// Hide TOC if less than 2 headings
+				if (tocSidebar) tocSidebar.style.display = 'none';
+				if (tocToggle) tocToggle.style.display = 'none';
+				return;
+			}
 
-      // Show TOC elements
-      if (tocSidebar) tocSidebar.style.display = "block";
-      if (tocToggle) tocToggle.style.display = "block";
+			// Show TOC elements
+			if (tocSidebar) tocSidebar.style.display = 'block';
+			if (tocToggle) tocToggle.style.display = 'block';
 
-      const tocItems: string[] = [];
+			const tocItems: string[] = [];
 
-      headings.forEach(function (heading: Element, index: number) {
-        const id = "heading-" + index;
-        heading.id = id;
+			headings.forEach(function (heading: Element, index: number) {
+				const id = 'heading-' + index;
+				heading.id = id;
 
-        const level = heading.tagName.toLowerCase();
-        const text = heading.textContent || "";
-        const indent =
-          level === "h3" ? "ml-4 text-sm" : "text-base font-medium";
+				const level = heading.tagName.toLowerCase();
+				const text = heading.textContent || '';
+				const indent =
+					level === 'h3' ? 'ml-4 text-sm' : 'text-base font-medium';
 
-        const tocItem = `
+				const tocItem = `
 					<li>
 						<a href="#${id}" class="toc-item block text-gray-400 hover:text-white ${indent} transition-all duration-200" data-heading="${id}">
 							${text}
@@ -1606,283 +1634,291 @@ const processedContent = processContent(blogPost?.content);
 					</li>
 				`;
 
-        tocItems.push(tocItem);
-      });
+				tocItems.push(tocItem);
+			});
 
-      // Populate both desktop and mobile TOC
-      if (tocList) tocList.innerHTML = tocItems.join("");
-      if (tocListMobile) tocListMobile.innerHTML = tocItems.join("");
+			// Populate both desktop and mobile TOC
+			if (tocList) tocList.innerHTML = tocItems.join('');
+			if (tocListMobile) tocListMobile.innerHTML = tocItems.join('');
 
-      // Add click handlers for smooth scrolling
-      document.querySelectorAll(".toc-item").forEach(function (link) {
-        link.addEventListener("click", function (e: Event) {
-          e.preventDefault();
-          const target = e.target as HTMLElement;
-          const targetId = target.getAttribute("data-heading");
-          const targetElement = document.getElementById(targetId || "");
+			// Add click handlers for smooth scrolling
+			document.querySelectorAll('.toc-item').forEach(function (link) {
+				link.addEventListener('click', function (e: Event) {
+					e.preventDefault();
+					const target = e.target as HTMLElement;
+					const targetId = target.getAttribute('data-heading');
+					const targetElement = document.getElementById(
+						targetId || '',
+					);
 
-          if (targetElement) {
-            // Close mobile popup if open
-            if (tocPopup) {
-              tocPopup.classList.remove("toc-popup-show");
-            }
+					if (targetElement) {
+						// Close mobile popup if open
+						if (tocPopup) {
+							tocPopup.classList.remove('toc-popup-show');
+						}
 
-            // Smooth scroll with offset for fixed header
-            const offsetTop = targetElement.offsetTop - 100;
-            window.scrollTo({
-              top: offsetTop,
-              behavior: "smooth",
-            });
-          }
-        });
-      });
+						// Smooth scroll with offset for fixed header
+						const offsetTop = targetElement.offsetTop - 100;
+						window.scrollTo({
+							top: offsetTop,
+							behavior: 'smooth',
+						});
+					}
+				});
+			});
 
-      // Update active TOC item on scroll
-      function updateActiveTOC() {
-        const scrollPosition = window.pageYOffset + 150;
-        let activeHeading: Element | null = null;
+			// Update active TOC item on scroll
+			function updateActiveTOC() {
+				const scrollPosition = window.pageYOffset + 150;
+				let activeHeading: Element | null = null;
 
-        headings.forEach(function (heading: Element) {
-          if ((heading as HTMLElement).offsetTop <= scrollPosition) {
-            activeHeading = heading;
-          }
-        });
+				headings.forEach(function (heading: Element) {
+					if ((heading as HTMLElement).offsetTop <= scrollPosition) {
+						activeHeading = heading;
+					}
+				});
 
-        // Remove active class from all items
-        document.querySelectorAll(".toc-item").forEach(function (item) {
-          item.classList.remove("active");
-        });
+				// Remove active class from all items
+				document.querySelectorAll('.toc-item').forEach(function (item) {
+					item.classList.remove('active');
+				});
 
-        // Add active class to current item
-        if (activeHeading && (activeHeading as HTMLElement).id) {
-          const activeItems = document.querySelectorAll(
-            `[data-heading="${(activeHeading as HTMLElement).id}"]`,
-          );
-          activeItems.forEach(function (item) {
-            item.classList.add("active");
-          });
-        }
-      }
+				// Add active class to current item
+				if (activeHeading && (activeHeading as HTMLElement).id) {
+					const activeItems = document.querySelectorAll(
+						`[data-heading="${(activeHeading as HTMLElement).id}"]`,
+					);
+					activeItems.forEach(function (item) {
+						item.classList.add('active');
+					});
+				}
+			}
 
-      window.addEventListener("scroll", updateActiveTOC, {
-        passive: true,
-      });
-      updateActiveTOC(); // Initial call
-    }
+			window.addEventListener('scroll', updateActiveTOC, {
+				passive: true,
+			});
+			updateActiveTOC(); // Initial call
+		}
 
-    // Initialize TOC
-    generateTOC();
+		// Initialize TOC
+		generateTOC();
 
-    // Copy to clipboard fallback for share button
-    window.copyToClipboard = function (text: string) {
-      navigator.clipboard.writeText(text).then(function () {
-        // Create a temporary toast notification
-        const toast = document.createElement("div");
-        toast.className =
-          "fixed bottom-24 right-8 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300";
-        toast.textContent = "Link copied to clipboard!";
-        document.body.appendChild(toast);
+		// Copy to clipboard fallback for share button
+		window.copyToClipboard = function (text: string) {
+			navigator.clipboard.writeText(text).then(function () {
+				// Create a temporary toast notification
+				const toast = document.createElement('div');
+				toast.className =
+					'fixed bottom-24 right-8 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+				toast.textContent = 'Link copied to clipboard!';
+				document.body.appendChild(toast);
 
-        setTimeout(function () {
-          toast.classList.add("opacity-0", "translate-y-4");
-          setTimeout(function () {
-            document.body.removeChild(toast);
-          }, 300);
-        }, 2000);
-      });
-    };
+				setTimeout(function () {
+					toast.classList.add('opacity-0', 'translate-y-4');
+					setTimeout(function () {
+						document.body.removeChild(toast);
+					}, 300);
+				}, 2000);
+			});
+		};
 
-    // Add copy functionality to code blocks
-    const codeBlocks = document.querySelectorAll("pre code");
-    codeBlocks.forEach(function (block) {
-      const button = document.createElement("button");
-      button.className =
-        "absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100";
-      button.textContent = "Copy";
-      button.onclick = function () {
-        navigator.clipboard.writeText(block.textContent || "");
-        button.textContent = "Copied!";
-        setTimeout(function () {
-          button.textContent = "Copy";
-        }, 2000);
-      };
+		// Add copy functionality to code blocks
+		const codeBlocks = document.querySelectorAll('pre code');
+		codeBlocks.forEach(function (block) {
+			const button = document.createElement('button');
+			button.className =
+				'absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100';
+			button.textContent = 'Copy';
+			button.onclick = function () {
+				navigator.clipboard.writeText(block.textContent || '');
+				button.textContent = 'Copied!';
+				setTimeout(function () {
+					button.textContent = 'Copy';
+				}, 2000);
+			};
 
-      const pre = block.parentElement;
-      if (pre && pre.tagName === "PRE") {
-        pre.className += " relative group";
-        pre.appendChild(button);
-      }
-    });
+			const pre = block.parentElement;
+			if (pre && pre.tagName === 'PRE') {
+				pre.className += ' relative group';
+				pre.appendChild(button);
+			}
+		});
 
-    // Add reading progress indicator
-    const progressBar = document.createElement("div");
-    progressBar.className =
-      "fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 z-50 transition-all duration-150";
-    progressBar.style.width = "0%";
-    document.body.appendChild(progressBar);
+		// Add reading progress indicator
+		const progressBar = document.createElement('div');
+		progressBar.className =
+			'fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 z-50 transition-all duration-150';
+		progressBar.style.width = '0%';
+		document.body.appendChild(progressBar);
 
-    function updateReadingProgress() {
-      const scrollTop = window.pageYOffset;
-      const docHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = (scrollTop / docHeight) * 100;
-      progressBar.style.width = Math.min(scrollPercent, 100) + "%";
-    }
+		function updateReadingProgress() {
+			const scrollTop = window.pageYOffset;
+			const docHeight =
+				document.documentElement.scrollHeight - window.innerHeight;
+			const scrollPercent = (scrollTop / docHeight) * 100;
+			progressBar.style.width = Math.min(scrollPercent, 100) + '%';
+		}
 
-    window.addEventListener("scroll", updateReadingProgress, {
-      passive: true,
-    });
+		window.addEventListener('scroll', updateReadingProgress, {
+			passive: true,
+		});
 
-    // Add smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-      anchor.addEventListener("click", function (e) {
-        e.preventDefault();
-        const element = e.currentTarget;
-        if (element && element instanceof HTMLAnchorElement) {
-          const href = element.getAttribute("href");
-          if (href) {
-            const target = document.querySelector(href);
-            if (target) {
-              target.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            }
-          }
-        }
-      });
-    });
+		// Add smooth scrolling for anchor links
+		document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+			anchor.addEventListener('click', function (e) {
+				e.preventDefault();
+				const element = e.currentTarget;
+				if (element && element instanceof HTMLAnchorElement) {
+					const href = element.getAttribute('href');
+					if (href) {
+						const target = document.querySelector(href);
+						if (target) {
+							target.scrollIntoView({
+								behavior: 'smooth',
+								block: 'start',
+							});
+						}
+					}
+				}
+			});
+		});
 
-    // Add image zoom functionality
-    const images = document.querySelectorAll(".prose img");
-    images.forEach(function (img) {
-      if (img instanceof HTMLImageElement) {
-        img.style.cursor = "zoom-in";
-        img.addEventListener("click", function (event) {
-          const overlay = document.createElement("div");
-          overlay.className =
-            "fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-zoom-out";
-          const imgEl = event.target as HTMLImageElement;
-          overlay.innerHTML =
-            '<img src="' +
-            imgEl.src +
-            '" alt="' +
-            imgEl.alt +
-            '" class="max-w-full max-h-full object-contain">';
+		// Add image zoom functionality
+		const images = document.querySelectorAll('.prose img');
+		images.forEach(function (img) {
+			if (img instanceof HTMLImageElement) {
+				img.style.cursor = 'zoom-in';
+				img.addEventListener('click', function (event) {
+					const overlay = document.createElement('div');
+					overlay.className =
+						'fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-zoom-out';
+					const imgEl = event.target as HTMLImageElement;
+					overlay.innerHTML =
+						'<img src="' +
+						imgEl.src +
+						'" alt="' +
+						imgEl.alt +
+						'" class="max-w-full max-h-full object-contain">';
 
-          overlay.addEventListener("click", function () {
-            document.body.removeChild(overlay);
-          });
+					overlay.addEventListener('click', function () {
+						document.body.removeChild(overlay);
+					});
 
-          document.body.appendChild(overlay);
-        });
-      }
-    });
+					document.body.appendChild(overlay);
+				});
+			}
+		});
 
-    // Process any HTML elements that need additional styling
-    // Apply prose styling to elements that might be in HTML content
-    document.querySelectorAll(".prose-content").forEach(function (container) {
-      // Apply basic styling to HTML tables if they don't have classes
-      container
-        .querySelectorAll("table:not([class])")
-        .forEach(function (tableEl) {
-          if (tableEl instanceof HTMLTableElement) {
-            tableEl.classList.add("prose-table");
-            // Add table styling with CSS classes instead of inline styles
-            tableEl.classList.add("w-full", "border-collapse", "my-6");
-          }
-        });
+		// Process any HTML elements that need additional styling
+		// Apply prose styling to elements that might be in HTML content
+		document
+			.querySelectorAll('.prose-content')
+			.forEach(function (container) {
+				// Apply basic styling to HTML tables if they don't have classes
+				container
+					.querySelectorAll('table:not([class])')
+					.forEach(function (tableEl) {
+						if (tableEl instanceof HTMLTableElement) {
+							tableEl.classList.add('prose-table');
+							// Add table styling with CSS classes instead of inline styles
+							tableEl.classList.add(
+								'w-full',
+								'border-collapse',
+								'my-6',
+							);
+						}
+					});
 
-      // Style HTML headings that might be missing styling
-      ["h1", "h2", "h3", "h4", "h5", "h6"].forEach(function (tag) {
-        container
-          .querySelectorAll(tag + ":not([class])")
-          .forEach(function (heading) {
-            heading.classList.add("prose-" + tag);
-          });
-      });
-    });
-  });
+				// Style HTML headings that might be missing styling
+				['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(function (tag) {
+					container
+						.querySelectorAll(tag + ':not([class])')
+						.forEach(function (heading) {
+							heading.classList.add('prose-' + tag);
+						});
+				});
+			});
+	});
 </script>
 
 <script is:inline>
-  // Table of Contents functionality
-  function toggleTOC() {
-    const modal = document.getElementById("toc-modal");
-    const modalContent = modal.querySelector(".bg-gradient-to-br");
+	// Table of Contents functionality
+	function toggleTOC() {
+		const modal = document.getElementById('toc-modal');
+		const modalContent = modal.querySelector('.bg-gradient-to-br');
 
-    if (modal.classList.contains("hidden")) {
-      // Show modal
-      modal.classList.remove("hidden");
-      setTimeout(() => {
-        modal.classList.remove("opacity-0");
-        modalContent.classList.remove("scale-95");
-        modalContent.classList.add("scale-100");
-      }, 10);
+		if (modal.classList.contains('hidden')) {
+			// Show modal
+			modal.classList.remove('hidden');
+			setTimeout(() => {
+				modal.classList.remove('opacity-0');
+				modalContent.classList.remove('scale-95');
+				modalContent.classList.add('scale-100');
+			}, 10);
 
-      // Generate TOC if not already generated
-      generateTOC();
-    } else {
-      closeTOC();
-    }
-  }
+			// Generate TOC if not already generated
+			generateTOC();
+		} else {
+			closeTOC();
+		}
+	}
 
-  function closeTOC(event) {
-    const modal = document.getElementById("toc-modal");
-    const modalContent = modal.querySelector(".bg-gradient-to-br");
+	function closeTOC(event) {
+		const modal = document.getElementById('toc-modal');
+		const modalContent = modal.querySelector('.bg-gradient-to-br');
 
-    // Close modal
-    modal.classList.add("opacity-0");
-    modalContent.classList.remove("scale-100");
-    modalContent.classList.add("scale-95");
+		// Close modal
+		modal.classList.add('opacity-0');
+		modalContent.classList.remove('scale-100');
+		modalContent.classList.add('scale-95');
 
-    setTimeout(() => {
-      modal.classList.add("hidden");
-    }, 300);
-  }
+		setTimeout(() => {
+			modal.classList.add('hidden');
+		}, 300);
+	}
 
-  function generateTOC() {
-    const tocContent = document.getElementById("toc-content");
-    const headings = document.querySelectorAll(
-      ".prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6",
-    );
+	function generateTOC() {
+		const tocContent = document.getElementById('toc-content');
+		const headings = document.querySelectorAll(
+			'.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6',
+		);
 
-    if (headings.length === 0) {
-      tocContent.innerHTML =
-        '<p class="text-gray-400 text-sm">No headings found in this article.</p>';
-      return;
-    }
+		if (headings.length === 0) {
+			tocContent.innerHTML =
+				'<p class="text-gray-400 text-sm">No headings found in this article.</p>';
+			return;
+		}
 
-    let tocHTML = "";
+		let tocHTML = '';
 
-    headings.forEach((heading, index) => {
-      const level = parseInt(heading.tagName.charAt(1));
-      const text = heading.textContent || heading.innerText;
-      const id = heading.id || text.toLowerCase().replace(/[^\w]+/g, "-");
+		headings.forEach((heading, index) => {
+			const level = parseInt(heading.tagName.charAt(1));
+			const text = heading.textContent || heading.innerText;
+			const id = heading.id || text.toLowerCase().replace(/[^\w]+/g, '-');
 
-      // Ensure heading has an ID for smooth scrolling
-      if (!heading.id) {
-        heading.id = id;
-      }
+			// Ensure heading has an ID for smooth scrolling
+			if (!heading.id) {
+				heading.id = id;
+			}
 
-      // Calculate indentation based on heading level
-      const indentation = (level - 1) * 1; // 1rem per level
-      const textSize =
-        level <= 2 ? "text-base" : level <= 4 ? "text-sm" : "text-xs";
-      const fontWeight =
-        level <= 2
-          ? "font-semibold"
-          : level <= 4
-            ? "font-medium"
-            : "font-normal";
-      const textColor =
-        level <= 2
-          ? "text-white"
-          : level <= 4
-            ? "text-gray-200"
-            : "text-gray-300";
+			// Calculate indentation based on heading level
+			const indentation = (level - 1) * 1; // 1rem per level
+			const textSize =
+				level <= 2 ? 'text-base' : level <= 4 ? 'text-sm' : 'text-xs';
+			const fontWeight =
+				level <= 2
+					? 'font-semibold'
+					: level <= 4
+						? 'font-medium'
+						: 'font-normal';
+			const textColor =
+				level <= 2
+					? 'text-white'
+					: level <= 4
+						? 'text-gray-200'
+						: 'text-gray-300';
 
-      tocHTML += `
+			tocHTML += `
         <a
           href="#${id}"
           onclick="scrollToHeading('${id}'); closeTOC();"
@@ -1895,72 +1931,72 @@ const processedContent = processContent(blogPost?.content);
           </span>
         </a>
       `;
-    });
+		});
 
-    tocContent.innerHTML = tocHTML;
-  }
+		tocContent.innerHTML = tocHTML;
+	}
 
-  function scrollToHeading(id) {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }
+	function scrollToHeading(id) {
+		const element = document.getElementById(id);
+		if (element) {
+			element.scrollIntoView({
+				behavior: 'smooth',
+				block: 'start',
+			});
+		}
+	}
 
-  // Generate TOC on page load
-  document.addEventListener("DOMContentLoaded", function () {
-    // Pre-generate TOC for faster display
-    setTimeout(() => {
-      generateTOC();
-    }, 1000);
-  });
+	// Generate TOC on page load
+	document.addEventListener('DOMContentLoaded', function () {
+		// Pre-generate TOC for faster display
+		setTimeout(() => {
+			generateTOC();
+		}, 1000);
+	});
 </script>
 
 <script is:inline>
-  // Add Prism.js for code highlighting
-  document.addEventListener("DOMContentLoaded", function () {
-    // Only load Prism if we have code blocks
-    if (document.querySelector("pre code")) {
-      // Load Prism.js dynamically
-      const prismCSS = document.createElement("link");
-      prismCSS.rel = "stylesheet";
-      prismCSS.href =
-        "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css";
-      document.head.appendChild(prismCSS);
+	// Add Prism.js for code highlighting
+	document.addEventListener('DOMContentLoaded', function () {
+		// Only load Prism if we have code blocks
+		if (document.querySelector('pre code')) {
+			// Load Prism.js dynamically
+			const prismCSS = document.createElement('link');
+			prismCSS.rel = 'stylesheet';
+			prismCSS.href =
+				'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';
+			document.head.appendChild(prismCSS);
 
-      const prismScript = document.createElement("script");
-      prismScript.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js";
-      document.body.appendChild(prismScript);
+			const prismScript = document.createElement('script');
+			prismScript.src =
+				'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';
+			document.body.appendChild(prismScript);
 
-      // Add language support for common languages
-      const languages = [
-        "javascript",
-        "css",
-        "html",
-        "typescript",
-        "python",
-        "bash",
-        "json",
-      ];
-      languages.forEach(function (lang) {
-        const script = document.createElement("script");
-        script.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-" +
-          lang +
-          ".min.js";
-        document.body.appendChild(script);
-      });
+			// Add language support for common languages
+			const languages = [
+				'javascript',
+				'css',
+				'html',
+				'typescript',
+				'python',
+				'bash',
+				'json',
+			];
+			languages.forEach(function (lang) {
+				const script = document.createElement('script');
+				script.src =
+					'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-' +
+					lang +
+					'.min.js';
+				document.body.appendChild(script);
+			});
 
-      // Initialize Prism when scripts are loaded
-      prismScript.onload = function () {
-        if (window.Prism) {
-          window.Prism.highlightAll();
-        }
-      };
-    }
-  });
+			// Initialize Prism when scripts are loaded
+			prismScript.onload = function () {
+				if (window.Prism) {
+					window.Prism.highlightAll();
+				}
+			};
+		}
+	});
 </script>

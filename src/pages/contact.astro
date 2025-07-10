@@ -851,16 +851,16 @@ export const prerender = true;
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById(
-      "contact-form"
+      "contact-form",
     ) as HTMLFormElement | null;
     const formMessage = document.getElementById(
-      "form-message"
+      "form-message",
     ) as HTMLElement | null;
     const successMessage = document.getElementById(
-      "success-message"
+      "success-message",
     ) as HTMLElement | null;
     const errorMessage = document.getElementById(
-      "error-message"
+      "error-message",
     ) as HTMLElement | null;
 
     if (form && formMessage && successMessage && errorMessage) {
@@ -872,10 +872,11 @@ export const prerender = true;
 
         // Add loading state to button
         const submitButton = form.querySelector(
-          'button[type="submit"]'
+          'button[type="submit"]',
         ) as HTMLButtonElement;
-        const originalText = submitButton.innerHTML;
+        let originalText = "";
         if (submitButton) {
+          originalText = submitButton.innerHTML;
           submitButton.disabled = true;
           submitButton.innerHTML = `
             <span class="flex items-center justify-center">
@@ -923,7 +924,7 @@ export const prerender = true;
 
           // Update error message with specific details if available
           const errorText = errorMessage.querySelector(
-            ".text-sm"
+            ".text-sm",
           ) as HTMLElement;
           if (errorText && error instanceof Error) {
             errorText.textContent =
