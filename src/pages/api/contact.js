@@ -2,9 +2,11 @@ import nodemailer from "nodemailer";
 
 // Email configuration using Gmail
 const EMAIL_CONFIG = {
-  SMTP_USER: process.env.SMTP_USER, // yourgmail@gmail.com
-  SMTP_PASSWORD: process.env.SMTP_PASSWORD, // App Password
-  RECIPIENT_EMAIL: process.env.RECIPIENT_EMAIL || process.env.SMTP_USER,
+  SMTP_HOST: import.meta.env.SMTP_HOST,
+  SMTP_PORT: import.meta.env.SMTP_PORT,
+  SMTP_USER: import.meta.env.SMTP_USER,
+  SMTP_PASSWORD: import.meta.env.SMTP_PASSWORD, // In production, use environment variables
+  RECIPIENT_EMAIL: import.meta.env.RECIPIENT_EMAIL,
 };
 
 console.log("[DEBUG] Email configuration loaded:", {
@@ -69,7 +71,9 @@ function getPersonalizedResponse(subject) {
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: EMAIL_CONFIG.SMTP_HOST,
+  port: EMAIL_CONFIG.SMTP_PORT,
+  secure: EMAIL_CONFIG.SMTP_PORT == 465 ? true : false, // true for 465, false for other ports
   auth: {
     user: EMAIL_CONFIG.SMTP_USER,
     pass: EMAIL_CONFIG.SMTP_PASSWORD,
@@ -309,7 +313,7 @@ export async function POST({ request }) {
     </div>
 
     <div class="footer">
-      <p>This message was sent from the contact form on gideonmaina.dev</p>
+      <p>This message was sent from the contact form on gmainapro@gmail.com.dev</p>
       <p>Timestamp: ${new Date().toLocaleString()}</p>
     </div>
   </div>
