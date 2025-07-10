@@ -313,7 +313,7 @@ export async function POST({ request }) {
     </div>
 
     <div class="footer">
-      <p>This message was sent from the contact form on gmainapro@gmail.com.dev</p>
+      <p>This message was sent from the contact form on gideonmaina.me</p>
       <p>Timestamp: ${new Date().toLocaleString()}</p>
     </div>
   </div>
