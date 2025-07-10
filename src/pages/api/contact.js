@@ -1,12 +1,10 @@
 import nodemailer from "nodemailer";
 
-// Email configuration
+// Email configuration using Gmail
 const EMAIL_CONFIG = {
-  SMTP_HOST: "us2.smtp.mailhostbox.com",
-  SMTP_PORT: 587,
-  SMTP_USER: "gideon@yebei.tech",
-  SMTP_PASSWORD: "nNfdO^C4", // In production, use environment variables
-  RECIPIENT_EMAIL: "gideon@yebei.tech",
+  SMTP_USER: process.env.SMTP_USER, // yourgmail@gmail.com
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD, // App Password
+  RECIPIENT_EMAIL: process.env.RECIPIENT_EMAIL || process.env.SMTP_USER,
 };
 
 console.log("[DEBUG] Email configuration loaded:", {
@@ -71,15 +69,10 @@ function getPersonalizedResponse(subject) {
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-  host: EMAIL_CONFIG.SMTP_HOST,
-  port: EMAIL_CONFIG.SMTP_PORT,
-  secure: false, // true for 465, false for other ports
+  service: "gmail",
   auth: {
     user: EMAIL_CONFIG.SMTP_USER,
     pass: EMAIL_CONFIG.SMTP_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
   },
 });
 
@@ -398,7 +391,7 @@ Timestamp: ${new Date().toLocaleString()}
 
       <p>In the meantime, feel free to check out my latest work on <a href="https://github.com/gideon-maina">GitHub</a> or connect with me on <a href="https://linkedin.com/in/gideon-maina">LinkedIn</a>.</p>
 
-      <a href="https://gideonmaina.dev/projects" class="cta">View My Recent Projects</a>
+      <a href="https://gideonmaina.me/projects" class="cta">View My Recent Projects</a>
 
       <p>Looking forward to our conversation!</p>
 
@@ -408,7 +401,7 @@ Timestamp: ${new Date().toLocaleString()}
     </div>
 
     <div class="footer">
-      <p>📧 gideon@yebei.tech | 🌐 gideonmaina.dev</p>
+      <p> 🌐 gideonmaina.me</p>
       <p>This is an automated response. Please don't reply to this email.</p>
     </div>
   </div>
@@ -435,7 +428,7 @@ Best regards,
 Gideon Maina
 Electrical Engineer & IoT Developer
 
-gideon@yebei.tech | gideonmaina.dev
+gideonmaina.me
       `.trim(),
     };
 
