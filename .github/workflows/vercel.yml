@@ -41,16 +41,15 @@ jobs:
 
       # Link to Vercel project
       - name: Link to Vercel project
-        run: vercel link --yes --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
+        run: vercel link --yes --token=$VERCEL_TOKEN
+
       # Deploy to Vercel
       - name: Deploy to Vercel
-        run: vercel deploy --prod --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel deploy --yes --prod --prebuilt --token=$VERCEL_TOKEN
