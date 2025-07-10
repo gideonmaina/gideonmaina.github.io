@@ -316,7 +316,7 @@ export async function POST({ request }) {
     </div>
 
     <div class="footer">
-      <p>This message was sent from the contact form on gideonmaina.dev</p>
+      <p>This message was sent from the contact form on gmainapro@gmail.com.dev</p>
       <p>Timestamp: ${new Date().toLocaleString()}</p>
     </div>
   </div>
@@ -398,7 +398,7 @@ Timestamp: ${new Date().toLocaleString()}
 
       <p>In the meantime, feel free to check out my latest work on <a href="https://github.com/gideon-maina">GitHub</a> or connect with me on <a href="https://linkedin.com/in/gideon-maina">LinkedIn</a>.</p>
 
-      <a href="https://gideonmaina.dev/projects" class="cta">View My Recent Projects</a>
+      <a href="https://gideonmaina.me/projects" class="cta">View My Recent Projects</a>
 
       <p>Looking forward to our conversation!</p>
 
@@ -408,7 +408,7 @@ Timestamp: ${new Date().toLocaleString()}
     </div>
 
     <div class="footer">
-      <p>📧 gideon@yebei.tech | 🌐 gideonmaina.dev</p>
+      <p>📧 gideon@yebei.tech | 🌐 gmainapro@gmail.com</p>
       <p>This is an automated response. Please don't reply to this email.</p>
     </div>
   </div>
@@ -435,7 +435,7 @@ Best regards,
 Gideon Maina
 Electrical Engineer & IoT Developer
 
-gideon@yebei.tech | gideonmaina.dev
+gideon@yebei.tech | gmainapro@gmail.com
       `.trim(),
     };
 

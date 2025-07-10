@@ -392,7 +392,7 @@ export const prerender = true;
                     </p>
                     <p class="text-sm text-red-400">
                       Please try again or contact me directly at
-                      contact@gideonmaina.dev
+                      gmainapro@gmail.com
                     </p>
                   </div>
                 </div>
@@ -432,9 +432,9 @@ export const prerender = true;
                   <div>
                     <h3 class="text-white font-semibold text-lg">Email</h3>
                     <a
-                      href="mailto:contact@gideonmaina.dev"
+                      href="mailto:gmainapro@gmail.com"
                       class="text-blue-400 hover:text-blue-300 transition-colors font-medium"
-                      >contact@gideonmaina.dev</a
+                      >gmainapro@gmail.com</a
                     >
                     <p class="text-gray-400 text-sm mt-1">
                       I typically respond within 24 hours
@@ -464,9 +464,9 @@ export const prerender = true;
                   <div>
                     <h3 class="text-white font-semibold text-lg">Phone</h3>
                     <a
-                      href="tel:+254700123456"
+                      href="tel:+254758906353"
                       class="text-green-400 hover:text-green-300 transition-colors font-medium"
-                      >+254 700 123 456</a
+                      >+254 758 906 353</a
                     >
                     <p class="text-gray-400 text-sm mt-1">
                       Available Mon-Fri, 9AM-6PM EAT
@@ -559,7 +559,7 @@ export const prerender = true;
                 </a>
 
                 <a
-                  href="https://twitter.com/gideonmaina"
+                  href="https://x.com/gmaina_"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="flex items-center space-x-3 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all duration-300 group border border-white/10 hover:border-white/20"
@@ -851,16 +851,16 @@ export const prerender = true;
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById(
-      "contact-form",
+      "contact-form"
     ) as HTMLFormElement | null;
     const formMessage = document.getElementById(
-      "form-message",
+      "form-message"
     ) as HTMLElement | null;
     const successMessage = document.getElementById(
-      "success-message",
+      "success-message"
     ) as HTMLElement | null;
     const errorMessage = document.getElementById(
-      "error-message",
+      "error-message"
     ) as HTMLElement | null;
 
     if (form && formMessage && successMessage && errorMessage) {
@@ -872,7 +872,7 @@ export const prerender = true;
 
         // Add loading state to button
         const submitButton = form.querySelector(
-          'button[type="submit"]',
+          'button[type="submit"]'
         ) as HTMLButtonElement;
         const originalText = submitButton.innerHTML;
         if (submitButton) {
@@ -923,7 +923,7 @@ export const prerender = true;
 
           // Update error message with specific details if available
           const errorText = errorMessage.querySelector(
-            ".text-sm",
+            ".text-sm"
           ) as HTMLElement;
           if (errorText && error instanceof Error) {
             errorText.textContent =
