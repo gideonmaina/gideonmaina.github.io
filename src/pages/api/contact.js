@@ -7,6 +7,11 @@ const EMAIL_CONFIG = {
   SMTP_USER: import.meta.env.SMTP_USER,
   SMTP_PASSWORD: import.meta.env.SMTP_PASSWORD, // In production, use environment variables
   RECIPIENT_EMAIL: import.meta.env.RECIPIENT_EMAIL,
+  SMTP_HOST: import.meta.env.SMTP_HOST,
+  SMTP_PORT: import.meta.env.SMTP_PORT,
+  SMTP_USER: import.meta.env.SMTP_USER,
+  SMTP_PASSWORD: import.meta.env.SMTP_PASSWORD, // In production, use environment variables
+  RECIPIENT_EMAIL: import.meta.env.RECIPIENT_EMAIL,
 };
 
 console.log("[DEBUG] Email configuration loaded:", {
@@ -71,6 +76,9 @@ function getPersonalizedResponse(subject) {
 
 // Create transporter
 const transporter = nodemailer.createTransport({
+  host: EMAIL_CONFIG.SMTP_HOST,
+  port: EMAIL_CONFIG.SMTP_PORT,
+  secure: EMAIL_CONFIG.SMTP_PORT == 465 ? true : false, // true for 465, false for other ports
   host: EMAIL_CONFIG.SMTP_HOST,
   port: EMAIL_CONFIG.SMTP_PORT,
   secure: EMAIL_CONFIG.SMTP_PORT == 465 ? true : false, // true for 465, false for other ports
@@ -313,7 +321,7 @@ export async function POST({ request }) {
     </div>
 
     <div class="footer">
-      <p>This message was sent from the contact form on gmainapro@gmail.com.dev</p>
+      <p>This message was sent from the contact form on gideonmaina.me</p>
       <p>Timestamp: ${new Date().toLocaleString()}</p>
     </div>
   </div>

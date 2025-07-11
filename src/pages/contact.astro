@@ -75,7 +75,7 @@ export const prerender = true;
           <span class="text-pink-400 font-medium"
             >web development opportunities</span
           >. Let's collaborate to create innovative solutions that make a
-          positive impact.
+          positive impact or turn an idea into a profitable venture.
         </p>
       </div>
     </div>
@@ -220,11 +220,11 @@ export const prerender = true;
                   class="w-full px-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300"
                 >
                   <option value="" class="bg-gray-800">Select a subject</option>
-                  <option value="web-development" class="bg-gray-800"
-                    >Web Development Project</option
-                  >
                   <option value="iot-consulting" class="bg-gray-800"
                     >IoT Consulting</option
+                  >
+                  <option value="web-development" class="bg-gray-800"
+                    >Web Development Project</option
                   >
                   <option value="electrical-engineering" class="bg-gray-800"
                     >Electrical Engineering</option
@@ -232,9 +232,7 @@ export const prerender = true;
                   <option value="collaboration" class="bg-gray-800"
                     >Collaboration Opportunity</option
                   >
-                  <option value="employment" class="bg-gray-800"
-                    >Employment Opportunity</option
-                  >
+
                   <option value="other" class="bg-gray-800">Other</option>
                 </select>
               </div>
@@ -315,18 +313,19 @@ export const prerender = true;
 
               <button
                 type="submit"
-                class="group w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-transparent shadow-xl hover:shadow-2xl hover:shadow-blue-500/25"
+                class="cursor-pointer group w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-transparent shadow-xl hover:shadow-2xl hover:shadow-blue-500/25"
                 data-aos="fade-up"
                 data-aos-delay="700"
                 data-aos-duration="600"
               >
                 <span class="flex items-center justify-center">
-                  Send Message
+                  <span> Send Message </span>
                   <svg
                     class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    style="transform: rotate(60deg);margin-bottom:6px;"
                   >
                     <path
                       stroke-linecap="round"
@@ -582,7 +581,7 @@ export const prerender = true;
                   >
                 </a>
 
-                <a
+                <!-- <a
                   href="https://dribbble.com/gideonmaina"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -604,7 +603,7 @@ export const prerender = true;
                     class="text-gray-300 group-hover:text-white font-medium transition-colors"
                     >Dribbble</span
                   >
-                </a>
+                </a> -->
               </div>
             </div>
 
@@ -794,10 +793,16 @@ export const prerender = true;
               </h3>
               <p class="text-gray-300 leading-relaxed">
                 I specialize in modern web technologies including React, Vue.js,
-                Astro, Node.js, and various databases. For IoT projects, I work
-                with Arduino, Raspberry Pi, and various sensors. I choose the
-                best technology stack based on your specific project
-                requirements and long-term goals.
+                Astro, Node.js, Django, FastAPI and various databases. For IoT
+                projects, I work with industry C/C++, Python and Linux based
+                frameworks for embedded systems like Arduino, MicroPython,
+                ESP-IDF, and more. This also includes industry accepted
+                communication protocols and technologies.
+              </p>
+              <p class="text-gray-300 leading-relaxed mt-2">
+                I also have experience with cloud platforms like AWS, Azure, and
+                Google Cloud. My goal is to use the best tools for your specific
+                project needs.
               </p>
             </div>
           </div>
@@ -851,16 +856,16 @@ export const prerender = true;
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById(
-      "contact-form",
+      "contact-form"
     ) as HTMLFormElement | null;
     const formMessage = document.getElementById(
-      "form-message",
+      "form-message"
     ) as HTMLElement | null;
     const successMessage = document.getElementById(
-      "success-message",
+      "success-message"
     ) as HTMLElement | null;
     const errorMessage = document.getElementById(
-      "error-message",
+      "error-message"
     ) as HTMLElement | null;
 
     if (form && formMessage && successMessage && errorMessage) {
@@ -872,7 +877,7 @@ export const prerender = true;
 
         // Add loading state to button
         const submitButton = form.querySelector(
-          'button[type="submit"]',
+          'button[type="submit"]'
         ) as HTMLButtonElement;
         let originalText = "";
         if (submitButton) {
@@ -924,7 +929,7 @@ export const prerender = true;
 
           // Update error message with specific details if available
           const errorText = errorMessage.querySelector(
-            ".text-sm",
+            ".text-sm"
           ) as HTMLElement;
           if (errorText && error instanceof Error) {
             errorText.textContent =
