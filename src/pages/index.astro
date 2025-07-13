@@ -34,7 +34,7 @@ try {
 try {
   const projects = await strapiAPI.getFeaturedProjects(3);
   featuredProjects = projects.map((project: any) =>
-    strapiAPI.formatProject(project),
+    strapiAPI.formatProject(project)
   );
   console.log(`Initially fetched ${featuredProjects.length} featured projects`);
 } catch (error) {
@@ -124,7 +124,7 @@ try {
 
         <!-- Stats -->
         <div
-          class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-2xl mx-auto"
+          class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12 max-w-2xl mx-auto"
           data-aos="fade-up"
           data-aos-delay="600"
           data-aos-duration="1000"
@@ -132,7 +132,7 @@ try {
           <div
             class="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
           >
-            <div class="text-2xl font-bold text-blue-400">25+</div>
+            <div class="text-2xl font-bold text-blue-400">15+</div>
             <div class="text-gray-400 text-sm">Projects</div>
           </div>
           <div
@@ -141,17 +141,17 @@ try {
             <div class="text-2xl font-bold text-purple-400">8+</div>
             <div class="text-gray-400 text-sm">Years Exp</div>
           </div>
-          <div
+          <!-- <div
             class="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
           >
             <div class="text-2xl font-bold text-green-400">15+</div>
             <div class="text-gray-400 text-sm">IoT Devices</div>
-          </div>
+          </div> -->
           <div
             class="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
           >
-            <div class="text-2xl font-bold text-pink-400">3</div>
-            <div class="text-gray-400 text-sm">Countries</div>
+            <div class="text-2xl font-bold text-pink-400">5+</div>
+            <div class="text-gray-400 text-sm">Countries footprint</div>
           </div>
         </div>
 
@@ -182,7 +182,7 @@ try {
             </span>
           </a>
           <a
-            href="/docs/resume.pdf"
+            href="/docs/Resume_Tech_Gideon Maina.pdf"
             target="_blank"
             class="group border-2 border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
           >
@@ -207,7 +207,7 @@ try {
 
         <!-- Social Links -->
         <div
-          class="flex justify-center space-x-6"
+          class="flex justify-center items-center space-x-6"
           data-aos="fade-up"
           data-aos-delay="1000"
           data-aos-duration="1000"
@@ -435,7 +435,7 @@ try {
               class="text-center p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-xl border border-blue-500/20"
             >
               <div class="text-2xl sm:text-3xl font-bold text-blue-400 mb-1">
-                25+
+                15+
               </div>
               <div class="text-gray-300 text-sm">Projects Completed</div>
             </div>
@@ -443,7 +443,7 @@ try {
               class="text-center p-4 bg-gradient-to-br from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-xl border border-green-500/20"
             >
               <div class="text-2xl sm:text-3xl font-bold text-green-400 mb-1">
-                15+
+                100+
               </div>
               <div class="text-gray-300 text-sm">IoT Devices Built</div>
             </div>
@@ -451,7 +451,7 @@ try {
               class="text-center p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-xl border border-purple-500/20"
             >
               <div class="text-2xl sm:text-3xl font-bold text-purple-400 mb-1">
-                3
+                10+
               </div>
               <div class="text-gray-300 text-sm">Countries Deployed</div>
             </div>
@@ -519,7 +519,7 @@ try {
                       Frontend Development
                     </h4>
                     <p class="text-gray-400 text-sm">
-                      React, Vue.js, Astro, TailwindCSS, TypeScript
+                      React, Vue.js, Astro, Next.js, TailwindCSS, TypeScript
                     </p>
                     <div class="mt-2 bg-gray-800 rounded-full h-2 w-full">
                       <div
@@ -552,12 +552,13 @@ try {
                       Backend Development
                     </h4>
                     <p class="text-gray-400 text-sm">
-                      Node.js, Python, APIs, PostgreSQL, MongoDB
+                      Node.js, FastAPI, Django, PostgreSQL, MongoDB,
+                      TimescaleDB, Grafana, Prometheus
                     </p>
                     <div class="mt-2 bg-gray-800 rounded-full h-2 w-full">
                       <div
                         class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                        style="width: 85%"
+                        style="width: 92%"
                       >
                       </div>
                     </div>
@@ -585,18 +586,51 @@ try {
                       IoT & Hardware
                     </h4>
                     <p class="text-gray-400 text-sm">
-                      Arduino, ESP32, Sensors, PCB Design, KiCad
+                      Arduino, ESP-IDF, QuecPython, GSM, LoRa, SigFox, ZigBee,
+                      PCB Design
                     </p>
                     <div class="mt-2 bg-gray-800 rounded-full h-2 w-full">
                       <div
                         class="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full"
-                        style="width: 95%"
+                        style="width: 98%"
                       >
                       </div>
                     </div>
                   </div>
                 </div>
 
+                <div
+                  class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4"
+                >
+                  <div
+                    class="w-12 h-12 bg-gradient-to-r from-cyan-500 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 mb-2 sm:mb-0"
+                  >
+                    <svg
+                      class="w-6 h-6 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div class="flex-1 w-full">
+                    <h4 class="text-white font-semibold text-lg">
+                      DevOps & Coud
+                    </h4>
+                    <p class="text-gray-400 text-sm">
+                      CI/CD, Docker, Kubernetes, AWS, Azure, GCP, Terraform
+                    </p>
+                    <div class="mt-2 bg-gray-800 rounded-full h-2 w-full">
+                      <div
+                        class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                        style="width: 90%"
+                      >
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div
                   class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4"
                 >
@@ -618,7 +652,7 @@ try {
                       Data & Analytics
                     </h4>
                     <p class="text-gray-400 text-sm">
-                      Python, MATLAB, Data Visualization, ML
+                      Jupyter, Pandas, SQL, ML
                     </p>
                     <div class="mt-2 bg-gray-800 rounded-full h-2 w-full">
                       <div
@@ -713,7 +747,7 @@ try {
                   github: string | null;
                   website: string | null;
                 },
-                index: number,
+                index: number
               ) => (
                 <div
                   class="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-teal-500/10 flex flex-col h-full"
@@ -841,7 +875,7 @@ try {
                     </div>
                   </div>
                 </div>
-              ),
+              )
             )}
           </div>
         ) : (
@@ -966,7 +1000,7 @@ try {
                   category: { color: any; name: unknown };
                   tags: any[];
                 },
-                index: number,
+                index: number
               ) => (
                 <article
                   class="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10 flex flex-col h-full"
@@ -1068,7 +1102,7 @@ try {
                     </a>
                   </div>
                 </article>
-              ),
+              )
             )}
           </div>
         ) : (
@@ -1233,7 +1267,7 @@ try {
           </span>
         </a>
         <a
-          href="mailto:contact@gideonmaina.me"
+          href="mailto:gmainapro@gmail.com"
           class="group border-2 border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
         >
           <span class="flex items-center">
@@ -1395,7 +1429,7 @@ try {
                         <span class="px-3 py-1 bg-white/5 text-gray-300 text-xs rounded-full border border-white/10">
                           ${tech}
                         </span>
-                      `,
+                      `
                         )
                         .join("")
                     }
@@ -1517,7 +1551,7 @@ try {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
-                },
+                }
               );
 
               return `
