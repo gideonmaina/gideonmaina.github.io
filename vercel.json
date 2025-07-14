@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "framework": "astro",
   "functions": {
-    "src/pages/api/(.*)\\.js": {
+    "src/pages/api/contact.js": {
       "maxDuration": 10
     }
   },
