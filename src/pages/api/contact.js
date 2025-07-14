@@ -2,11 +2,26 @@ import nodemailer from "nodemailer";
 
 // Email configuration using Gmail
 const EMAIL_CONFIG = {
-  SMTP_HOST: import.meta.env.SMTP_HOST,
-  SMTP_PORT: import.meta.env.SMTP_PORT,
-  SMTP_USER: import.meta.env.SMTP_USER,
-  SMTP_PASSWORD: import.meta.env.SMTP_PASSWORD, // In production, use environment variables
-  RECIPIENT_EMAIL: import.meta.env.RECIPIENT_EMAIL,
+  SMTP_HOST:
+    process.env.NODE_ENV === "development"
+      ? import.meta.env.SMTP_HOST
+      : process.env.SMTP_HOST,
+  SMTP_PORT:
+    process.env.NODE_ENV === "development"
+      ? import.meta.env.SMTP_PORT
+      : process.env.SMTP_PORT,
+  SMTP_USER:
+    process.env.NODE_ENV === "development"
+      ? import.meta.env.SMTP_USER
+      : process.env.SMTP_USER,
+  SMTP_PASSWORD:
+    process.env.NODE_ENV === "development"
+      ? import.meta.env.SMTP_PASSWORD
+      : process.env.SMTP_PASSWORD,
+  RECIPIENT_EMAIL:
+    process.env.NODE_ENV === "development"
+      ? import.meta.env.RECIPIENT_EMAIL
+      : process.env.RECIPIENT_EMAIL,
 };
 
 console.log("[DEBUG] Email configuration loaded:", {
