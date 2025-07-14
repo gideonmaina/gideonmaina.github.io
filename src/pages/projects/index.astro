@@ -1,12 +1,12 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import strapiAPI from "@lib/strapi.js";
+import Layout from '@layouts/Layout.astro';
+import strapiAPI from '@lib/strapi.js';
 
 export const prerender = false;
 
-const title = "Projects";
+const title = 'Projects';
 const description =
-  "Explore my portfolio of projects showcasing my expertise in electrical engineering, IoT development, web technologies, and sustainable solutions.";
+	'Explore my portfolio of projects showcasing my expertise in electrical engineering, IoT development, web technologies, and sustainable solutions.';
 
 let projects = [];
 let featuredProjects = [];
@@ -15,1461 +15,1570 @@ let allTags: any[] = [];
 let allTechnologies: any[] = [];
 
 try {
-  // Fetch all projects
-  const projectsResponse = await strapiAPI.getProjects({
-    sort: "order:asc,startDate:desc",
-    pagination: { pageSize: 100 },
-  });
-  const formattedProjects = projectsResponse.projects.map((project: any) =>
-    strapiAPI.formatProject(project),
-  );
+	// Fetch all projects
+	const projectsResponse = await strapiAPI.getProjects({
+		sort: 'order:asc,startDate:desc',
+		pagination: { pageSize: 100 },
+	});
+	const formattedProjects = projectsResponse.projects.map((project: any) =>
+		strapiAPI.formatProject(project),
+	);
 
-  // Fetch featured projects separately for the hero section
-  const featuredResponse = await strapiAPI.getFeaturedProjects(6);
-  featuredProjects = featuredResponse.map((project: any) =>
-    strapiAPI.formatProject(project),
-  );
+	// Fetch featured projects separately for the hero section
+	const featuredResponse = await strapiAPI.getFeaturedProjects(6);
+	featuredProjects = featuredResponse.map((project: any) =>
+		strapiAPI.formatProject(project),
+	);
 
-  // Filter out featured projects from the main projects list to avoid duplication
-  const featuredIds = new Set(featuredProjects.map((p: { id: any }) => p.id));
-  projects = formattedProjects.filter(
-    (project: { id: unknown }) => !featuredIds.has(project.id),
-  );
+	// Filter out featured projects from the main projects list to avoid duplication
+	const featuredIds = new Set(featuredProjects.map((p: { id: any }) => p.id));
+	projects = formattedProjects.filter(
+		(project: { id: unknown }) => !featuredIds.has(project.id),
+	);
 
-  // Extract unique categories, tags, and technologies for filtering
-  allCategories = [
-    ...new Set(
-      formattedProjects
-        .filter((p: { category: any }) => p.category)
-        .map((p: { category: { name: any; slug: any; color: any } }) => ({
-          name: p.category.name,
-          slug: p.category.slug,
-          color: p.category.color,
-        })),
-    ),
-  ];
+	// Extract unique categories, tags, and technologies for filtering
+	allCategories = [
+		...new Set(
+			formattedProjects
+				.filter((p: { category: any }) => p.category)
+				.map(
+					(p: {
+						category: { name: any; slug: any; color: any };
+					}) => ({
+						name: p.category.name,
+						slug: p.category.slug,
+						color: p.category.color,
+					}),
+				),
+		),
+	];
 
-  allTags = [
-    ...new Set(
-      formattedProjects
-        .flatMap((p: { tags: any }) => p.tags || [])
-        .map((tag: { name: any; slug: any; color: any }) => ({
-          name: tag.name,
-          slug: tag.slug,
-          color: tag.color,
-        })),
-    ),
-  ];
+	allTags = [
+		...new Set(
+			formattedProjects
+				.flatMap((p: { tags: any }) => p.tags || [])
+				.map((tag: { name: any; slug: any; color: any }) => ({
+					name: tag.name,
+					slug: tag.slug,
+					color: tag.color,
+				})),
+		),
+	];
 
-  allTechnologies = [
-    ...new Set(
-      formattedProjects.flatMap(
-        (p: { technologies: any }) => p.technologies || [],
-      ),
-    ),
-  ].sort();
+	allTechnologies = [
+		...new Set(
+			formattedProjects.flatMap(
+				(p: { technologies: any }) => p.technologies || [],
+			),
+		),
+	].sort();
 } catch (error) {
-  console.error("Error fetching projects:", error);
+	console.error('Error fetching projects:', error);
 }
 ---
 
 <Layout title={title} description={description}>
-  <!-- Hero Section -->
-  <section
-    class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black py-24"
-  >
-    <!-- Background Pattern (same as AppFooter) -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
-    >
-      <div
-        class="absolute inset-0"
-        style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;"
-      >
-      </div>
-    </div>
+	<!-- Hero Section -->
+	<section
+		class='relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black py-24'>
+		<!-- Background Pattern (same as AppFooter) -->
+		<div
+			class='absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20'>
+			<div
+				class='absolute inset-0'
+				style='background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;'>
+			</div>
+		</div>
 
-    <!-- Floating particles animation -->
-    <div class="absolute inset-0 overflow-hidden">
-      <div
-        class="absolute -top-10 -left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
-      >
-      </div>
-      <div
-        class="absolute top-1/2 -right-10 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
-        style="animation-delay: 2s;"
-      >
-      </div>
-      <div
-        class="absolute -bottom-10 left-1/3 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"
-        style="animation-delay: 4s;"
-      >
-      </div>
-    </div>
+		<!-- Floating particles animation -->
+		<div class='absolute inset-0 overflow-hidden'>
+			<div
+				class='absolute -top-10 -left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse'>
+			</div>
+			<div
+				class='absolute top-1/2 -right-10 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse'
+				style='animation-delay: 2s;'>
+			</div>
+			<div
+				class='absolute -bottom-10 left-1/3 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl animate-pulse'
+				style='animation-delay: 4s;'>
+			</div>
+		</div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div
-        class="text-center mb-20"
-        data-aos="fade-up"
-        data-aos-duration="1000"
-      >
-        <div class="inline-block mb-6">
-          <h1
-            class="text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-4 relative"
-          >
-            My
-            <span class="relative ml-4">
-              <span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 animate-pulse"
-              >
-                Projects
-              </span>
-              <div
-                class="absolute -inset-1 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 rounded-lg opacity-20 blur animate-pulse"
-              >
-              </div>
-            </span>
-          </h1>
-        </div>
-        <p
-          class="text-xl sm:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light"
-        >
-          Explore my innovative portfolio spanning
-          <span class="text-blue-400 font-semibold">electrical engineering</span
-          >,
-          <span class="text-purple-400 font-semibold">IoT development</span>,
-          <span class="text-cyan-400 font-semibold">web technologies</span>, and
-          <span class="text-green-400 font-semibold">sustainable solutions</span
-          >.
-        </p>
-        <div class="mt-8 flex justify-center">
-          <div class="flex items-center space-x-4 text-gray-400 text-sm">
-            <div class="flex items-center">
-              <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse">
-              </div>
-              <!-- Completed -->
-              <span>
-                {
-                  featuredProjects.filter(
-                    (p: {
-                      completed: boolean;
-                      endDate: string | number | Date;
-                    }) =>
-                      p.completed === true ||
-                      (p.endDate && new Date(p.endDate) < new Date()),
-                  ).length
-                } Completed
-              </span>
-            </div>
-            <div class="w-1 h-1 bg-gray-600 rounded-full"></div>
-            <div class="flex items-center">
-              <div
-                class="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"
-              >
-              </div>
-              <!-- In Progress -->
-              <span>
-                {
-                  featuredProjects.filter(
-                    (p: {
-                      completed: boolean;
-                      endDate: string | number | Date;
-                    }) =>
-                      p.completed === false ||
-                      (p.endDate && new Date(p.endDate) >= new Date()),
-                  ).length
-                } In Progress
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Featured Projects Carousel -->
-      {
-        featuredProjects.length > 0 && (
-          <div class="mb-24">
-            <div class="text-center mb-16" data-aos="fade-up">
-              <h2 class="text-4xl sm:text-5xl font-bold text-white mb-4">
-                Featured{" "}
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                  Spotlight
-                </span>
-              </h2>
-              <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-                Handpicked projects that showcase innovation, technical
-                excellence, and real-world impact.
-              </p>
-            </div>
+		<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+			<div
+				class='text-center mb-20'
+				data-aos='fade-up'
+				data-aos-duration='1000'>
+				<div class='inline-block mb-6'>
+					<h1
+						class='text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-4 relative'>
+						My
+						<span class='relative ml-4'>
+							<span
+								class='text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 animate-pulse'>
+								Projects
+							</span>
+							<div
+								class='absolute -inset-1 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 rounded-lg opacity-20 blur animate-pulse'>
+							</div>
+						</span>
+					</h1>
+				</div>
+				<p
+					class='text-xl sm:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light'>
+					Explore my innovative portfolio spanning
+					<span class='text-blue-400 font-semibold'
+						>electrical engineering</span
+					>,
+					<span class='text-purple-400 font-semibold'
+						>IoT development</span
+					>,
+					<span class='text-cyan-400 font-semibold'
+						>web technologies</span
+					>, and
+					<span class='text-green-400 font-semibold'
+						>sustainable solutions</span
+					>.
+				</p>
+				<div class='mt-8 flex justify-center'>
+					<div
+						class='flex items-center space-x-4 text-gray-400 text-sm'>
+						<div class='flex items-center'>
+							<div
+								class='w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse'>
+							</div>
+							<!-- Completed -->
+							<span>
+								{
+									featuredProjects.filter(
+										(p: {
+											completed: boolean;
+											endDate: string | number | Date;
+										}) =>
+											p.completed === true ||
+											(p.endDate &&
+												new Date(p.endDate) <
+													new Date()),
+									).length
+								} Completed
+							</span>
+						</div>
+						<div class='w-1 h-1 bg-gray-600 rounded-full'></div>
+						<div class='flex items-center'>
+							<div
+								class='w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse'>
+							</div>
+							<!-- In Progress -->
+							<span>
+								{
+									featuredProjects.filter(
+										(p: {
+											completed: boolean;
+											endDate: string | number | Date;
+										}) =>
+											p.completed === false ||
+											(p.endDate &&
+												new Date(p.endDate) >=
+													new Date()),
+									).length
+								} In Progress
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Featured Projects Carousel -->
+			{
+				featuredProjects.length > 0 && (
+					<div class='mb-24'>
+						<div class='text-center mb-16' data-aos='fade-up'>
+							<h2 class='text-4xl sm:text-5xl font-bold text-white mb-4'>
+								Featured{' '}
+								<span class='text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500'>
+									Spotlight
+								</span>
+							</h2>
+							<p class='text-gray-400 text-lg max-w-2xl mx-auto'>
+								Handpicked projects that showcase innovation,
+								technical excellence, and real-world impact.
+							</p>
+						</div>
 
-            <div class="relative" data-aos="fade-up" data-aos-delay="200">
-              {/* <!-- Carousel Container --> */}
-              <div
-                id="featured-carousel"
-                class="overflow-hidden rounded-3xl shadow-2xl border border-gray-700/30 backdrop-blur-sm"
-              >
-                <div
-                  class="flex transition-transform duration-700 ease-out"
-                  id="featured-carousel-track"
-                >
-                  {featuredProjects.map(
-                    (project: {
-                      slug: any;
-                      image: string | null | undefined;
-                      title: unknown;
-                      completed: any;
-                      category: { color: any; name: unknown };
-                      summary: any;
-                      description: string;
-                      technologies: any[];
-                      startDate: string | number | Date;
-                      endDate: string | number | Date;
-                      github: any;
-                      website: any;
-                    }) => (
-                      <div class="w-full flex-shrink-0">
-                        <a
-                          href={`/projects/${project.slug}`}
-                          class="group relative block overflow-hidden"
-                        >
-                          <div class="relative h-80 sm:h-96 lg:h-[32rem] overflow-hidden">
-                            {project.image ? (
-                              <img
-                                src={project.image}
-                                alt={String(project.title)}
-                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div class="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                                <svg
-                                  class="w-24 h-24 text-gray-500"
-                                  fill="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                </svg>
-                              </div>
-                            )}
+						<div
+							class='relative'
+							data-aos='fade-up'
+							data-aos-delay='200'>
+							{/* <!-- Carousel Container --> */}
+							<div
+								id='featured-carousel'
+								class='overflow-hidden rounded-3xl shadow-2xl border border-gray-700/30 backdrop-blur-sm'>
+								<div
+									class='flex transition-transform duration-700 ease-out'
+									id='featured-carousel-track'>
+									{featuredProjects.map(
+										(project: {
+											slug: any;
+											image: string | null | undefined;
+											title: unknown;
+											completed: any;
+											category: {
+												color: any;
+												name: unknown;
+											};
+											summary: any;
+											description: string;
+											technologies: any[];
+											startDate: string | number | Date;
+											endDate: string | number | Date;
+											github: any;
+											website: any;
+										}) => (
+											<div class='w-full flex-shrink-0'>
+												<a
+													href={`/projects/${project.slug}`}
+													class='group relative block overflow-hidden'>
+													<div class='relative h-80 sm:h-96 lg:h-[32rem] overflow-hidden'>
+														{project.image ? (
+															<img
+																src={
+																	project.image
+																}
+																alt={String(
+																	project.title,
+																)}
+																class='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700'
+																loading='lazy'
+															/>
+														) : (
+															<div class='w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center'>
+																<svg
+																	class='w-24 h-24 text-gray-500'
+																	fill='currentColor'
+																	viewBox='0 0 24 24'>
+																	<path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' />
+																</svg>
+															</div>
+														)}
 
-                            {/* <!--  gradient overlay --> */}
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+														{/* <!--  gradient overlay --> */}
+														<div class='absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent' />
 
-                            {/* <!-- Status badge with glow effect --> */}
-                            <div class="absolute top-6 right-6">
-                              {project.completed ? (
-                                <div class="bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-green-400/50 shadow-lg shadow-green-500/25">
-                                  ✓ Completed
-                                </div>
-                              ) : (
-                                <div class="bg-yellow-500/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-sm font-semibold border border-yellow-400/50 shadow-lg shadow-yellow-500/25">
-                                  ⚡ In Progress
-                                </div>
-                              )}
-                            </div>
+														{/* <!-- Status badge with glow effect --> */}
+														<div class='absolute top-6 right-6'>
+															{project.completed ? (
+																<div class='bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-green-400/50 shadow-lg shadow-green-500/25'>
+																	✓ Completed
+																</div>
+															) : (
+																<div class='bg-yellow-500/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-sm font-semibold border border-yellow-400/50 shadow-lg shadow-yellow-500/25'>
+																	⚡ In
+																	Progress
+																</div>
+															)}
+														</div>
 
-                            {/* <!--  content overlay --> */}
-                            <div class="absolute bottom-0 left-0 right-0 p-8 sm:p-10">
-                              <div class="flex items-center gap-3 mb-4">
-                                {project.category && (
-                                  <span
-                                    class="px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm border border-white/20"
-                                    style={`background-color: ${project.category.color}40; color: ${project.category.color}; border-color: ${project.category.color}40;`}
-                                  >
-                                    {project.category.name}
-                                  </span>
-                                )}
-                              </div>
+														{/* <!--  content overlay --> */}
+														<div class='absolute bottom-0 left-0 right-0 p-8 sm:p-10'>
+															<div class='flex items-center gap-3 mb-4'>
+																{project.category && (
+																	<span
+																		class='px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm border border-white/20'
+																		style={`background-color: ${project.category.color}40; color: ${project.category.color}; border-color: ${project.category.color}40;`}>
+																		{
+																			project
+																				.category
+																				.name
+																		}
+																	</span>
+																)}
+															</div>
 
-                              <h3 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors duration-300">
-                                {project.title}
-                              </h3>
+															<h3 class='text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors duration-300'>
+																{project.title}
+															</h3>
 
-                              <p class="text-gray-200 text-lg sm:text-xl mb-6 line-clamp-2 leading-relaxed">
-                                {project.summary ||
-                                  project.description?.substring(0, 200) +
-                                    "..."}
-                              </p>
+															<p class='text-gray-200 text-lg sm:text-xl mb-6 line-clamp-2 leading-relaxed'>
+																{project.summary ||
+																	project.description?.substring(
+																		0,
+																		200,
+																	) + '...'}
+															</p>
 
-                              {/* <!-- Technology tags  --> */}
-                              <div class="flex flex-wrap gap-2 mb-6">
-                                {project.technologies &&
-                                  Array.isArray(project.technologies) &&
-                                  project.technologies
-                                    .slice(0, 4)
-                                    .map((tech: unknown) => (
-                                      <span class="bg-white/10 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm border border-white/20 hover:bg-white/20 transition-colors">
-                                        {tech}
-                                      </span>
-                                    ))}
-                                {project.technologies &&
-                                  Array.isArray(project.technologies) &&
-                                  project.technologies.length > 4 && (
-                                    <span class="text-gray-300 text-sm flex items-center">
-                                      +{project.technologies.length - 4} more
-                                      technologies
-                                    </span>
-                                  )}
-                              </div>
+															{/* <!-- Technology tags  --> */}
+															<div class='flex flex-wrap gap-2 mb-6'>
+																{project.technologies &&
+																	Array.isArray(
+																		project.technologies,
+																	) &&
+																	project.technologies
+																		.slice(
+																			0,
+																			4,
+																		)
+																		.map(
+																			(
+																				tech: unknown,
+																			) => (
+																				<span class='bg-white/10 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm border border-white/20 hover:bg-white/20 transition-colors'>
+																					{
+																						tech
+																					}
+																				</span>
+																			),
+																		)}
+																{project.technologies &&
+																	Array.isArray(
+																		project.technologies,
+																	) &&
+																	project
+																		.technologies
+																		.length >
+																		4 && (
+																		<span class='text-gray-300 text-sm flex items-center'>
+																			+
+																			{project
+																				.technologies
+																				.length -
+																				4}{' '}
+																			more
+																			technologies
+																		</span>
+																	)}
+															</div>
 
-                              {/* <!--  action links --> */}
-                              <div class="flex items-center justify-between">
-                                <div class="text-gray-300 font-medium">
-                                  {new Date(project.startDate).getFullYear()}
-                                  {project.endDate &&
-                                    project.endDate !== project.startDate &&
-                                    ` - ${new Date(project.endDate).getFullYear()}`}
-                                </div>
-                                <div class="flex gap-4">
-                                  {project.github && (
-                                    <div class="p-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110">
-                                      <svg
-                                        class="w-5 h-5"
-                                        fill="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                                      </svg>
-                                    </div>
-                                  )}
-                                  {project.website && (
-                                    <div class="p-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110">
-                                      <svg
-                                        class="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          stroke-linecap="round"
-                                          stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                        />
-                                      </svg>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </a>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
+															{/* <!--  action links --> */}
+															<div class='flex items-center justify-between'>
+																<div class='text-gray-300 font-medium'>
+																	{new Date(
+																		project.startDate,
+																	).getFullYear()}
+																	{project.endDate &&
+																		project.endDate !==
+																			project.startDate &&
+																		` - ${new Date(project.endDate).getFullYear()}`}
+																</div>
+																<div class='flex gap-4'>
+																	{project.github && (
+																		<div class='p-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110'>
+																			<svg
+																				class='w-5 h-5'
+																				fill='currentColor'
+																				viewBox='0 0 24 24'>
+																				<path d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z' />
+																			</svg>
+																		</div>
+																	)}
+																	{project.website && (
+																		<div class='p-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110'>
+																			<svg
+																				class='w-5 h-5'
+																				fill='none'
+																				stroke='currentColor'
+																				viewBox='0 0 24 24'>
+																				<path
+																					stroke-linecap='round'
+																					stroke-linejoin='round'
+																					stroke-width='2'
+																					d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+																				/>
+																			</svg>
+																		</div>
+																	)}
+																</div>
+															</div>
+														</div>
+													</div>
+												</a>
+											</div>
+										),
+									)}
+								</div>
+							</div>
 
-              {/* <!--  Navigation --> */}
-              <button
-                id="featured-prev"
-                class="absolute left-6 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-4 rounded-full transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 hover:scale-110 shadow-xl"
-                aria-label="Previous project"
-              >
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <button
-                id="featured-next"
-                class="absolute right-6 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-4 rounded-full transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 hover:scale-110 shadow-xl"
-                aria-label="Next project"
-              >
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+							{/* <!--  Navigation --> */}
+							<button
+								id='featured-prev'
+								class='absolute left-6 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-4 rounded-full transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 hover:scale-110 shadow-xl'
+								aria-label='Previous project'>
+								<svg
+									class='w-6 h-6'
+									fill='none'
+									stroke='currentColor'
+									viewBox='0 0 24 24'>
+									<path
+										stroke-linecap='round'
+										stroke-linejoin='round'
+										stroke-width='2'
+										d='M15 19l-7-7 7-7'
+									/>
+								</svg>
+							</button>
+							<button
+								id='featured-next'
+								class='absolute right-6 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-4 rounded-full transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 hover:scale-110 shadow-xl'
+								aria-label='Next project'>
+								<svg
+									class='w-6 h-6'
+									fill='none'
+									stroke='currentColor'
+									viewBox='0 0 24 24'>
+									<path
+										stroke-linecap='round'
+										stroke-linejoin='round'
+										stroke-width='2'
+										d='M9 5l7 7-7 7'
+									/>
+								</svg>
+							</button>
 
-              {/* <!--  Carousel Indicators --> */}
-              <div
-                class="flex justify-center mt-8 space-x-3"
-                id="featured-indicators"
-              >
-                {featuredProjects.map((_: any, index: number) => (
-                  <button
-                    class={`w-4 h-4 rounded-full transition-all duration-300 border-2 ${
-                      index === 0
-                        ? "bg-blue-500 border-blue-500 shadow-lg shadow-blue-500/50"
-                        : "bg-transparent border-gray-400 hover:border-white hover:bg-white/20"
-                    }`}
-                    data-slide={index}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
+							{/* <!--  Carousel Indicators --> */}
+							<div
+								class='flex justify-center mt-8 space-x-3'
+								id='featured-indicators'>
+								{featuredProjects.map(
+									(_: any, index: number) => (
+										<button
+											class={`w-4 h-4 rounded-full transition-all duration-300 border-2 ${
+												index === 0
+													? 'bg-blue-500 border-blue-500 shadow-lg shadow-blue-500/50'
+													: 'bg-transparent border-gray-400 hover:border-white hover:bg-white/20'
+											}`}
+											data-slide={index}
+											aria-label={`Go to slide ${index + 1}`}
+										/>
+									),
+								)}
+							</div>
 
-              {/* <!-- Progress bar --> */}
-              <div class="mt-6 w-full max-w-md mx-auto">
-                <div class="h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    id="carousel-progress"
-                    class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300 ease-out"
-                    style="width: 0%"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    </div>
-  </section>
+							{/* <!-- Progress bar --> */}
+							<div class='mt-6 w-full max-w-md mx-auto'>
+								<div class='h-1 bg-gray-700 rounded-full overflow-hidden'>
+									<div
+										id='carousel-progress'
+										class='h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300 ease-out'
+										style='width: 0%'
+									/>
+								</div>
+							</div>
+						</div>
+					</div>
+				)
+			}
+		</div>
+	</section>
 
-  <!-- All Projects Section -->
-  <section
-    class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black py-24"
-  >
-    <!-- Background Pattern (same as AppFooter) -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20"
-    >
-      <div
-        class="absolute inset-0"
-        style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;"
-      >
-      </div>
-    </div>
+	<!-- All Projects Section -->
+	<section
+		class='relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black py-24'>
+		<!-- Background Pattern (same as AppFooter) -->
+		<div
+			class='absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-gray-900/20'>
+			<div
+				class='absolute inset-0'
+				style='background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 20px 20px;'>
+			</div>
+		</div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {
-        projects.length === 0 ? (
-          <div class="text-center py-20" data-aos="fade-up">
-            <div class="mb-8">
-              <svg
-                class="w-24 h-24 text-gray-600 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">No Projects Yet</h3>
-            <p class="text-gray-400 max-w-md mx-auto">
-              Projects are being added to the portfolio. Check back soon to see
-              my latest work!
-            </p>
-          </div>
-        ) : (
-          <div>
-            <div class="text-center mb-16" data-aos="fade-up">
-              <h2 class="text-4xl sm:text-5xl font-bold text-white mb-6">
-                Complete{" "}
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                  Portfolio
-                </span>
-              </h2>
-              <p class="text-gray-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
-                Dive deep into my technical journey. Filter by technology,
-                category, or project status to find exactly what interests you.
-              </p>
-            </div>
+		<div class='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+			{
+				projects.length === 0 && featuredProjects.length === 0 ? (
+					<div class='text-center py-20' data-aos='fade-up'>
+						<div class='mb-8'>
+							<svg
+								class='w-24 h-24 text-gray-600 mx-auto mb-4'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'>
+								<path
+									stroke-linecap='round'
+									stroke-linejoin='round'
+									stroke-width='2'
+									d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
+								/>
+							</svg>
+						</div>
+						<h3 class='text-2xl font-bold text-white mb-4'>
+							No Projects Yet
+						</h3>
+						<p class='text-gray-400 max-w-md mx-auto'>
+							Projects are being added to the portfolio. Check
+							back soon to see my latest work!
+						</p>
+					</div>
+				) : projects.length === 0 ? (
+					<div class='text-center py-20' data-aos='fade-up'>
+						<div class='mb-8'>
+							<svg
+								class='w-24 h-24 text-gray-600 mx-auto mb-4'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'>
+								<path
+									stroke-linecap='round'
+									stroke-linejoin='round'
+									stroke-width='2'
+									d='M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z'
+								/>
+							</svg>
+						</div>
+						<h3 class='text-2xl font-bold text-white mb-4'>
+							All Projects Featured
+						</h3>
+						<p class='text-gray-400 max-w-md mx-auto'>
+							All current projects are featured above. Check out
+							the spotlight section to explore my work!
+						</p>
+					</div>
+				) : (
+					<div>
+						<div class='text-center mb-16' data-aos='fade-up'>
+							<h2 class='text-4xl sm:text-5xl font-bold text-white mb-6'>
+								Complete{' '}
+								<span class='text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400'>
+									Portfolio
+								</span>
+							</h2>
+							<p class='text-gray-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed'>
+								Dive deep into my technical journey. Filter by
+								technology, category, or project status to find
+								exactly what interests you.
+							</p>
+						</div>
 
-            {/* <!-- Filter Bar --> */}
-            <div class="relative mb-16" data-aos="fade-up" data-aos-delay="100">
-              {/* <!-- Glassmorphism effect container --> */}
-              <div class="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl shadow-black/50">
-                {/* <!-- Filter header --> */}
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-                  <div class="flex items-center gap-3">
-                    <div class="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                      <svg
-                        class="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 class="text-white font-bold text-xl">Filters</h3>
-                      <p class="text-gray-400 text-sm">Find project match</p>
-                    </div>
-                  </div>
-                  <button
-                    id="clear-filters"
-                    class="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded-xl border border-red-500/30 hover:border-red-500/50 transition-all duration-300 font-medium hidden backdrop-blur-sm"
-                  >
-                    <svg
-                      class="w-4 h-4 inline mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    Clear Filters
-                  </button>
-                </div>
+						{/* <!-- Filter Bar --> */}
+						<div
+							class='relative mb-16'
+							data-aos='fade-up'
+							data-aos-delay='100'>
+							{/* <!-- Glassmorphism effect container --> */}
+							<div class='bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl shadow-black/50'>
+								{/* <!-- Filter header --> */}
+								<div class='flex flex-wrap items-center justify-between gap-4 mb-8'>
+									<div class='flex items-center gap-3'>
+										<div class='p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg'>
+											<svg
+												class='w-6 h-6 text-white'
+												fill='none'
+												stroke='currentColor'
+												viewBox='0 0 24 24'>
+												<path
+													stroke-linecap='round'
+													stroke-linejoin='round'
+													stroke-width='2'
+													d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z'
+												/>
+											</svg>
+										</div>
+										<div>
+											<h3 class='text-white font-bold text-xl'>
+												Filters
+											</h3>
+											<p class='text-gray-400 text-sm'>
+												Find project match
+											</p>
+										</div>
+									</div>
+									<button
+										id='clear-filters'
+										class='px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded-xl border border-red-500/30 hover:border-red-500/50 transition-all duration-300 font-medium hidden backdrop-blur-sm'>
+										<svg
+											class='w-4 h-4 inline mr-2'
+											fill='none'
+											stroke='currentColor'
+											viewBox='0 0 24 24'>
+											<path
+												stroke-linecap='round'
+												stroke-linejoin='round'
+												stroke-width='2'
+												d='M6 18L18 6M6 6l12 12'
+											/>
+										</svg>
+										Clear Filters
+									</button>
+								</div>
 
-                {/* <!--  filter grid --> */}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  {/* <!-- Category Filter --> */}
-                  <div>
-                    <label class="block text-white font-semibold mb-3 text-sm uppercase tracking-wider">
-                      Category
-                    </label>
-                    <div class="relative">
-                      <select
-                        id="category-filter"
-                        class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 appearance-none cursor-pointer"
-                      >
-                        <option value="" class="bg-gray-800 text-white">
-                          All Categories
-                        </option>
-                        {allCategories.map((category) => (
-                          <option
-                            value={category.name}
-                            class="bg-gray-800 text-white"
-                          >
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          class="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
+								{/* <!--  filter grid --> */}
+								<div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+									{/* <!-- Category Filter --> */}
+									<div>
+										<label class='block text-white font-semibold mb-3 text-sm uppercase tracking-wider'>
+											Category
+										</label>
+										<div class='relative'>
+											<select
+												id='category-filter'
+												class='w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 appearance-none cursor-pointer'>
+												<option
+													value=''
+													class='bg-gray-800 text-white'>
+													All Categories
+												</option>
+												{allCategories.map(
+													(category) => (
+														<option
+															value={
+																category.name
+															}
+															class='bg-gray-800 text-white'>
+															{category.name}
+														</option>
+													),
+												)}
+											</select>
+											<div class='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
+												<svg
+													class='w-5 h-5 text-gray-400'
+													fill='none'
+													stroke='currentColor'
+													viewBox='0 0 24 24'>
+													<path
+														stroke-linecap='round'
+														stroke-linejoin='round'
+														stroke-width='2'
+														d='M19 9l-7 7-7-7'
+													/>
+												</svg>
+											</div>
+										</div>
+									</div>
 
-                  {/* <!-- Technology Filter --> */}
-                  <div>
-                    <label class="block text-white font-semibold mb-3 text-sm uppercase tracking-wider">
-                      Technology
-                    </label>
-                    <div class="relative">
-                      <select
-                        id="technology-filter"
-                        class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-300 appearance-none cursor-pointer"
-                      >
-                        <option value="" class="bg-gray-800 text-white">
-                          All Technologies
-                        </option>
-                        {allTechnologies.map((tech) => (
-                          <option value={tech} class="bg-gray-800 text-white">
-                            {tech}
-                          </option>
-                        ))}
-                      </select>
-                      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          class="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
+									{/* <!-- Technology Filter --> */}
+									<div>
+										<label class='block text-white font-semibold mb-3 text-sm uppercase tracking-wider'>
+											Technology
+										</label>
+										<div class='relative'>
+											<select
+												id='technology-filter'
+												class='w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-300 appearance-none cursor-pointer'>
+												<option
+													value=''
+													class='bg-gray-800 text-white'>
+													All Technologies
+												</option>
+												{allTechnologies.map((tech) => (
+													<option
+														value={tech}
+														class='bg-gray-800 text-white'>
+														{tech}
+													</option>
+												))}
+											</select>
+											<div class='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
+												<svg
+													class='w-5 h-5 text-gray-400'
+													fill='none'
+													stroke='currentColor'
+													viewBox='0 0 24 24'>
+													<path
+														stroke-linecap='round'
+														stroke-linejoin='round'
+														stroke-width='2'
+														d='M19 9l-7 7-7-7'
+													/>
+												</svg>
+											</div>
+										</div>
+									</div>
 
-                  {/* <!-- Status Filter --> */}
-                  <div>
-                    <label class="block text-white font-semibold mb-3 text-sm uppercase tracking-wider">
-                      Status
-                    </label>
-                    <div class="relative">
-                      <select
-                        id="status-filter"
-                        class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all duration-300 appearance-none cursor-pointer"
-                      >
-                        <option value="" class="bg-gray-800 text-white">
-                          All Status
-                        </option>
-                        <option
-                          value="completed"
-                          class="bg-gray-800 text-white"
-                        >
-                          ✓ Completed
-                        </option>
-                        <option
-                          value="in-progress"
-                          class="bg-gray-800 text-white"
-                        >
-                          ⚡ In Progress
-                        </option>
-                      </select>
-                      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          class="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
+									{/* <!-- Status Filter --> */}
+									<div>
+										<label class='block text-white font-semibold mb-3 text-sm uppercase tracking-wider'>
+											Status
+										</label>
+										<div class='relative'>
+											<select
+												id='status-filter'
+												class='w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all duration-300 appearance-none cursor-pointer'>
+												<option
+													value=''
+													class='bg-gray-800 text-white'>
+													All Status
+												</option>
+												<option
+													value='completed'
+													class='bg-gray-800 text-white'>
+													✓ Completed
+												</option>
+												<option
+													value='in-progress'
+													class='bg-gray-800 text-white'>
+													⚡ In Progress
+												</option>
+											</select>
+											<div class='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
+												<svg
+													class='w-5 h-5 text-gray-400'
+													fill='none'
+													stroke='currentColor'
+													viewBox='0 0 24 24'>
+													<path
+														stroke-linecap='round'
+														stroke-linejoin='round'
+														stroke-width='2'
+														d='M19 9l-7 7-7-7'
+													/>
+												</svg>
+											</div>
+										</div>
+									</div>
 
-                  {/* <!-- Search Input --> */}
-                  <div>
-                    <label class="block text-white font-semibold mb-3 text-sm uppercase tracking-wider">
-                      Search
-                    </label>
-                    <div class="relative">
-                      <input
-                        type="text"
-                        id="search-filter"
-                        placeholder="Search projects..."
-                        class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 pl-11 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300"
-                      />
-                      <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg
-                          class="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+									{/* <!-- Search Input --> */}
+									<div>
+										<label class='block text-white font-semibold mb-3 text-sm uppercase tracking-wider'>
+											Search
+										</label>
+										<div class='relative'>
+											<input
+												type='text'
+												id='search-filter'
+												placeholder='Search projects...'
+												class='w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 pl-11 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300'
+											/>
+											<div class='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+												<svg
+													class='w-5 h-5 text-gray-400'
+													fill='none'
+													stroke='currentColor'
+													viewBox='0 0 24 24'>
+													<path
+														stroke-linecap='round'
+														stroke-linejoin='round'
+														stroke-width='2'
+														d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+													/>
+												</svg>
+											</div>
+										</div>
+									</div>
+								</div>
 
-                {/* <!-- Tag Filter Chips --> */}
-                {allTags.length > 0 && (
-                  <div>
-                    <label class="block text-white font-semibold mb-4 text-sm uppercase tracking-wider">
-                      <svg
-                        class="w-4 h-4 inline mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 2 2 2h11c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z" />
-                      </svg>
-                      Project Tags
-                    </label>
-                    <div class="flex flex-wrap gap-3" id="tag-filters">
-                      {allTags.map((tag) => (
-                        <button
-                          class="tag-filter-chip group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/20 text-gray-300 hover:border-blue-400 hover:text-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105 hover:shadow-lg"
-                          data-tag={tag.name}
-                          style={`border-color: ${tag.color}30; color: ${tag.color}80;`}
-                        >
-                          <span class="relative z-10">{tag.name}</span>
-                          <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+								{/* <!-- Tag Filter Chips --> */}
+								{allTags.length > 0 && (
+									<div>
+										<label class='block text-white font-semibold mb-4 text-sm uppercase tracking-wider'>
+											<svg
+												class='w-4 h-4 inline mr-2'
+												fill='currentColor'
+												viewBox='0 0 24 24'>
+												<path d='M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 2 2 2h11c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z' />
+											</svg>
+											Project Tags
+										</label>
+										<div
+											class='flex flex-wrap gap-3'
+											id='tag-filters'>
+											{allTags.map((tag) => (
+												<button
+													class='tag-filter-chip group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/20 text-gray-300 hover:border-blue-400 hover:text-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105 hover:shadow-lg'
+													data-tag={tag.name}
+													style={`border-color: ${tag.color}30; color: ${tag.color}80;`}>
+													<span class='relative z-10'>
+														{tag.name}
+													</span>
+													<div class='absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+							</div>
+						</div>
 
-            {/* <!-- Projects Grid --> */}
-            <div
-              id="projects-grid"
-              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            >
-              {projects.map(
-                (
-                  project: {
-                    slug: any;
-                    category: { name: unknown; color: any };
-                    technologies: any[];
-                    tags: any[];
-                    completed: any;
-                    image: string | null | undefined;
-                    title: unknown;
-                    summary: any;
-                    description: string;
-                    startDate: string | number | Date;
-                    endDate: string | number | Date;
-                    github: any;
-                    website: any;
-                  },
-                  index: number,
-                ) => (
-                  <a
-                    href={`/projects/${project.slug}`}
-                    class="project-card group relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-blue-400/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 block shadow-lg hover:shadow-2xl hover:shadow-blue-500/25"
-                    data-aos="fade-up"
-                    data-aos-delay={Math.min(index * 100, 600)}
-                    data-category={project.category?.name || ""}
-                    data-technologies={JSON.stringify(
-                      project.technologies || [],
-                    )}
-                    data-tags={JSON.stringify(
-                      project.tags?.map((tag: { name: any }) => tag.name) || [],
-                    )}
-                    data-status={
-                      project.completed ? "completed" : "in-progress"
-                    }
-                  >
-                    {project.image && (
-                      <div class="relative h-48 overflow-hidden">
-                        <img
-                          src={project.image}
-                          alt={String(project.title)}
-                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          loading="lazy"
-                        />
-                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent" />
-                        {project.completed && (
-                          <div class="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                            Completed
-                          </div>
-                        )}
-                        {!project.completed && (
-                          <div class="absolute top-3 right-3 bg-yellow-500 text-gray-900 px-2 py-1 rounded-full text-xs font-semibold">
-                            In Progress
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div class="p-5">
-                      <div class="flex items-center gap-2 mb-3">
-                        {project.category && (
-                          <span
-                            class="px-2 py-1 rounded-full text-xs font-medium"
-                            style={`background-color: ${project.category.color}20; color: ${project.category.color};`}
-                          >
-                            {project.category.name}
-                          </span>
-                        )}
-                      </div>
-                      <h4 class="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
-                        {project.title}
-                      </h4>
-                      <p class="text-gray-300 text-sm mb-3 line-clamp-2">
-                        {project.summary ||
-                          project.description?.substring(0, 100) + "..."}
-                      </p>
-                      <div class="flex flex-wrap gap-1 mb-3">
-                        {project.technologies &&
-                          Array.isArray(project.technologies) &&
-                          project.technologies
-                            .slice(0, 3)
-                            .map((tech: unknown) => (
-                              <span class="bg-gray-700/40 text-gray-300 px-2 py-1 rounded text-xs">
-                                {tech}
-                              </span>
-                            ))}
-                        {project.technologies &&
-                          Array.isArray(project.technologies) &&
-                          project.technologies.length > 3 && (
-                            <span class="text-gray-400 text-xs">
-                              +{project.technologies.length - 3}
-                            </span>
-                          )}
-                      </div>
-                      <div class="flex items-center justify-between">
-                        <div class="text-xs text-gray-500">
-                          {new Date(project.startDate).getFullYear()}
-                          {project.endDate &&
-                            project.endDate !== project.startDate &&
-                            ` - ${new Date(project.endDate).getFullYear()}`}
-                        </div>
-                        <div class="flex gap-2">
-                          {project.github && (
-                            <span
-                              class="text-gray-400 group-hover:text-white transition-colors"
-                              aria-label="View on GitHub"
-                            >
-                              <svg
-                                class="w-4 h-4"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                              </svg>
-                            </span>
-                          )}
-                          {project.website && (
-                            <span
-                              class="text-gray-400 group-hover:text-white transition-colors"
-                              aria-label="Visit website"
-                            >
-                              <svg
-                                class="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                />
-                              </svg>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </a>
-                ),
-              )}
-            </div>
+						{/* <!-- Projects Grid --> */}
+						<div
+							id='projects-grid'
+							class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+							{projects.map(
+								(
+									project: {
+										slug: any;
+										category: { name: unknown; color: any };
+										technologies: any[];
+										tags: any[];
+										completed: any;
+										image: string | null | undefined;
+										title: unknown;
+										summary: any;
+										description: string;
+										startDate: string | number | Date;
+										endDate: string | number | Date;
+										github: any;
+										website: any;
+									},
+									index: number,
+								) => (
+									<a
+										href={`/projects/${project.slug}`}
+										class='project-card group relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-blue-400/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 block shadow-lg hover:shadow-2xl hover:shadow-blue-500/25'
+										data-aos='fade-up'
+										data-aos-delay={Math.min(
+											index * 100,
+											600,
+										)}
+										data-category={
+											project.category?.name || ''
+										}
+										data-technologies={JSON.stringify(
+											project.technologies || [],
+										)}
+										data-tags={JSON.stringify(
+											project.tags?.map(
+												(tag: { name: any }) =>
+													tag.name,
+											) || [],
+										)}
+										data-status={
+											project.completed
+												? 'completed'
+												: 'in-progress'
+										}>
+										{project.image && (
+											<div class='relative h-48 overflow-hidden'>
+												<img
+													src={project.image}
+													alt={String(project.title)}
+													class='w-full h-full object-cover group-hover:scale-110 transition-transform duration-300'
+													loading='lazy'
+												/>
+												<div class='absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent' />
+												{project.completed && (
+													<div class='absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold'>
+														Completed
+													</div>
+												)}
+												{!project.completed && (
+													<div class='absolute top-3 right-3 bg-yellow-500 text-gray-900 px-2 py-1 rounded-full text-xs font-semibold'>
+														In Progress
+													</div>
+												)}
+											</div>
+										)}
+										<div class='p-5'>
+											<div class='flex items-center gap-2 mb-3'>
+												{project.category && (
+													<span
+														class='px-2 py-1 rounded-full text-xs font-medium'
+														style={`background-color: ${project.category.color}20; color: ${project.category.color};`}>
+														{project.category.name}
+													</span>
+												)}
+											</div>
+											<h4 class='text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors'>
+												{project.title}
+											</h4>
+											<p class='text-gray-300 text-sm mb-3 line-clamp-2'>
+												{project.summary ||
+													project.description?.substring(
+														0,
+														100,
+													) + '...'}
+											</p>
+											<div class='flex flex-wrap gap-1 mb-3'>
+												{project.technologies &&
+													Array.isArray(
+														project.technologies,
+													) &&
+													project.technologies
+														.slice(0, 3)
+														.map(
+															(tech: unknown) => (
+																<span class='bg-gray-700/40 text-gray-300 px-2 py-1 rounded text-xs'>
+																	{tech}
+																</span>
+															),
+														)}
+												{project.technologies &&
+													Array.isArray(
+														project.technologies,
+													) &&
+													project.technologies
+														.length > 3 && (
+														<span class='text-gray-400 text-xs'>
+															+
+															{project
+																.technologies
+																.length - 3}
+														</span>
+													)}
+											</div>
+											<div class='flex items-center justify-between'>
+												<div class='text-xs text-gray-500'>
+													{new Date(
+														project.startDate,
+													).getFullYear()}
+													{project.endDate &&
+														project.endDate !==
+															project.startDate &&
+														` - ${new Date(project.endDate).getFullYear()}`}
+												</div>
+												<div class='flex gap-2'>
+													{project.github && (
+														<span
+															class='text-gray-400 group-hover:text-white transition-colors'
+															aria-label='View on GitHub'>
+															<svg
+																class='w-4 h-4'
+																fill='currentColor'
+																viewBox='0 0 24 24'>
+																<path d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z' />
+															</svg>
+														</span>
+													)}
+													{project.website && (
+														<span
+															class='text-gray-400 group-hover:text-white transition-colors'
+															aria-label='Visit website'>
+															<svg
+																class='w-4 h-4'
+																fill='none'
+																stroke='currentColor'
+																viewBox='0 0 24 24'>
+																<path
+																	stroke-linecap='round'
+																	stroke-linejoin='round'
+																	stroke-width='2'
+																	d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+																/>
+															</svg>
+														</span>
+													)}
+												</div>
+											</div>
+										</div>
+									</a>
+								),
+							)}
+						</div>
 
-            {/* <!-- No Results Message --> */}
-            <div id="no-results" class="text-center py-20 hidden">
-              <div class="mb-8">
-                <svg
-                  class="w-24 h-24 text-gray-600 mx-auto mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <h3 class="text-2xl font-bold text-white mb-4">
-                No Projects Found
-              </h3>
-              <p class="text-gray-400 max-w-md mx-auto mb-6">
-                No projects match your current filters. Try adjusting your
-                search criteria.
-              </p>
-              <button
-                id="reset-filters"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-              >
-                Reset Filters
-              </button>
-            </div>
-          </div>
-        )
-      }
-    </div>
-  </section>
+						{/* <!-- No Results Message --> */}
+						<div id='no-results' class='text-center py-20 hidden'>
+							<div class='mb-8'>
+								<svg
+									class='w-24 h-24 text-gray-600 mx-auto mb-4'
+									fill='none'
+									stroke='currentColor'
+									viewBox='0 0 24 24'>
+									<path
+										stroke-linecap='round'
+										stroke-linejoin='round'
+										stroke-width='2'
+										d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+									/>
+								</svg>
+							</div>
+							<h3 class='text-2xl font-bold text-white mb-4'>
+								No Projects Found
+							</h3>
+							<p class='text-gray-400 max-w-md mx-auto mb-6'>
+								No projects match your current filters. Try
+								adjusting your search criteria.
+							</p>
+							<button
+								id='reset-filters'
+								class='bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors'>
+								Reset Filters
+							</button>
+						</div>
+					</div>
+				)
+			}
+		</div>
+	</section>
 </Layout>
 
 <style>
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+	.line-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
 
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+	.line-clamp-3 {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
 
-  .tag-filter-chip.active {
-    background-color: rgba(59, 130, 246, 0.2);
-    border-color: rgb(59, 130, 246);
-    color: rgb(59, 130, 246);
-  }
+	.tag-filter-chip.active {
+		background-color: rgba(59, 130, 246, 0.2);
+		border-color: rgb(59, 130, 246);
+		color: rgb(59, 130, 246);
+	}
 
-  .project-card.hidden {
-    display: none;
-  }
+	.project-card.hidden {
+		display: none;
+	}
 
-  /* Smooth height transitions for grid */
-  #projects-grid {
-    transition: all 0.3s ease;
-  }
+	/* Smooth height transitions for grid */
+	#projects-grid {
+		transition: all 0.3s ease;
+	}
 
-  /* Carousel smooth transitions */
-  #featured-carousel-track {
-    transition: transform 0.5s ease-in-out;
-  }
+	/* Carousel smooth transitions */
+	#featured-carousel-track {
+		transition: transform 0.5s ease-in-out;
+	}
 
-  /* Custom scrollbar for filter selects */
-  select::-webkit-scrollbar {
-    width: 8px;
-  }
+	/* Custom scrollbar for filter selects */
+	select::-webkit-scrollbar {
+		width: 8px;
+	}
 
-  select::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.5);
-    border-radius: 4px;
-  }
+	select::-webkit-scrollbar-track {
+		background: rgba(55, 65, 81, 0.5);
+		border-radius: 4px;
+	}
 
-  select::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.7);
-    border-radius: 4px;
-  }
+	select::-webkit-scrollbar-thumb {
+		background: rgba(59, 130, 246, 0.7);
+		border-radius: 4px;
+	}
 
-  select::-webkit-scrollbar-thumb:hover {
-    background: rgba(59, 130, 246, 0.9);
-  }
+	select::-webkit-scrollbar-thumb:hover {
+		background: rgba(59, 130, 246, 0.9);
+	}
 </style>
 
 <script>
-  // Featured Projects Carousel
-  class FeaturedCarousel {
-    currentSlide: number;
-    track: HTMLElement | null;
-    prevBtn: HTMLElement | null;
-    nextBtn: HTMLElement | null;
-    indicators: NodeListOf<HTMLButtonElement>;
-    slides: NodeListOf<HTMLDivElement>;
-    totalSlides: number;
-    autoplayInterval: ReturnType<typeof setInterval> | null;
-
-    constructor() {
-      this.currentSlide = 0;
-      this.track = document.getElementById("featured-carousel-track");
-      this.prevBtn = document.getElementById("featured-prev");
-      this.nextBtn = document.getElementById("featured-next");
-      this.indicators = document.querySelectorAll(
-        "#featured-indicators button",
-      );
-      this.slides = document.querySelectorAll("#featured-carousel-track > div");
-      this.totalSlides = this.slides.length;
-      this.autoplayInterval = null;
-
-      if (this.totalSlides > 0) {
-        this.init();
-      }
-    }
-
-    init() {
-      // Add event listeners
-      this.prevBtn?.addEventListener("click", () => this.prevSlide());
-      this.nextBtn?.addEventListener("click", () => this.nextSlide());
-
-      // Indicator click handlers
-      this.indicators.forEach((indicator, index) => {
-        indicator.addEventListener("click", () => this.goToSlide(index));
-      });
-
-      // Auto-play functionality
-      this.startAutoplay();
-
-      // Pause on hover
-      const carousel = document.getElementById("featured-carousel");
-      carousel?.addEventListener("mouseenter", () => this.stopAutoplay());
-      carousel?.addEventListener("mouseleave", () => this.startAutoplay());
-
-      // Keyboard navigation
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft") this.prevSlide();
-        if (e.key === "ArrowRight") this.nextSlide();
-      });
-    }
-
-    goToSlide(index: number) {
-      this.currentSlide = index;
-      this.updateCarousel();
-    }
-
-    nextSlide() {
-      this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
-      this.updateCarousel();
-    }
-
-    prevSlide() {
-      this.currentSlide =
-        (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-      this.updateCarousel();
-    }
-
-    updateCarousel() {
-      if (this.track) {
-        const translateX = -this.currentSlide * 100;
-        this.track.style.transform = `translateX(${translateX}%)`;
-      }
-
-      // Update indicators
-      this.indicators.forEach((indicator, index) => {
-        indicator.classList.toggle("bg-blue-500", index === this.currentSlide);
-        indicator.classList.toggle("bg-gray-600", index !== this.currentSlide);
-      });
-    }
-
-    startAutoplay() {
-      this.stopAutoplay();
-      this.autoplayInterval = setInterval(() => {
-        this.nextSlide();
-      }, 5000); // Change slide every 5 seconds
-    }
-
-    stopAutoplay() {
-      if (this.autoplayInterval) {
-        clearInterval(this.autoplayInterval);
-        this.autoplayInterval = null;
-      }
-    }
-  }
-
-  // Project Filtering System
-  class ProjectFilter {
-    categoryFilter: HTMLSelectElement | null;
-    technologyFilter: HTMLSelectElement | null;
-    statusFilter: HTMLSelectElement | null;
-    searchFilter: HTMLInputElement | null;
-    tagChips: NodeListOf<HTMLButtonElement>;
-    clearFiltersBtn: HTMLElement | null;
-    resetFiltersBtn: HTMLElement | null;
-    projectCards: NodeListOf<HTMLElement>;
-    noResultsMessage: HTMLElement | null;
-    projectsGrid: HTMLElement | null;
-    activeFilters: {
-      category: string;
-      technology: string;
-      status: string;
-      search: string;
-      tags: Set<string>;
-    };
-
-    constructor() {
-      this.categoryFilter = document.getElementById(
-        "category-filter",
-      ) as HTMLSelectElement | null;
-      this.technologyFilter = document.getElementById(
-        "technology-filter",
-      ) as HTMLSelectElement | null;
-      this.statusFilter = document.getElementById(
-        "status-filter",
-      ) as HTMLSelectElement | null;
-      this.searchFilter = document.getElementById(
-        "search-filter",
-      ) as HTMLInputElement | null;
-      this.tagChips = document.querySelectorAll(
-        ".tag-filter-chip",
-      ) as NodeListOf<HTMLButtonElement>;
-      this.clearFiltersBtn = document.getElementById("clear-filters");
-      this.resetFiltersBtn = document.getElementById("reset-filters");
-      this.projectCards = document.querySelectorAll(
-        ".project-card",
-      ) as NodeListOf<HTMLElement>;
-      this.noResultsMessage = document.getElementById("no-results");
-      this.projectsGrid = document.getElementById("projects-grid");
-
-      this.activeFilters = {
-        category: "",
-        technology: "",
-        status: "",
-        search: "",
-        tags: new Set(),
-      };
-
-      this.init();
-    }
-
-    init() {
-      // Add event listeners for filters
-      this.categoryFilter?.addEventListener("change", () =>
-        this.applyFilters(),
-      );
-      this.technologyFilter?.addEventListener("change", () =>
-        this.applyFilters(),
-      );
-      this.statusFilter?.addEventListener("change", () => this.applyFilters());
-
-      // Search filter with debounce
-      this.searchFilter?.addEventListener(
-        "input",
-        this.debounce(() => this.applyFilters(), 300),
-      );
-
-      // Tag chip event listeners
-      this.tagChips.forEach((chip: HTMLButtonElement) => {
-        chip.addEventListener("click", (e: Event) => {
-          e.preventDefault();
-          this.toggleTagFilter(chip);
-        });
-      });
-
-      // Clear/reset filters
-      this.clearFiltersBtn?.addEventListener("click", () =>
-        this.clearAllFilters(),
-      );
-      this.resetFiltersBtn?.addEventListener("click", () =>
-        this.clearAllFilters(),
-      );
-
-      // Add smooth transitions to filter changes
-      this.projectsGrid?.classList.add(
-        "transition-all",
-        "duration-500",
-        "ease-out",
-      );
-    }
-
-    debounce<T extends any[]>(
-      func: (...args: T) => void,
-      wait: number | undefined,
-    ) {
-      let timeout: string | number | NodeJS.Timeout | undefined;
-      return function executedFunction(...args: T) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    }
-
-    toggleTagFilter(chip: HTMLButtonElement) {
-      const tag = chip.dataset.tag;
-      const isActive = chip.classList.contains("active");
-
-      if (isActive) {
-        chip.classList.remove("active");
-        if (tag !== undefined) {
-          this.activeFilters.tags.delete(tag);
-        }
-      } else {
-        chip.classList.add("active");
-        if (tag !== undefined) {
-          this.activeFilters.tags.add(tag);
-        }
-      }
-
-      this.applyFilters();
-    }
-
-    applyFilters() {
-      // Update active filters
-      this.activeFilters.category = this.categoryFilter?.value || "";
-      this.activeFilters.technology = this.technologyFilter?.value || "";
-      this.activeFilters.status = this.statusFilter?.value || "";
-      this.activeFilters.search = this.searchFilter?.value.toLowerCase() || "";
-
-      let visibleCount = 0;
-      const allCards = Array.from(this.projectCards);
-
-      // Add stagger animation to filtered results
-      let visibleIndex = 0;
-
-      allCards.forEach((card, index) => {
-        if (this.shouldShowProject(card)) {
-          card.classList.remove("hidden");
-          // Stagger animation for visible cards
-          card.style.animationDelay = `${visibleIndex * 0.1}s`;
-          card.classList.add("animate-fade-in-up");
-          visibleCount++;
-          visibleIndex++;
-        } else {
-          card.classList.add("hidden");
-          card.classList.remove("animate-fade-in-up");
-        }
-      });
-
-      // Show/hide no results message with animation
-      if (visibleCount === 0) {
-        this.noResultsMessage?.classList.remove("hidden");
-        this.projectsGrid?.classList.add("hidden");
-      } else {
-        this.noResultsMessage?.classList.add("hidden");
-        this.projectsGrid?.classList.remove("hidden");
-      }
-
-      // Show/hide clear filters button
-      const hasActiveFilters =
-        this.activeFilters.category ||
-        this.activeFilters.technology ||
-        this.activeFilters.status ||
-        this.activeFilters.search ||
-        this.activeFilters.tags.size > 0;
-
-      if (hasActiveFilters) {
-        this.clearFiltersBtn?.classList.remove("hidden");
-        this.clearFiltersBtn?.classList.add("animate-bounce-in");
-      } else {
-        this.clearFiltersBtn?.classList.add("hidden");
-        this.clearFiltersBtn?.classList.remove("animate-bounce-in");
-      }
-
-      // Update URL with current filters (for sharing/bookmarking)
-      this.updateURL();
-
-      // // Re-trigger AOS for visible cards
-      // if (typeof AOS !== 'undefined') {
-      //   setTimeout(() => AOS.refresh(), 100);
-      // }
-    }
-
-    shouldShowProject(card: unknown) {
-      const el = card as HTMLElement;
-      const cardCategory = el.dataset.category;
-      const cardTechnologies = JSON.parse(el.dataset.technologies || "[]");
-      const cardTags = JSON.parse(el.dataset.tags || "[]");
-      const cardStatus = el.dataset.status;
-      const cardTitle =
-        el.querySelector("h4")?.textContent?.toLowerCase() || "";
-      const cardDescription =
-        el.querySelector("p")?.textContent?.toLowerCase() || "";
-
-      // Check search filter (searches in title and description)
-      if (this.activeFilters.search) {
-        const searchMatch =
-          cardTitle.includes(this.activeFilters.search) ||
-          cardDescription.includes(this.activeFilters.search) ||
-          cardTechnologies.some((tech: string) =>
-            tech.toLowerCase().includes(this.activeFilters.search),
-          ) ||
-          cardTags.some((tag: string) =>
-            tag.toLowerCase().includes(this.activeFilters.search),
-          );
-        if (!searchMatch) return false;
-      }
-
-      // Check category filter
-      if (
-        this.activeFilters.category &&
-        cardCategory !== this.activeFilters.category
-      ) {
-        return false;
-      }
-
-      // Check technology filter
-      if (
-        this.activeFilters.technology &&
-        !cardTechnologies.includes(this.activeFilters.technology)
-      ) {
-        return false;
-      }
-
-      // Check status filter
-      if (
-        this.activeFilters.status &&
-        cardStatus !== this.activeFilters.status
-      ) {
-        return false;
-      }
-
-      // Check tag filters (project must have ALL selected tags)
-      if (this.activeFilters.tags.size > 0) {
-        const hasAllTags = Array.from(this.activeFilters.tags).every((tag) =>
-          cardTags.includes(tag),
-        );
-        if (!hasAllTags) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    updateURL() {
-      const params = new URLSearchParams();
-      if (this.activeFilters.category)
-        params.set("category", this.activeFilters.category);
-      if (this.activeFilters.technology)
-        params.set("technology", this.activeFilters.technology);
-      if (this.activeFilters.status)
-        params.set("status", this.activeFilters.status);
-      if (this.activeFilters.search)
-        params.set("search", this.activeFilters.search);
-      if (this.activeFilters.tags.size > 0)
-        params.set("tags", Array.from(this.activeFilters.tags).join(","));
-
-      const newURL = params.toString()
-        ? `${window.location.pathname}?${params.toString()}`
-        : window.location.pathname;
-      window.history.replaceState({}, "", newURL);
-    }
-
-    loadFiltersFromURL() {
-      const params = new URLSearchParams(window.location.search);
-
-      if (params.get("category") && this.categoryFilter) {
-        this.categoryFilter.value = params.get("category") ?? "";
-      }
-      if (params.get("technology") && this.technologyFilter) {
-        this.technologyFilter.value = params.get("technology") ?? "";
-      }
-      if (params.get("status") && this.statusFilter) {
-        this.statusFilter.value = params.get("status") ?? "";
-      }
-      if (params.get("search") && this.searchFilter) {
-        this.searchFilter.value = params.get("search") ?? "";
-      }
-      const tagsParam = params.get("tags");
-      if (tagsParam) {
-        const tags = tagsParam.split(",");
-        this.tagChips.forEach((chip: HTMLButtonElement) => {
-          if (chip.dataset.tag && tags.includes(chip.dataset.tag)) {
-            chip.classList.add("active");
-            this.activeFilters.tags.add(chip.dataset.tag);
-          }
-        });
-      }
-
-      if (params.toString()) {
-        this.applyFilters();
-      }
-    }
-
-    clearAllFilters() {
-      // Reset form elements
-      if (this.categoryFilter) this.categoryFilter.value = "";
-      if (this.technologyFilter) this.technologyFilter.value = "";
-      if (this.statusFilter) this.statusFilter.value = "";
-      if (this.searchFilter) this.searchFilter.value = "";
-
-      // Reset tag chips
-      this.tagChips.forEach(
-        (chip: { classList: { remove: (arg0: string) => void } }) => {
-          chip.classList.remove("active");
-        },
-      );
-
-      // Reset active filters
-      this.activeFilters = {
-        category: "",
-        technology: "",
-        status: "",
-        search: "",
-        tags: new Set(),
-      };
-
-      // Show all projects with stagger animation
-      this.projectCards.forEach(
-        (
-          card: {
-            classList: {
-              remove: (arg0: string) => void;
-              add: (arg0: string) => void;
-            };
-            style: { animationDelay: string };
-          },
-          index: number,
-        ) => {
-          card.classList.remove("hidden");
-          card.style.animationDelay = `${index * 0.05}s`;
-          card.classList.add("animate-fade-in-up");
-        },
-      );
-
-      // Hide no results message
-      this.noResultsMessage?.classList.add("hidden");
-      this.projectsGrid?.classList.remove("hidden");
-      this.clearFiltersBtn?.classList.add("hidden");
-
-      // Clear URL params
-      window.history.replaceState({}, "", window.location.pathname);
-
-      // // Re-trigger AOS
-      // if (typeof AOS !== 'undefined') {
-      //   setTimeout(() => AOS.refresh(), 100);
-      // }
-    }
-  }
-
-  // Initialize when DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
-    new FeaturedCarousel();
-    new ProjectFilter();
-  });
-
-  // Also initialize on Astro page transitions
-  document.addEventListener("astro:page-load", () => {
-    new FeaturedCarousel();
-    new ProjectFilter();
-  });
-
-  // Dynamic content refresh function
-  async function refreshProjects() {
-    try {
-      // Fetch updated projects data
-      const response = await fetch("/api/projects.json?pageSize=100");
-      if (!response.ok) throw new Error("Failed to fetch updated projects");
-
-      const data = await response.json();
-
-      if (!data.projects || !data.projects.length) return;
-
-      console.log(`Refreshed ${data.projects.length} projects from Strapi`);
-
-      // Get featured projects separately
-      const featuredResponse = await fetch("/api/featured-projects.json");
-      if (!featuredResponse.ok)
-        throw new Error("Failed to fetch featured projects");
-
-      const featuredData = await featuredResponse.json();
-      const featuredProjects = featuredData.projects || [];
-
-      console.log(
-        `Refreshed ${featuredProjects.length} featured projects from Strapi`,
-      );
-
-      // Update the featured carousel if it exists
-      const featuredCarousel = document.querySelector(".featured-carousel");
-      if (featuredCarousel && featuredProjects.length > 0) {
-        console.log("Featured carousel could be updated with fresh data");
-      }
-
-      // Update the projects grid if it exists
-      const projectsGrid = document.querySelector(".projects-grid");
-      if (projectsGrid && data.projects.length > 0) {
-        console.log("Projects grid could be updated with fresh data");
-      }
-    } catch (error) {
-      console.error("Error refreshing projects:", error);
-    }
-  }
-
-  // Refresh projects after a delay to ensure the page is fully loaded
-  setTimeout(refreshProjects, 2000);
+	// Featured Projects Carousel
+	class FeaturedCarousel {
+		currentSlide: number;
+		track: HTMLElement | null;
+		prevBtn: HTMLElement | null;
+		nextBtn: HTMLElement | null;
+		indicators: NodeListOf<HTMLButtonElement>;
+		slides: NodeListOf<HTMLDivElement>;
+		totalSlides: number;
+		autoplayInterval: ReturnType<typeof setInterval> | null;
+
+		constructor() {
+			this.currentSlide = 0;
+			this.track = document.getElementById('featured-carousel-track');
+			this.prevBtn = document.getElementById('featured-prev');
+			this.nextBtn = document.getElementById('featured-next');
+			this.indicators = document.querySelectorAll(
+				'#featured-indicators button',
+			);
+			this.slides = document.querySelectorAll(
+				'#featured-carousel-track > div',
+			);
+			this.totalSlides = this.slides.length;
+			this.autoplayInterval = null;
+
+			if (this.totalSlides > 0) {
+				this.init();
+			}
+		}
+
+		init() {
+			// Add event listeners
+			this.prevBtn?.addEventListener('click', () => this.prevSlide());
+			this.nextBtn?.addEventListener('click', () => this.nextSlide());
+
+			// Indicator click handlers
+			this.indicators.forEach((indicator, index) => {
+				indicator.addEventListener('click', () =>
+					this.goToSlide(index),
+				);
+			});
+
+			// Auto-play functionality
+			this.startAutoplay();
+
+			// Pause on hover
+			const carousel = document.getElementById('featured-carousel');
+			carousel?.addEventListener('mouseenter', () => this.stopAutoplay());
+			carousel?.addEventListener('mouseleave', () =>
+				this.startAutoplay(),
+			);
+
+			// Keyboard navigation
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'ArrowLeft') this.prevSlide();
+				if (e.key === 'ArrowRight') this.nextSlide();
+			});
+		}
+
+		goToSlide(index: number) {
+			this.currentSlide = index;
+			this.updateCarousel();
+		}
+
+		nextSlide() {
+			this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+			this.updateCarousel();
+		}
+
+		prevSlide() {
+			this.currentSlide =
+				(this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+			this.updateCarousel();
+		}
+
+		updateCarousel() {
+			if (this.track) {
+				const translateX = -this.currentSlide * 100;
+				this.track.style.transform = `translateX(${translateX}%)`;
+			}
+
+			// Update indicators
+			this.indicators.forEach((indicator, index) => {
+				indicator.classList.toggle(
+					'bg-blue-500',
+					index === this.currentSlide,
+				);
+				indicator.classList.toggle(
+					'bg-gray-600',
+					index !== this.currentSlide,
+				);
+			});
+		}
+
+		startAutoplay() {
+			this.stopAutoplay();
+			this.autoplayInterval = setInterval(() => {
+				this.nextSlide();
+			}, 5000); // Change slide every 5 seconds
+		}
+
+		stopAutoplay() {
+			if (this.autoplayInterval) {
+				clearInterval(this.autoplayInterval);
+				this.autoplayInterval = null;
+			}
+		}
+	}
+
+	// Project Filtering System
+	class ProjectFilter {
+		categoryFilter: HTMLSelectElement | null;
+		technologyFilter: HTMLSelectElement | null;
+		statusFilter: HTMLSelectElement | null;
+		searchFilter: HTMLInputElement | null;
+		tagChips: NodeListOf<HTMLButtonElement>;
+		clearFiltersBtn: HTMLElement | null;
+		resetFiltersBtn: HTMLElement | null;
+		projectCards: NodeListOf<HTMLElement>;
+		noResultsMessage: HTMLElement | null;
+		projectsGrid: HTMLElement | null;
+		activeFilters: {
+			category: string;
+			technology: string;
+			status: string;
+			search: string;
+			tags: Set<string>;
+		};
+
+		constructor() {
+			this.categoryFilter = document.getElementById(
+				'category-filter',
+			) as HTMLSelectElement | null;
+			this.technologyFilter = document.getElementById(
+				'technology-filter',
+			) as HTMLSelectElement | null;
+			this.statusFilter = document.getElementById(
+				'status-filter',
+			) as HTMLSelectElement | null;
+			this.searchFilter = document.getElementById(
+				'search-filter',
+			) as HTMLInputElement | null;
+			this.tagChips = document.querySelectorAll(
+				'.tag-filter-chip',
+			) as NodeListOf<HTMLButtonElement>;
+			this.clearFiltersBtn = document.getElementById('clear-filters');
+			this.resetFiltersBtn = document.getElementById('reset-filters');
+			this.projectCards = document.querySelectorAll(
+				'.project-card',
+			) as NodeListOf<HTMLElement>;
+			this.noResultsMessage = document.getElementById('no-results');
+			this.projectsGrid = document.getElementById('projects-grid');
+
+			this.activeFilters = {
+				category: '',
+				technology: '',
+				status: '',
+				search: '',
+				tags: new Set(),
+			};
+
+			this.init();
+		}
+
+		init() {
+			// Add event listeners for filters
+			this.categoryFilter?.addEventListener('change', () =>
+				this.applyFilters(),
+			);
+			this.technologyFilter?.addEventListener('change', () =>
+				this.applyFilters(),
+			);
+			this.statusFilter?.addEventListener('change', () =>
+				this.applyFilters(),
+			);
+
+			// Search filter with debounce
+			this.searchFilter?.addEventListener(
+				'input',
+				this.debounce(() => this.applyFilters(), 300),
+			);
+
+			// Tag chip event listeners
+			this.tagChips.forEach((chip: HTMLButtonElement) => {
+				chip.addEventListener('click', (e: Event) => {
+					e.preventDefault();
+					this.toggleTagFilter(chip);
+				});
+			});
+
+			// Clear/reset filters
+			this.clearFiltersBtn?.addEventListener('click', () =>
+				this.clearAllFilters(),
+			);
+			this.resetFiltersBtn?.addEventListener('click', () =>
+				this.clearAllFilters(),
+			);
+
+			// Add smooth transitions to filter changes
+			this.projectsGrid?.classList.add(
+				'transition-all',
+				'duration-500',
+				'ease-out',
+			);
+		}
+
+		debounce<T extends any[]>(
+			func: (...args: T) => void,
+			wait: number | undefined,
+		) {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			return function executedFunction(...args: T) {
+				const later = () => {
+					clearTimeout(timeout);
+					func(...args);
+				};
+				clearTimeout(timeout);
+				timeout = setTimeout(later, wait);
+			};
+		}
+
+		toggleTagFilter(chip: HTMLButtonElement) {
+			const tag = chip.dataset.tag;
+			const isActive = chip.classList.contains('active');
+
+			if (isActive) {
+				chip.classList.remove('active');
+				if (tag !== undefined) {
+					this.activeFilters.tags.delete(tag);
+				}
+			} else {
+				chip.classList.add('active');
+				if (tag !== undefined) {
+					this.activeFilters.tags.add(tag);
+				}
+			}
+
+			this.applyFilters();
+		}
+
+		applyFilters() {
+			// Update active filters
+			this.activeFilters.category = this.categoryFilter?.value || '';
+			this.activeFilters.technology = this.technologyFilter?.value || '';
+			this.activeFilters.status = this.statusFilter?.value || '';
+			this.activeFilters.search =
+				this.searchFilter?.value.toLowerCase() || '';
+
+			let visibleCount = 0;
+			const allCards = Array.from(this.projectCards);
+
+			// Add stagger animation to filtered results
+			let visibleIndex = 0;
+
+			allCards.forEach((card) => {
+				if (this.shouldShowProject(card)) {
+					card.classList.remove('hidden');
+					// Stagger animation for visible cards
+					card.style.animationDelay = `${visibleIndex * 0.1}s`;
+					card.classList.add('animate-fade-in-up');
+					visibleCount++;
+					visibleIndex++;
+				} else {
+					card.classList.add('hidden');
+					card.classList.remove('animate-fade-in-up');
+				}
+			});
+
+			// Show/hide no results message with animation
+			if (visibleCount === 0) {
+				this.noResultsMessage?.classList.remove('hidden');
+				this.projectsGrid?.classList.add('hidden');
+			} else {
+				this.noResultsMessage?.classList.add('hidden');
+				this.projectsGrid?.classList.remove('hidden');
+			}
+
+			// Show/hide clear filters button
+			const hasActiveFilters =
+				this.activeFilters.category ||
+				this.activeFilters.technology ||
+				this.activeFilters.status ||
+				this.activeFilters.search ||
+				this.activeFilters.tags.size > 0;
+
+			if (hasActiveFilters) {
+				this.clearFiltersBtn?.classList.remove('hidden');
+				this.clearFiltersBtn?.classList.add('animate-bounce-in');
+			} else {
+				this.clearFiltersBtn?.classList.add('hidden');
+				this.clearFiltersBtn?.classList.remove('animate-bounce-in');
+			}
+
+			// Update URL with current filters (for sharing/bookmarking)
+			this.updateURL();
+
+			// // Re-trigger AOS for visible cards
+			// if (typeof AOS !== 'undefined') {
+			//   setTimeout(() => AOS.refresh(), 100);
+			// }
+		}
+
+		shouldShowProject(card: unknown) {
+			const el = card as HTMLElement;
+			const cardCategory = el.dataset.category;
+			const cardTechnologies = JSON.parse(
+				el.dataset.technologies || '[]',
+			);
+			const cardTags = JSON.parse(el.dataset.tags || '[]');
+			const cardStatus = el.dataset.status;
+			const cardTitle =
+				el.querySelector('h4')?.textContent?.toLowerCase() || '';
+			const cardDescription =
+				el.querySelector('p')?.textContent?.toLowerCase() || '';
+
+			// Check search filter (searches in title and description)
+			if (this.activeFilters.search) {
+				const searchMatch =
+					cardTitle.includes(this.activeFilters.search) ||
+					cardDescription.includes(this.activeFilters.search) ||
+					cardTechnologies.some((tech: string) =>
+						tech.toLowerCase().includes(this.activeFilters.search),
+					) ||
+					cardTags.some((tag: string) =>
+						tag.toLowerCase().includes(this.activeFilters.search),
+					);
+				if (!searchMatch) return false;
+			}
+
+			// Check category filter
+			if (
+				this.activeFilters.category &&
+				cardCategory !== this.activeFilters.category
+			) {
+				return false;
+			}
+
+			// Check technology filter
+			if (
+				this.activeFilters.technology &&
+				!cardTechnologies.includes(this.activeFilters.technology)
+			) {
+				return false;
+			}
+
+			// Check status filter
+			if (
+				this.activeFilters.status &&
+				cardStatus !== this.activeFilters.status
+			) {
+				return false;
+			}
+
+			// Check tag filters (project must have ALL selected tags)
+			if (this.activeFilters.tags.size > 0) {
+				const hasAllTags = Array.from(this.activeFilters.tags).every(
+					(tag) => cardTags.includes(tag),
+				);
+				if (!hasAllTags) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		updateURL() {
+			const params = new URLSearchParams();
+			if (this.activeFilters.category)
+				params.set('category', this.activeFilters.category);
+			if (this.activeFilters.technology)
+				params.set('technology', this.activeFilters.technology);
+			if (this.activeFilters.status)
+				params.set('status', this.activeFilters.status);
+			if (this.activeFilters.search)
+				params.set('search', this.activeFilters.search);
+			if (this.activeFilters.tags.size > 0)
+				params.set(
+					'tags',
+					Array.from(this.activeFilters.tags).join(','),
+				);
+
+			const newURL = params.toString()
+				? `${window.location.pathname}?${params.toString()}`
+				: window.location.pathname;
+			window.history.replaceState({}, '', newURL);
+		}
+
+		loadFiltersFromURL() {
+			const params = new URLSearchParams(window.location.search);
+
+			if (params.get('category') && this.categoryFilter) {
+				this.categoryFilter.value = params.get('category') ?? '';
+			}
+			if (params.get('technology') && this.technologyFilter) {
+				this.technologyFilter.value = params.get('technology') ?? '';
+			}
+			if (params.get('status') && this.statusFilter) {
+				this.statusFilter.value = params.get('status') ?? '';
+			}
+			if (params.get('search') && this.searchFilter) {
+				this.searchFilter.value = params.get('search') ?? '';
+			}
+			const tagsParam = params.get('tags');
+			if (tagsParam) {
+				const tags = tagsParam.split(',');
+				this.tagChips.forEach((chip: HTMLButtonElement) => {
+					if (chip.dataset.tag && tags.includes(chip.dataset.tag)) {
+						chip.classList.add('active');
+						this.activeFilters.tags.add(chip.dataset.tag);
+					}
+				});
+			}
+
+			if (params.toString()) {
+				this.applyFilters();
+			}
+		}
+
+		clearAllFilters() {
+			// Reset form elements
+			if (this.categoryFilter) this.categoryFilter.value = '';
+			if (this.technologyFilter) this.technologyFilter.value = '';
+			if (this.statusFilter) this.statusFilter.value = '';
+			if (this.searchFilter) this.searchFilter.value = '';
+
+			// Reset tag chips
+			this.tagChips.forEach(
+				(chip: { classList: { remove: (arg0: string) => void } }) => {
+					chip.classList.remove('active');
+				},
+			);
+
+			// Reset active filters
+			this.activeFilters = {
+				category: '',
+				technology: '',
+				status: '',
+				search: '',
+				tags: new Set(),
+			};
+
+			// Show all projects with stagger animation
+			this.projectCards.forEach(
+				(
+					card: {
+						classList: {
+							remove: (arg0: string) => void;
+							add: (arg0: string) => void;
+						};
+						style: { animationDelay: string };
+					},
+					index: number,
+				) => {
+					card.classList.remove('hidden');
+					card.style.animationDelay = `${index * 0.05}s`;
+					card.classList.add('animate-fade-in-up');
+				},
+			);
+
+			// Hide no results message
+			this.noResultsMessage?.classList.add('hidden');
+			this.projectsGrid?.classList.remove('hidden');
+			this.clearFiltersBtn?.classList.add('hidden');
+
+			// Clear URL params
+			window.history.replaceState({}, '', window.location.pathname);
+
+			// // Re-trigger AOS
+			// if (typeof AOS !== 'undefined') {
+			//   setTimeout(() => AOS.refresh(), 100);
+			// }
+		}
+	}
+
+	// Initialize when DOM is ready
+	document.addEventListener('DOMContentLoaded', () => {
+		new FeaturedCarousel();
+		new ProjectFilter();
+	});
+
+	// Also initialize on Astro page transitions
+	document.addEventListener('astro:page-load', () => {
+		new FeaturedCarousel();
+		new ProjectFilter();
+	});
+
+	// Dynamic content refresh function
+	async function refreshProjects() {
+		try {
+			// Fetch updated projects data
+			const response = await fetch('/api/projects.json?pageSize=100');
+			if (!response.ok)
+				throw new Error('Failed to fetch updated projects');
+
+			const data = await response.json();
+
+			if (!data.projects || !data.projects.length) return;
+
+			console.log(
+				`Refreshed ${data.projects.length} projects from Strapi`,
+			);
+
+			// Get featured projects separately
+			const featuredResponse = await fetch('/api/featured-projects.json');
+			if (!featuredResponse.ok)
+				throw new Error('Failed to fetch featured projects');
+
+			const featuredData = await featuredResponse.json();
+			const featuredProjects = featuredData.projects || [];
+
+			console.log(
+				`Refreshed ${featuredProjects.length} featured projects from Strapi`,
+			);
+
+			// Update the featured carousel if it exists
+			const featuredCarousel =
+				document.querySelector('.featured-carousel');
+			if (featuredCarousel && featuredProjects.length > 0) {
+				console.log(
+					'Featured carousel could be updated with fresh data',
+				);
+			}
+
+			// Update the projects grid if it exists
+			const projectsGrid = document.querySelector('.projects-grid');
+			if (projectsGrid && data.projects.length > 0) {
+				console.log('Projects grid could be updated with fresh data');
+			}
+		} catch (error) {
+			console.error('Error refreshing projects:', error);
+		}
+	}
+
+	// Refresh projects after a delay to ensure the page is fully loaded
+	setTimeout(refreshProjects, 2000);
 </script>
