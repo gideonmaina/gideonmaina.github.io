@@ -114,6 +114,32 @@ const currentPath = Astro.url.pathname;
             ></span>
           </a>
           <a
+            href="/gallery"
+            class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-purple-400 rounded-xl hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 hover:shadow-lg hover:shadow-purple-500/20 ${
+              currentPath === "/gallery" || currentPath.startsWith("/gallery")
+                ? "text-purple-400 bg-gradient-to-r from-purple-500/20 to-pink-500/20 shadow-md shadow-purple-500/20"
+                : "text-gray-300"
+            }`}
+            data-aos="fade-down"
+            data-aos-duration="500"
+            data-aos-delay="450"
+          >
+            <i class="fas fa-images mr-2"></i>
+            <span
+              class="relative z-10 transition-transform duration-300 group-hover:scale-105"
+              >Gallery</span
+            >
+            {
+              (currentPath === "/gallery" ||
+                currentPath.startsWith("/gallery")) && (
+                <span class="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-xl animate-pulse" />
+              )
+            }
+            <span
+              class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full transition-all duration-500 group-hover:w-full group-hover:left-0"
+            ></span>
+          </a>
+          <a
             href="/blog"
             class={`group relative px-6 py-2 text-sm font-medium transition-all duration-500 ease-out hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:shadow-lg hover:shadow-blue-500/20 ${
               currentPath.startsWith("/blog")
@@ -122,7 +148,7 @@ const currentPath = Astro.url.pathname;
             }`}
             data-aos="fade-down"
             data-aos-duration="500"
-            data-aos-delay="450"
+            data-aos-delay="500"
           >
             <i class="fas fa-blog mr-2"></i>
             <span
@@ -147,7 +173,7 @@ const currentPath = Astro.url.pathname;
             }`}
             data-aos="fade-down"
             data-aos-duration="500"
-            data-aos-delay="500"
+            data-aos-delay="550"
           >
             <i class="fas fa-envelope mr-2"></i>
             <span
@@ -341,6 +367,28 @@ const currentPath = Astro.url.pathname;
           <span
             class="transition-transform duration-300 group-hover:translate-x-2"
             >Projects</span
+          >
+        </span>
+      </a>
+
+      <a
+        href="/gallery"
+        class={`group block text-center py-4 text-2xl font-bold transition-all duration-500 rounded-2xl hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:shadow-lg hover:shadow-purple-500/20 hover:scale-105 ${
+          currentPath === "/gallery" || currentPath.startsWith("/gallery")
+            ? "text-purple-400 bg-gradient-to-r from-purple-500/20 to-pink-500/20 shadow-lg shadow-purple-500/20"
+            : "text-white hover:text-purple-400"
+        }`}
+        data-aos="slide-right"
+        data-aos-duration="600"
+        data-aos-delay="725"
+      >
+        <span class="flex items-center justify-center">
+          <span class="mr-4 text-3xl">
+            <i class="fas fa-images"></i>
+          </span>
+          <span
+            class="transition-transform duration-300 group-hover:translate-x-2"
+            >Gallery</span
           >
         </span>
       </a>

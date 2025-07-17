@@ -1,0 +1,896 @@
+---
+import Layout from '@layouts/Layout.astro';
+import strapiAPI from '@lib/strapi.js';
+import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
+import { marked } from 'marked';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+let gallery = null;
+let relatedGalleries = [];
+
+// Set up DOMPurify with JSDOM for server-side sanitization
+const window = new JSDOM("").window;
+const purify = DOMPurify(window);
+
+// Configure DOMPurify options
+const purifyOptions = {
+  ADD_ATTR: ["class"],
+  ADD_TAGS: ["iframe"],
+  FORBID_TAGS: ["style", "script"],
+  FORBID_ATTR: ["style", "onerror", "onload"],
+};
+
+// Configure marked options for better Markdown processing
+marked.use({
+  gfm: true, // GitHub Flavored Markdown
+  breaks: true, // Convert \n to <br>
+});
+
+//  Markdown renderer with custom styling
+const renderer = new marked.Renderer();
+
+// Custom heading renderer
+renderer.heading = function (token: any) {
+  const text = this.parser.parseInline(token.tokens);
+  const level = token.depth;
+  const id = text.toLowerCase().replace(/[^\w]+/g, "-");
+  const classes: Record<number, string> = {
+	1: "text-4xl font-bold text-white mt-12 mb-6 border-b-2 border-indigo-500 pb-4",
+	2: "text-3xl font-bold mt-10 mb-5 border-b border-indigo-400 pb-3",
+	3: "text-2xl font-semibold text-white mt-8 mb-4",
+	4: "text-xl font-semibold text-gray-100 mt-6 mb-3",
+	5: "text-lg font-medium text-gray-100 mt-5 mb-2",
+	6: "text-base font-medium text-gray-200 mt-4 mb-2",
+  };
+  return `<h${level} id="${id}" class="${classes[level] || classes[6]}">${text}</h${level}>`;
+};
+
+// Custom blockquote renderer
+renderer.blockquote = function (token: any) {
+  const quote = this.parser.parse(token.tokens);
+  return `<blockquote class="my-8 border-l-4 border-indigo-500 pl-6 py-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/5 rounded-r-lg">
+		<div class="text-lg italic text-gray-200 leading-relaxed">${quote}</div>
+	</blockquote>`;
+};
+
+// Custom table renderer
+renderer.table = function (token: any) {
+  const header = this.parser.parse(token.header);
+  const body = this.parser.parse(token.rows);
+  return `<div class="my-8 overflow-x-auto">
+		<table class="w-full border-collapse bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700">
+			<thead class="bg-gray-700">${header}</thead>
+			<tbody>${body}</tbody>
+		</table>
+	</div>`;
+};
+
+// Custom table header renderer
+renderer.tablecell = function (token: any) {
+  const content = this.parser.parseInline(token.tokens);
+  const tag = token.header ? "th" : "td";
+  const classes = token.header
+    ? "px-6 py-3 text-left text-xs font-bold text-gray-200 uppercase tracking-wider border-b border-gray-600"
+    : "px-6 py-4 text-sm text-gray-300 border-b border-gray-700";
+  return `<${tag} class="${classes}">${content}</${tag}>`;
+};
+
+// Custom list renderer
+renderer.list = function (token: any) {
+  const ordered = token.ordered;
+  const items = token.items;
+  const tag = ordered ? "ol" : "ul";
+  const classes = ordered ? "list-decimal pl-6" : "list-disc pl-6";
+
+  // Render list items with default marker
+  const itemsHtml = items
+	.map((item: any) => {
+	  const text = this.parser.parse(item.tokens);
+	  return `<li class="leading-relaxed hover:text-gray-200 transition-colors">${text}</li>`;
+	})
+	.join("");
+
+  return `<${tag} class="my-6 space-y-2 ${classes} text-gray-300">${itemsHtml}</${tag}>`;
+};
+
+// Custom link renderer - fixed to handle href properly
+renderer.link = function (token: any) {
+  const href = token.href || "#";
+  const title = token.title || "";
+  const text = this.parser.parseInline(token.tokens);
+
+  // Ensure href is always a string and handle potential objects
+  const safeHref = typeof href === "string" ? href : href?.toString() || "#";
+  const titleAttr = title ? ` title="${title}"` : "";
+  const isExternal =
+	safeHref.startsWith("http") &&
+	!safeHref.includes(globalThis.location?.hostname || "");
+  const external = isExternal
+	? ' target="_blank" rel="noopener noreferrer"'
+	: "";
+
+  return `<a href="${safeHref}"${titleAttr}${external} class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 decoration-indigo-500/50 hover:decoration-indigo-400 transition-all duration-200 font-medium">${text}</a>`;
+};
+
+// Custom image renderer - fixed to handle src properly
+renderer.image = function (token: any) {
+  const href = token.href || "";
+  const title = token.title || "";
+  const text = token.text || "";
+
+  // Ensure href is always a string and handle potential objects
+  const safeHref = typeof href === "string" ? href : href?.toString() || "";
+  const titleAttr = title ? ` title="${title}"` : "";
+  const altAttr = text ? ` alt="${text}"` : "";
+
+  return `<figure class="my-8">
+		<img src="${safeHref}"${altAttr}${titleAttr} class="w-full rounded-xl shadow-2xl hover:shadow-indigo-500/10 transition-shadow duration-300 cursor-zoom-in" loading="lazy" />
+		${text ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm">${text}</figcaption>` : ""}
+	</figure>`;
+};
+
+// Custom horizontal rule renderer
+renderer.hr = function () {
+  return `<hr class="my-12 border-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />`;
+};
+
+// Custom paragraph renderer to ensure proper spacing
+renderer.paragraph = function (token: any) {
+  const text = this.parser.parseInline(token.tokens);
+  return `<p class="mb-6 leading-relaxed">${text}</p>`;
+};
+
+// Apply custom renderer to marked
+marked.use({ renderer });
+
+
+function extractYouTubeID(url: string) {
+  const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+}
+
+// Helper function to render content components
+function renderContentComponent(component: any) {
+  switch (component.__component || component.type) {
+	case "content.rich-text":
+	case "rich-text": {
+	  if (component.content) {
+		const markdownContent = String(component.content);
+		const htmlContent = marked.parse(markdownContent);
+		const sanitizedContent = purify.sanitize(
+		  String(htmlContent),
+		  purifyOptions,
+		);
+		return `<div class="prose prose-content markdown-content">${sanitizedContent}</div>`;
+	  }
+	  return "";
+	}
+	case "content.quote":
+	case "quote": {
+	  return `<blockquote class="my-10 relative">
+		<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+		<div class="pl-8 py-6 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent rounded-r-2xl">
+		  <div class="relative">
+			<svg class="absolute -top-2 -left-4 w-8 h-8 text-indigo-400/30" fill="currentColor" viewBox="0 0 24 24">
+			  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
+			</svg>
+			<p class="text-xl italic text-gray-200 mb-4 leading-relaxed relative z-10">"${component.text}"</p>
+			${
+			  component.author
+				? `
+				<cite class="text-gray-400 not-italic font-medium flex items-center">
+				  <div class="w-8 h-px bg-gradient-to-r from-indigo-500 to-transparent mr-3"></div>
+				  ${component.author}${component.authorTitle ? `, <span class="text-indigo-400">${component.authorTitle}</span>` : ""}
+				</cite>
+			  `
+				: ""
+			}
+			${component.style ? `<div class="text-xs text-gray-500 mt-2">Style: ${component.style}</div>` : ""}
+		  </div>
+		</div>
+	  </blockquote>`;
+	}
+	case "embed": {
+	  return `
+  <div class="my-10">
+	<div class="aspect-video bg-gray-800 rounded-xl flex items-center justify-center overflow-hidden border border-gray-700 shadow-2xl">
+	  ${
+		component.url && extractYouTubeID(component.url)
+		  ? `<iframe
+			  src="https://www.youtube.com/embed/${extractYouTubeID(component.url)}"
+			  class="w-full h-full rounded-xl"
+			  frameborder="0"
+			  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+			  allowfullscreen>
+			</iframe>`
+		  : `
+		<div class="text-center text-gray-400">
+		  <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+			<path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+		  </svg>
+		  <p>Embed content</p>
+		</div>
+	  `
+	  }
+	</div>
+	${
+	  component.title || component.description
+		? `
+	  <div class="mt-6 text-center">
+		${component.title ? `<h4 class="font-semibold text-gray-200 text-lg mb-2">${component.title}</h4>` : ""}
+		${component.description ? `<p class="text-gray-400 text-sm leading-relaxed">${component.description}</p>` : ""}
+	  </div>
+	`
+		: ""
+	}
+  </div>
+`;
+	}
+	default: {
+	  // Fallback for unknown components - show all properties in a structured way
+	  const componentType = component.__component || component.type || 'unknown';
+	  const componentProps = Object.entries(component)
+		.filter(([key, value]) => key !== '__component' && key !== 'type' && key !== 'id' && value != null)
+		.map(([key, value]) => `<p class="text-xs text-gray-400"><strong class="text-gray-300">${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</p>`)
+		.join('');
+
+	  return `<div class="my-6 p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
+		<p class="text-blue-400 font-medium mb-3">Component: ${componentType}</p>
+		<div class="space-y-2 text-sm">${componentProps || '<p class="text-gray-500 italic">No additional properties</p>'}</div>
+	  </div>`;
+	}
+  }
+}
+function processContent(content: any): string {
+  if (!content) return "";
+
+  // Gather all media-block images for the carousel
+  let mediaBlocks = [];
+  if (Array.isArray(content)) {
+	mediaBlocks = content.filter(
+	  (component) => (component.__component || component.type) === "content.media-block" && component.media && (component.media.url || component.media)
+	);
+  }
+
+  let carouselHtml = "";
+  if (mediaBlocks.length > 0) {
+	// Build carousel slides
+	const slides = mediaBlocks.map((mb, idx) => {
+	  const fullUrl = strapiAPI.getMediaURL(mb.media);
+	  return `<div class="carousel-slide${idx === 0 ? ' active' : ''}">
+		<img src="${fullUrl}" alt="${mb.altText || mb.media.alternativeText || ''}" class="w-full h-96 object-cover rounded-xl shadow-2xl" loading="lazy" />
+		${mb.caption ? `<figcaption class="text-center text-gray-400 mt-4 italic text-sm leading-relaxed"><strong>Caption:</strong> ${mb.caption}</figcaption>` : ""}
+	  </div>`;
+	}).join("");
+
+	// Carousel controls and indicators
+	const indicators = mediaBlocks.map((_, idx) => `<button class="carousel-indicator" data-slide="${idx}"></button>`).join("");
+
+	carouselHtml = `
+	  <div class="carousel-container my-10">
+		<div class="carousel-slides">${slides}</div>
+		<div class="carousel-controls">
+		  <button class="carousel-arrow left" aria-label="Previous">&#8592;</button>
+		  <button class="carousel-arrow right" aria-label="Next">&#8594;</button>
+		</div>
+		<div class="carousel-indicators">${indicators}</div>
+	  </div>
+	  <script is:inline>
+		(() => {
+		  const container = document.querySelector('.carousel-container');
+		  if (!container) return;
+		  const slides = container.querySelectorAll('.carousel-slide');
+		  const left = container.querySelector('.carousel-arrow.left');
+		  const right = container.querySelector('.carousel-arrow.right');
+		  const indicators = container.querySelectorAll('.carousel-indicator');
+		  let current = 0;
+
+		  function showSlide(idx) {
+			slides.forEach((slide, i) => {
+			  slide.classList.toggle('active', i === idx);
+			});
+			indicators.forEach((ind, i) => {
+			  ind.classList.toggle('active', i === idx);
+			});
+			current = idx;
+		  }
+
+		  left.addEventListener('click', () => {
+			showSlide((current - 1 + slides.length) % slides.length);
+		  });
+		  right.addEventListener('click', () => {
+			showSlide((current + 1) % slides.length);
+		  });
+		  indicators.forEach((ind, i) => {
+			ind.addEventListener('click', () => showSlide(i));
+		  });
+
+		  // Swipe support
+		  let startX = null;
+		  container.addEventListener('touchstart', (e) => {
+			startX = e.touches[0].clientX;
+		  });
+		  container.addEventListener('touchend', (e) => {
+			if (startX === null) return;
+			const endX = e.changedTouches[0].clientX;
+			if (endX - startX > 50) left.click();
+			else if (startX - endX > 50) right.click();
+			startX = null;
+		  });
+		})();
+	  </script>
+	  <style>
+		.carousel-container { position: relative; max-width: 100%; overflow: hidden; }
+		.carousel-slides { display: flex; transition: transform 0.5s; }
+		.carousel-slide { min-width: 100%; display: none; flex-direction: column; align-items: center; }
+		.carousel-slide.active { display: flex; }
+		.carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(55,65,81,0.7); color: #fff; border: none; border-radius: 9999px; padding: 0.75rem 1.25rem; font-size: 1.5rem; cursor: pointer; z-index: 2; transition: background 0.2s; }
+		.carousel-arrow.left { left: 1rem; }
+		.carousel-arrow.right { right: 1rem; }
+		.carousel-arrow:hover { background: rgba(99,102,241,0.8); }
+		.carousel-indicators { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; }
+		.carousel-indicator { width: 12px; height: 12px; border-radius: 50%; background: #6366f1; opacity: 0.4; border: none; cursor: pointer; transition: opacity 0.2s; }
+		.carousel-indicator.active { opacity: 1; background: #a855f7; }
+	  </style>
+	`;
+  }
+
+  // Render other content components except media-blocks
+  let otherContent = "";
+  if (Array.isArray(content)) {
+	otherContent = content
+	  .filter((component) => (component.__component || component.type) !== "content.media-block")
+	  .map((component) => renderContentComponent(component))
+	  .join("");
+  }
+
+  return carouselHtml + otherContent;
+  // ...existing code...
+}
+
+
+try {
+	if (slug) {
+		// Fetch the gallery item using corrected API
+		gallery = await strapiAPI.getGallery(slug);
+
+		// Fetch related galleries (same category, excluding current)
+		if (gallery && gallery.category) {
+			relatedGalleries = await strapiAPI.getGalleriesByCategory(gallery.category, 6);
+			// Filter out current gallery
+			relatedGalleries = relatedGalleries.filter((g: any) => g.slug !== slug);
+		}
+	}
+} catch (error) {
+	console.error('Error fetching gallery:', error);
+}
+
+if (!gallery) {
+	return Astro.redirect('/404');
+}
+
+const title = gallery.title;
+const description = gallery.description || `Gallery: ${gallery.title}`;
+---
+
+<Layout title={title} description={description}>
+	<!-- Background Pattern -->
+	<div class="fixed inset-0 -z-10">
+		<div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900"></div>
+		<div class="absolute inset-0 opacity-30">
+			<div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.2) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);"></div>
+		</div>
+		<!-- Animated dots pattern -->
+		<div class="absolute inset-0 opacity-20">
+			<div class="grid grid-cols-12 gap-4 h-full animate-pulse">
+				{Array.from({ length: 48 }).map((_, i) => (
+					<div class="bg-indigo-500/10 rounded-full w-2 h-2 animate-ping" style={`animation-delay: ${i * 100}ms`}></div>
+				))}
+			</div>
+		</div>
+	</div>
+
+	<main class="relative min-h-screen">
+		<!-- Hero Section -->
+		<section class="relative h-screen flex items-center justify-center overflow-hidden">
+			<!-- Hero Background Image -->
+			{gallery.media && (
+				<div class="absolute inset-0 z-0">
+					<img
+						src={gallery.media}
+						alt={gallery.altText || gallery.title}
+						class="w-full h-full object-cover"
+						loading="eager"
+					/>
+					<div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
+					<div class="absolute inset-0 bg-gradient-to-r from-indigo-900/30 to-purple-900/30"></div>
+				</div>
+			)}
+
+			<!-- Hero Content -->
+			<div class="relative z-10 text-center max-w-4xl mx-auto px-6">
+				<div data-aos="fade-up" data-aos-duration="1000">
+					<!-- Category Badge -->
+					{gallery.category && (
+						<div class="inline-flex items-center px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30 backdrop-blur-sm mb-6">
+							<span class="text-indigo-300 text-sm font-medium uppercase tracking-wider">{gallery.category}</span>
+						</div>
+					)}
+
+					<!-- Title -->
+					<h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+						{gallery.title}
+					</h1>
+
+					<!-- Description -->
+					{gallery.description && (
+						<p class="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto">
+							{gallery.description}
+						</p>
+					)}
+
+					<!-- Meta Information -->
+					<div class="flex flex-wrap items-center justify-center gap-6 text-gray-400 mb-12">
+						{gallery.date && (
+							<div class="flex items-center space-x-2">
+								<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+								</svg>
+								<span>{new Date(gallery.date).toLocaleDateString('en-US', {
+									year: 'numeric',
+									month: 'long',
+									day: 'numeric'
+								})}</span>
+							</div>
+						)}
+						{gallery.location && (
+							<div class="flex items-center space-x-2">
+								<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+								</svg>
+								<span>{gallery.location}</span>
+							</div>
+						)}
+						{Array.isArray(gallery.tags) && gallery.tags.length > 0 && (
+							<div class="flex items-center space-x-2">
+								<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+								</svg>
+								<div class="flex flex-wrap gap-2">
+									{gallery.tags.map((tag: any) => (
+										<span class="px-2 py-1 bg-gray-700/50 rounded-full text-xs">{tag}</span>
+									))}
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+
+				<!-- Scroll Indicator -->
+				<div data-aos="fade-up" data-aos-delay="500" class="absolute bottom-0 left-1/2 transform -translate-x-1/2 cursor-pointer mt-8">
+					<div class="animate-bounce" id="scroll-indicator">
+						<svg class="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+						</svg>
+					</div>
+				</div>
+
+			</div>
+		</section>
+
+		<!-- Main Content -->
+		<section class="relative z-10 bg-gradient-to-b from-transparent to-gray-900/95 backdrop-blur-sm" id="gallery-content">
+			<div class="max-w-4xl mx-auto px-6 py-20">
+				<!-- Content -->
+				{gallery.content && (
+					<div data-aos="fade-up" data-aos-duration="1000">
+						<div class="prose prose-lg prose-invert max-w-none">
+							<div class="text-gray-300 leading-relaxed">
+								<div set:html={processContent(gallery.content)}></div>
+							</div>
+						</div>
+					</div>
+				)}
+
+			</div>
+		</section>
+
+		<!-- Related Galleries -->
+		{relatedGalleries && relatedGalleries.length > 0 && (
+			<section class="relative z-10 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800">
+				<div class="max-w-7xl mx-auto px-6 py-20">
+					<div data-aos="fade-up">
+						<h2 class="text-3xl font-bold text-white mb-12 text-center">Related Galleries</h2>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+						{relatedGalleries.slice(0, 3).map((relatedGallery: any, index: number) => (
+							<article
+								class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/10"
+								data-aos="fade-up"
+								data-aos-delay={index * 100}
+							>
+								<!-- Image -->
+								<div class="relative h-64 overflow-hidden">
+									{relatedGallery.media && (
+										<img
+											src={relatedGallery.media.url}
+											alt={relatedGallery.media.alternativeText || relatedGallery.title}
+											class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+											loading="lazy"
+										/>
+									)}
+									<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+
+									<!-- Category Badge -->
+									{relatedGallery.category && (
+										<div class="absolute top-4 left-4">
+											<span class="inline-block px-3 py-1 bg-indigo-500/80 text-indigo-100 text-xs font-medium rounded-full backdrop-blur-sm">
+												{relatedGallery.category.name}
+											</span>
+										</div>
+									)}
+
+									<!-- Overlay Content -->
+									<div class="absolute bottom-0 left-0 right-0 p-6">
+										<h3 class="text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
+											{relatedGallery.title}
+										</h3>
+										{relatedGallery.description && (
+											<p class="text-gray-300 text-sm leading-relaxed line-clamp-2">
+												{relatedGallery.description}
+											</p>
+										)}
+									</div>
+								</div>
+
+								<!-- Content Footer -->
+								<div class="p-6">
+									<div class="flex items-center justify-between text-gray-400 text-sm">
+										{relatedGallery.date && (
+											<div class="flex items-center space-x-2">
+												<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+													<path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+												</svg>
+												<span>{new Date(relatedGallery.date).toLocaleDateString()}</span>
+											</div>
+										)}
+										{relatedGallery.location && (
+											<div class="flex items-center space-x-2">
+												<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+													<path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+												</svg>
+												<span class="truncate">{relatedGallery.location}</span>
+											</div>
+										)}
+									</div>
+								</div>
+
+								<!-- Link Overlay -->
+								<a
+									href={`/gallery/${relatedGallery.slug}`}
+									class="absolute inset-0 z-10"
+									aria-label={`View ${relatedGallery.title} gallery`}
+								></a>
+							</article>
+						))}
+					</div>
+				</div>
+			</section>
+		)}
+	</main>
+
+	<!-- AOS Animation Library -->
+	<script src="https://unpkg.com/aos@next/dist/aos.js" is:inline></script>
+	<script is:inline>
+		AOS.init({
+			duration: 1000,
+			easing: 'ease-in-out-cubic',
+			once: true,
+			offset: 100
+		});
+
+		document.addEventListener('DOMContentLoaded', () => {
+			AOS.refresh();
+		});
+	</script>
+
+	<!-- scroll -->
+	 <script is:inline>
+		const scrollIndicator = document.getElementById('scroll-indicator');
+		const galleryContent = document.getElementById('gallery-content');
+
+		scrollIndicator.addEventListener('click', () => {
+			if (galleryContent) {
+				galleryContent.scrollIntoView({ behavior: 'smooth' });
+			}
+		});
+
+		document.addEventListener('scroll', () => {
+			if (window.scrollY > 100) {
+				scrollIndicator.classList.add('hidden');
+			} else {
+				scrollIndicator.classList.remove('hidden');
+			}
+		});
+
+		document.addEventListener('DOMContentLoaded', () => {
+			if (window.scrollY > 100) {
+				scrollIndicator.classList.add('hidden');
+			} else {
+				scrollIndicator.classList.remove('hidden');
+			}
+		});
+
+	</script>
+
+	<!-- Image Lightbox -->
+	<script is:inline>
+		document.addEventListener('DOMContentLoaded', function() {
+			// Simple lightbox functionality
+			const images = document.querySelectorAll('[data-aos="zoom-in"] img, .markdown-content img');
+
+			images.forEach(img => {
+				img.addEventListener('click', function() {
+					// Create lightbox overlay
+					const overlay = document.createElement('div');
+					overlay.className = 'fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm';
+					overlay.style.opacity = '0';
+					overlay.style.transition = 'opacity 300ms ease-out';
+
+					// Create image container
+					const container = document.createElement('div');
+					container.className = 'relative max-w-full max-h-full';
+
+					// Create enlarged image
+					const enlargedImg = document.createElement('img');
+					enlargedImg.src = this.src;
+					enlargedImg.alt = this.alt;
+					enlargedImg.className = 'max-w-full max-h-full object-contain rounded-lg shadow-2xl';
+					enlargedImg.style.transform = 'scale(0.8)';
+					enlargedImg.style.transition = 'transform 300ms ease-out';
+
+					// Create close button
+					const closeBtn = document.createElement('button');
+					closeBtn.innerHTML = `
+						<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+						</svg>
+					`;
+					closeBtn.className = 'absolute -top-4 -right-4 bg-white/20 hover:bg-white/30 text-white rounded-full p-2 backdrop-blur-sm transition-colors';
+
+					// Assembly
+					container.appendChild(enlargedImg);
+					container.appendChild(closeBtn);
+					overlay.appendChild(container);
+					document.body.appendChild(overlay);
+
+					// Animate in
+					requestAnimationFrame(() => {
+						overlay.style.opacity = '1';
+						enlargedImg.style.transform = 'scale(1)';
+					});
+
+					// Close handlers
+					const closeHandler = () => {
+						overlay.style.opacity = '0';
+						enlargedImg.style.transform = 'scale(0.8)';
+						setTimeout(() => overlay.remove(), 300);
+					};
+
+					closeBtn.addEventListener('click', closeHandler);
+					overlay.addEventListener('click', (e) => {
+						if (e.target === overlay) closeHandler();
+					});
+
+					document.addEventListener('keydown', function escHandler(e) {
+						if (e.key === 'Escape') {
+							closeHandler();
+							document.removeEventListener('keydown', escHandler);
+						}
+					});
+				});
+			});
+		});
+	</script>
+
+	<!-- Custom Styles -->
+	<style>
+		.line-clamp-2 {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		/* Enhanced prose styling for rich content */
+		.prose-content {
+			color: rgb(209 213 219);
+			line-height: 1.625;
+		}
+
+		.prose-content h1, .prose-content h2, .prose-content h3,
+		.prose-content h4, .prose-content h5, .prose-content h6 {
+			color: white;
+			font-weight: bold;
+		}
+
+		.prose-content h1 {
+			font-size: 2.25rem;
+			margin-top: 3rem;
+			margin-bottom: 1.5rem;
+			border-bottom: 2px solid rgb(99 102 241);
+			padding-bottom: 1rem;
+		}
+
+		.prose-content h2 {
+			font-size: 1.875rem;
+			margin-top: 2.5rem;
+			margin-bottom: 1.25rem;
+			border-bottom: 1px solid rgb(129 140 248);
+			padding-bottom: 0.75rem;
+		}
+
+		.prose-content h3 {
+			font-size: 1.5rem;
+			margin-top: 2rem;
+			margin-bottom: 1rem;
+		}
+
+		.prose-content h4 {
+			font-size: 1.25rem;
+			margin-top: 1.5rem;
+			margin-bottom: 0.75rem;
+		}
+
+		.prose-content h5 {
+			font-size: 1.125rem;
+			margin-top: 1.25rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.prose-content h6 {
+			font-size: 1rem;
+			margin-top: 1rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.prose-content p {
+			margin-bottom: 1.5rem;
+			line-height: 1.625;
+		}
+
+		.prose-content ul, .prose-content ol {
+			margin-top: 1.5rem;
+			margin-bottom: 1.5rem;
+			padding-left: 1.5rem;
+		}
+
+		.prose-content ul li {
+			list-style-type: disc;
+		}
+
+		.prose-content ol li {
+			list-style-type: decimal;
+		}
+
+		.prose-content li {
+			line-height: 1.625;
+			transition: color 200ms;
+		}
+
+		.prose-content li:hover {
+			color: rgb(229 231 235);
+		}
+
+		.prose-content blockquote {
+			margin: 2rem 0;
+			border-left: 4px solid rgb(99 102 241);
+			padding-left: 1.5rem;
+			padding-top: 1rem;
+			padding-bottom: 1rem;
+			background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.05));
+			border-radius: 0 0.5rem 0.5rem 0;
+		}
+
+		.prose-content blockquote p {
+			font-size: 1.125rem;
+			font-style: italic;
+			color: rgb(229 231 235);
+			line-height: 1.625;
+		}
+
+		.prose-content a {
+			color: rgb(129 140 248);
+			text-decoration: underline;
+			text-underline-offset: 2px;
+			text-decoration-color: rgba(99, 102, 241, 0.5);
+			font-weight: 500;
+			transition: all 200ms;
+		}
+
+		.prose-content a:hover {
+			color: rgb(165 180 252);
+			text-decoration-color: rgb(129 140 248);
+		}
+
+		.prose-content code {
+			background-color: rgb(31 41 55);
+			color: rgb(165 180 252);
+			padding: 0.25rem 0.5rem;
+			border-radius: 0.25rem;
+			font-size: 0.875rem;
+			font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+		}
+
+		.prose-content pre {
+			background-color: rgb(17 24 39);
+			padding: 1.5rem;
+			border-radius: 0.75rem;
+			overflow-x: auto;
+			margin: 2rem 0;
+			border: 1px solid rgb(55 65 81);
+		}
+
+		.prose-content pre code {
+			background-color: transparent;
+			color: rgb(209 213 219);
+			padding: 0;
+		}
+
+		.prose-content img {
+			width: 100%;
+			border-radius: 0.75rem;
+			box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+			transition: box-shadow 300ms;
+			cursor: zoom-in;
+			margin: 2rem 0;
+		}
+
+		.prose-content img:hover {
+			box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.1);
+		}
+
+		.prose-content table {
+			width: 100%;
+			border-collapse: collapse;
+			background-color: rgba(31, 41, 55, 0.5);
+			border-radius: 0.5rem;
+			overflow: hidden;
+			border: 1px solid rgb(55 65 81);
+			margin: 2rem 0;
+		}
+
+		.prose-content th {
+			padding: 0.75rem 1.5rem;
+			text-align: left;
+			font-size: 0.75rem;
+			font-weight: bold;
+			color: rgb(229 231 235);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			border-bottom: 1px solid rgb(75 85 99);
+			background-color: rgb(55 65 81);
+		}
+
+		.prose-content td {
+			padding: 1rem 1.5rem;
+			font-size: 0.875rem;
+			color: rgb(209 213 219);
+			border-bottom: 1px solid rgb(55 65 81);
+		}
+
+		.prose-content hr {
+			margin: 3rem 0;
+			border: none;
+			height: 1px;
+			background: linear-gradient(to right, transparent, rgb(99 102 241), transparent);
+			opacity: 0.5;
+		}
+	</style>
+</Layout>
