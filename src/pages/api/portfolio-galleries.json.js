@@ -16,7 +16,7 @@ export async function GET({ request }) {
 		const sort = url.searchParams.get("sort") || "order:asc,createdAt:desc";
 
 		// Build filters
-		const filters: any = {};
+		const filters = {};
 
 		if (category) {
 			filters.category = { slug: category };
