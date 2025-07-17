@@ -33,7 +33,7 @@ class StrapiAPI {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("Error response body:", errorText);
+        console.log("[strapi.js] Error response body:", errorText);
         throw new Error(
           `Strapi API error: ${response.status} ${response.statusText} - ${errorText}`,
         );
@@ -79,6 +79,7 @@ class StrapiAPI {
   }
 
   // Add filters to URLSearchParams
+  // Add filters to URLSearchParams
   addFiltersToParams(params, filters, prefix = "filters") {
     Object.entries(filters).forEach(([key, value]) => {
       if (typeof value === "object" && value !== null) {
@@ -91,11 +92,7 @@ class StrapiAPI {
         } else if (Array.isArray(value)) {
           value.forEach((item, index) => {
             if (typeof item === "object") {
-              this.addFiltersToParams(
-                params,
-                item,
-                `${prefix}[${key}][${index}]`,
-              );
+              this.addFiltersToParams(params, item, `${prefix}[${key}][${index}]`);
             } else {
               params.append(`${prefix}[${key}][${index}]`, item);
             }
@@ -109,6 +106,14 @@ class StrapiAPI {
       }
     });
   }
+
+  getGalleryPopulateParams(params) {
+    params.append("populate[media]", "*");
+    params.append("populate[content][populate]", "*");
+  }
+
+
+
 
   // Helper method to add blog post population parameters
   addBlogPostPopulation(params) {
@@ -155,6 +160,8 @@ class StrapiAPI {
     // Add blog post population
     this.addBlogPostPopulation(params);
 
+    console.log("Full URL for blog posts:", `${this.baseURL}/api/blog-posts?${params.toString()}`);
+
     const data = await this.fetch(`/blog-posts?${params.toString()}`);
     return {
       posts: data.data || [],
@@ -171,12 +178,12 @@ class StrapiAPI {
     // Add blog post population
     this.addBlogPostPopulation(params);
 
-    console.log("post url params:", params);
+    console.log("[strapi.js] post url params:", params);
 
     const data = await this.fetch(`/blog-posts?${params.toString()}`);
 
     // Log the fetched content for debugging:       content: [Array]
-    console.log("Fetched blog post content:", data.data?.[0]?.content);
+    console.log("[strapi.js] Fetched blog post content:", data.data?.[0]?.content);
 
     return data.data?.[0] || null;
   }
@@ -278,7 +285,7 @@ class StrapiAPI {
     // Add blog post population
     this.addBlogPostPopulation(params);
 
-    console.log("Search query string:", params.toString());
+    console.log("[strapi.js] Search query string:", params.toString());
 
     const data = await this.fetch(`/blog-posts?${params.toString()}`);
     return data.data || [];
@@ -294,11 +301,18 @@ class StrapiAPI {
   getMediaURL(media) {
     if (!media) return null;
 
+    // If media is already a full URL, return it directly
     if (media.url && media.url.startsWith("http")) {
       return media.url;
     }
 
+    // Otherwise, construct the full URL using the base URL
     return media.url ? `${this.baseURL}${media.url}` : null;
+  }
+
+  // Helper function to format media URL (alias for getMediaURL)
+  formatMediaUrl(media) {
+    return this.getMediaURL(media);
   }
 
   // Helper function to format blog post data
@@ -319,46 +333,46 @@ class StrapiAPI {
       image: post.image?.url ? this.getMediaURL(post.image) : null,
       category: post.category
         ? {
-            id: post.category.id,
-            name: post.category.name,
-            slug: post.category.slug,
-            color: post.category.color || "#6B7280",
-            description: post.category.description,
-          }
+          id: post.category.id,
+          name: post.category.name,
+          slug: post.category.slug,
+          color: post.category.color || "#6B7280",
+          description: post.category.description,
+        }
         : null,
       author: post.author
         ? {
-            id: post.author.id,
-            name: post.author.name,
-            email: post.author.email,
-            bio: post.author.bio,
-            title: post.author.title,
-            website: post.author.website,
-            social: post.author.social,
-            avatar: post.author.avatar?.url
-              ? this.getMediaURL(post.author.avatar)
-              : null,
-          }
+          id: post.author.id,
+          name: post.author.name,
+          email: post.author.email,
+          bio: post.author.bio,
+          title: post.author.title,
+          website: post.author.website,
+          social: post.author.social,
+          avatar: post.author.avatar?.url
+            ? this.getMediaURL(post.author.avatar)
+            : null,
+        }
         : null,
       tags: post.tags
         ? post.tags.map((tag) => ({
-            id: tag.id,
-            name: tag.name,
-            slug: tag.slug,
-            color: tag.color || "#6B7280",
-            description: tag.description,
-          }))
+          id: tag.id,
+          name: tag.name,
+          slug: tag.slug,
+          color: tag.color || "#6B7280",
+          description: tag.description,
+        }))
         : [],
       seo: post.seo
         ? {
-            metaTitle: post.seo.metaTitle,
-            metaDescription: post.seo.metaDescription,
-            metaKeywords: post.seo.metaKeywords,
-            metaImage: post.seo.metaImage?.url
-              ? this.getMediaURL(post.seo.metaImage)
-              : null,
-            canonicalURL: post.seo.canonicalURL,
-          }
+          metaTitle: post.seo.metaTitle,
+          metaDescription: post.seo.metaDescription,
+          metaKeywords: post.seo.metaKeywords,
+          metaImage: post.seo.metaImage?.url
+            ? this.getMediaURL(post.seo.metaImage)
+            : null,
+          canonicalURL: post.seo.canonicalURL,
+        }
         : null,
     };
   }
@@ -372,6 +386,7 @@ class StrapiAPI {
         case "content.rich-text":
           return {
             type: "rich-text",
+            __component: "content.rich-text",
             id: component.id,
             content: component.content,
           };
@@ -379,17 +394,18 @@ class StrapiAPI {
         case "content.media-block":
           return {
             type: "media-block",
+            __component: "content.media-block",
             id: component.id,
             media: component.media
               ? {
-                  id: component.media.id,
-                  url: this.getMediaURL(component.media),
-                  alternativeText: component.media.alternativeText,
-                  caption: component.media.caption,
-                  mime: component.media.mime,
-                  width: component.media.width,
-                  height: component.media.height,
-                }
+                id: component.media.id,
+                url: this.getMediaURL(component.media),
+                alternativeText: component.media.alternativeText,
+                caption: component.media.caption,
+                mime: component.media.mime,
+                width: component.media.width,
+                height: component.media.height,
+              }
               : null,
             caption: component.caption,
             altText: component.altText,
@@ -399,6 +415,7 @@ class StrapiAPI {
         case "content.code-block":
           return {
             type: "code-block",
+            __component: "content.code-block",
             id: component.id,
             code: component.code,
             language: component.language || "javascript",
@@ -411,6 +428,7 @@ class StrapiAPI {
         case "content.quote":
           return {
             type: "quote",
+            __component: "content.quote",
             id: component.id,
             text: component.text,
             author: component.author,
@@ -424,6 +442,7 @@ class StrapiAPI {
         case "content.callout":
           return {
             type: "callout",
+            __component: "content.callout",
             id: component.id,
             title: component.title,
             content: component.content,
@@ -434,6 +453,7 @@ class StrapiAPI {
         case "content.embed":
           return {
             type: "embed",
+            __component: "content.embed",
             id: component.id,
             url: component.url,
             title: component.title,
@@ -444,12 +464,127 @@ class StrapiAPI {
           };
 
         default:
-          return component;
+          // Return the component as-is with its original __component
+          return {
+            ...component,
+            type: component.__component || "unknown",
+          };
       }
     });
   }
 
-  // Format category data
+  // Format gallery-specific content (handles gallery dynamic zone components)
+  formatGalleryContent(content) {
+    if (!content || !Array.isArray(content)) return content;
+
+    return content.map((component) => {
+      switch (component.__component) {
+        case "content.rich-text":
+          return {
+            type: "rich-text",
+            __component: "content.rich-text",
+            id: component.id,
+            content: component.content,
+          };
+
+        case "content.media-block": {
+          // Extract all possible media fields, including nested data
+          let media = null;
+          if (component.media) {
+            // Strapi may return media as an object or as { data: { ... } }
+            if (component.media.data) {
+              const m = component.media.data;
+              media = {
+                id: m.id,
+                url: m.url || (m.attributes && m.attributes.url) || null,
+                alternativeText: m.alternativeText || (m.attributes && m.attributes.alternativeText) || null,
+                caption: m.caption || (m.attributes && m.attributes.caption) || null,
+                mime: m.mime || (m.attributes && m.attributes.mime) || null,
+                width: m.width || (m.attributes && m.attributes.width) || null,
+                height: m.height || (m.attributes && m.attributes.height) || null,
+              };
+            } else {
+              // Direct object
+              media = {
+                id: component.media.id,
+                url: component.media.url,
+                alternativeText: component.media.alternativeText,
+                caption: component.media.caption,
+                mime: component.media.mime,
+                width: component.media.width,
+                height: component.media.height,
+              };
+            }
+          }
+          return {
+            type: "media-block",
+            __component: "content.media-block",
+            id: component.id,
+            caption: component.caption,
+            altText: component.altText,
+            alignment: component.alignment || "center",
+            media,
+          };
+        }
+
+        case "content.quote":
+          return {
+            type: "quote",
+            __component: "content.quote",
+            id: component.id,
+            text: component.text,
+            author: component.author,
+            authorTitle: component.authorTitle,
+            style: component.style || "default",
+          };
+
+        case "content.code-block":
+          return {
+            type: "code-block",
+            __component: "content.code-block",
+            id: component.id,
+            code: component.code,
+            language: component.language || "javascript",
+            filename: component.filename,
+            showLineNumbers: component.showLineNumbers !== false,
+            highlightLines: component.highlightLines,
+            caption: component.caption,
+          };
+
+        case "content.callout":
+          return {
+            type: "callout",
+            __component: "content.callout",
+            id: component.id,
+            title: component.title,
+            content: component.content,
+            variant: component.type || component.variant || "info",
+            icon: component.icon,
+          };
+
+        case "content.embed":
+          return {
+            type: "embed",
+            __component: "content.embed",
+            id: component.id,
+            url: component.url,
+            title: component.title,
+            description: component.description,
+            embedType: component.embedType || "custom",
+            aspectRatio: component.aspectRatio || "16:9",
+            customHeight: component.customHeight,
+          };
+
+        default:
+          // Return the component as-is but ensure it has both type and __component
+          return {
+            ...component,
+            type: component.__component || "unknown",
+            __component: component.__component || "unknown",
+          };
+      }
+    });
+  }  // Format category data
   formatCategory(category) {
     if (!category) return null;
 
@@ -569,43 +704,43 @@ class StrapiAPI {
       gallery:
         project.gallery && project.gallery.length > 0
           ? project.gallery.map((img) => ({
-              id: img.id,
-              url: this.getMediaURL(img),
-              alternativeText: img.alternativeText,
-              caption: img.caption,
-              mime: img.mime,
-              width: img.width,
-              height: img.height,
-            }))
+            id: img.id,
+            url: this.getMediaURL(img),
+            alternativeText: img.alternativeText,
+            caption: img.caption,
+            mime: img.mime,
+            width: img.width,
+            height: img.height,
+          }))
           : [],
       category: project.category
         ? {
-            id: project.category.id,
-            name: project.category.name,
-            slug: project.category.slug,
-            color: project.category.color || "#6B7280",
-            description: project.category.description,
-          }
+          id: project.category.id,
+          name: project.category.name,
+          slug: project.category.slug,
+          color: project.category.color || "#6B7280",
+          description: project.category.description,
+        }
         : null,
       tags: project.tags
         ? project.tags.map((tag) => ({
-            id: tag.id,
-            name: tag.name,
-            slug: tag.slug,
-            color: tag.color || "#6B7280",
-            description: tag.description,
-          }))
+          id: tag.id,
+          name: tag.name,
+          slug: tag.slug,
+          color: tag.color || "#6B7280",
+          description: tag.description,
+        }))
         : [],
       seo: project.seo
         ? {
-            metaTitle: project.seo.metaTitle,
-            metaDescription: project.seo.metaDescription,
-            metaKeywords: project.seo.metaKeywords,
-            metaImage: project.seo.metaImage?.url
-              ? this.getMediaURL(project.seo.metaImage)
-              : null,
-            canonicalURL: project.seo.canonicalURL,
-          }
+          metaTitle: project.seo.metaTitle,
+          metaDescription: project.seo.metaDescription,
+          metaKeywords: project.seo.metaKeywords,
+          metaImage: project.seo.metaImage?.url
+            ? this.getMediaURL(project.seo.metaImage)
+            : null,
+          canonicalURL: project.seo.canonicalURL,
+        }
         : null,
     };
   }
@@ -681,6 +816,315 @@ class StrapiAPI {
       );
     } catch (error) {
       console.error("Failed to fetch project slugs:", error);
+      return [];
+    }
+  }
+
+  // Portfolio Gallery Methods
+
+  // Get all portfolio gallery items
+  async getPortfolioGalleries(options = {}) {
+    const queryString = this.buildQueryParams({
+      populate: {
+        featuredImage: true,
+        galleryImages: true,
+        thumbnailImage: true,
+        category: {
+          fields: ["name", "slug", "color"],
+        },
+        tags: {
+          fields: ["name", "slug", "color"],
+        },
+      },
+      sort: options.sort || "order:asc,createdAt:desc",
+      filters: options.filters || {},
+      pagination: options.pagination || { pageSize: 20 },
+    });
+
+    const data = await this.fetch(`/portfolio-galleries?${queryString}`);
+    return {
+      galleries: data.data || [],
+      meta: data.meta || {},
+    };
+  }
+
+  // Get a single portfolio gallery item by slug
+  async getPortfolioGallery(slug) {
+    const params = new URLSearchParams();
+    params.append("filters[slug][$eq]", slug);
+    params.append(
+      "populate",
+      JSON.stringify({
+        featuredImage: true,
+        galleryImages: true,
+        thumbnailImage: true,
+        category: {
+          fields: ["name", "slug", "color", "description"],
+        },
+        tags: {
+          fields: ["name", "slug", "color", "description"],
+        },
+      }),
+    );
+
+    const data = await this.fetch(`/portfolio-galleries?${params.toString()}`);
+    return data.data?.[0] || null;
+  }
+
+  // Get featured portfolio gallery items
+  async getFeaturedPortfolioGalleries(limit = 6) {
+    const queryString = this.buildQueryParams({
+      populate: {
+        featuredImage: true,
+        thumbnailImage: true,
+        category: {
+          fields: ["name", "slug", "color"],
+        },
+        tags: {
+          fields: ["name", "slug", "color"],
+        },
+      },
+      filters: { featured: true },
+      sort: "order:asc,createdAt:desc",
+      pagination: { pageSize: limit },
+    });
+
+    const data = await this.fetch(`/portfolio-galleries?${queryString}`);
+    return data.data || [];
+  }
+
+  // Get highlighted portfolio gallery items
+  async getHighlightedPortfolioGalleries(limit = 4) {
+    const queryString = this.buildQueryParams({
+      populate: {
+        featuredImage: true,
+        thumbnailImage: true,
+        category: {
+          fields: ["name", "slug", "color"],
+        },
+        tags: {
+          fields: ["name", "slug", "color"],
+        },
+      },
+      filters: { highlighted: true },
+      sort: "order:asc,createdAt:desc",
+      pagination: { pageSize: limit },
+    });
+
+    const data = await this.fetch(`/portfolio-galleries?${queryString}`);
+    return data.data || [];
+  }
+
+  // Like a portfolio gallery item
+  async likePortfolioGallery(id) {
+    return await this.fetch(`/portfolio-galleries/${id}/like`, {
+      method: "POST",
+    });
+  }
+
+  // Format portfolio gallery data
+  formatPortfolioGallery(gallery) {
+    if (!gallery || !gallery.attributes) return null;
+
+    const attributes = gallery.attributes;
+    return {
+      id: gallery.id,
+      title: attributes.title,
+      slug: attributes.slug,
+      subtitle: attributes.subtitle,
+      description: attributes.description,
+      shortDescription: attributes.shortDescription,
+      featuredImage: this.formatMediaUrl(attributes.featuredImage?.data),
+      galleryImages:
+        attributes.galleryImages?.data?.map((img) =>
+          this.formatMediaUrl(img),
+        ) || [],
+      thumbnailImage: this.formatMediaUrl(attributes.thumbnailImage?.data),
+      category: attributes.category?.data
+        ? {
+          id: attributes.category.data.id,
+          name: attributes.category.data.attributes.name,
+          slug: attributes.category.data.attributes.slug,
+          color: attributes.category.data.attributes.color,
+          description: attributes.category.data.attributes.description,
+        }
+        : null,
+      tags:
+        attributes.tags?.data?.map((tag) => ({
+          id: tag.id,
+          name: tag.attributes.name,
+          slug: tag.attributes.slug,
+          color: tag.attributes.color,
+          description: tag.attributes.description,
+        })) || [],
+      technologies: attributes.technologies || [],
+      clientName: attributes.clientName,
+      projectUrl: attributes.projectUrl,
+      githubUrl: attributes.githubUrl,
+      liveUrl: attributes.liveUrl,
+      demoUrl: attributes.demoUrl,
+      startDate: attributes.startDate,
+      endDate: attributes.endDate,
+      duration: attributes.duration,
+      status: attributes.status,
+      featured: attributes.featured,
+      highlighted: attributes.highlighted,
+      order: attributes.order,
+      views: attributes.views || 0,
+      likes: attributes.likes || 0,
+      difficulty: attributes.difficulty,
+      collaboration: attributes.collaboration,
+      teamSize: attributes.teamSize,
+      role: attributes.role,
+      achievements: attributes.achievements || [],
+      challenges: attributes.challenges,
+      learnings: attributes.learnings,
+      seoTitle: attributes.seoTitle,
+      seoDescription: attributes.seoDescription,
+      seoKeywords: attributes.seoKeywords,
+      publishedAt: attributes.publishedAt,
+      createdAt: attributes.createdAt,
+      updatedAt: attributes.updatedAt,
+    };
+  }
+
+  // Get all portfolio gallery slugs
+  async getAllPortfolioGallerySlugs() {
+    try {
+      const data = await this.fetch(
+        "/portfolio-galleries?fields=slug,updatedAt&pagination[pageSize]=1000",
+      );
+      return (
+        data.data?.map((gallery) => ({
+          slug: gallery.slug,
+          lastModified: gallery.updatedAt,
+        })) || []
+      );
+    } catch (error) {
+      console.error("Failed to fetch portfolio gallery slugs:", error);
+      return [];
+    }
+  }
+
+  // Gallery Methods
+
+  // Get all galleries
+  async getGalleries(options = {}) {
+    const params = new URLSearchParams();
+
+    // Sort
+    params.append("sort", options.sort || "date:desc");
+
+    // Pagination
+    const pagination = options.pagination || { pageSize: 20 };
+    if (pagination.page) {
+      params.append("pagination[page]", pagination.page);
+    }
+    if (pagination.pageSize) {
+      params.append("pagination[pageSize]", pagination.pageSize);
+    }
+
+    // Filters
+    if (options.filters) {
+      this.addFiltersToParams(params, options.filters);
+    }
+
+    // Populate nested media properly
+    this.getGalleryPopulateParams(params);
+
+    const data = await this.fetch(`/galleries?${params.toString()}`);
+
+    console.log("[strapi.js] Full URL for galleries:", `${this.baseURL}/api/galleries?${params.toString()}`);
+    console.log("[strapi.js] Fetched galleries data:", data);
+
+    const galleries = Array.isArray(data) ? data : (data.data || []);
+
+    return {
+      galleries: galleries.map((gallery) => this.formatGallery(gallery)),
+      meta: data.meta || {},
+    };
+  }
+
+  // Get a single gallery by slug
+  async getGallery(slug) {
+    const params = new URLSearchParams();
+    params.append("filters[slug][$eq]", slug);
+    this.getGalleryPopulateParams(params);
+
+    const data = await this.fetch(`/galleries?${params.toString()}`);
+    const galleries = Array.isArray(data) ? data : (data.data || []);
+    const gallery = galleries[0];
+    return gallery ? this.formatGallery(gallery) : null;
+  }
+
+
+  // Get galleries by category
+  async getGalleriesByCategory(category, limit = 10) {
+    const params = new URLSearchParams();
+    params.append("filters[category][$eq]", category);
+    params.append("sort", "date:desc");
+    params.append("pagination[pageSize]", limit);
+    params.append("populate", "*");
+
+    const data = await this.fetch(`/galleries?${params.toString()}`);
+    // Handle both array response and object with data property
+    const galleries = Array.isArray(data) ? data : (data.data || []);
+    return galleries.map((gallery) => this.formatGallery(gallery));
+  }
+
+  // Format gallery data
+  formatGallery(gallery) {
+
+    console.log("[strapi.js] Formatting gallery:", gallery);
+
+    try {
+      if (!gallery || typeof gallery !== "object") {
+        return null;
+      }
+
+      console.log("[strapi.js] media:", gallery.media);
+
+      const formattedGallery = {
+        id: gallery.id ?? null,
+        documentId: gallery.documentId ?? null,
+        title: gallery.title ?? "",
+        slug: gallery.slug ?? "",
+        altText: gallery.altText ?? "",
+        description: gallery.description ?? "",
+        media: this.getMediaURL(gallery.media),
+        content: this.formatGalleryContent(gallery.content ?? []),
+        category: gallery.category ?? null,
+        location: gallery.location ?? "",
+        date: gallery.date ?? null,
+        tags: Array.isArray(gallery.tags) ? gallery.tags : [],
+        publishedAt: gallery.publishedAt ?? null,
+        createdAt: gallery.createdAt ?? null,
+        updatedAt: gallery.updatedAt ?? null,
+      };
+
+      console.log("[strapi.js] Formatted gallery:", formattedGallery);
+
+      return formattedGallery;
+    } catch (error) {
+      console.error("[strapi.js] Error in formatGallery:", error);
+      return null;
+    }
+  }
+
+  // Get all gallery slugs
+  async getAllGallerySlugs() {
+    try {
+      const data = await this.fetch(
+        "/galleries?fields=slug,updatedAt&pagination[pageSize]=1000",
+      );
+      return (
+        data.data?.map((gallery) => ({
+          slug: gallery.slug,
+          lastModified: gallery.updatedAt,
+        })) || []
+      );
+    } catch (error) {
+      console.error("Failed to fetch gallery slugs:", error);
       return [];
     }
   }
