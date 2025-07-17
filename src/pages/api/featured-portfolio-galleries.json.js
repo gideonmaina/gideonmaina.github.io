@@ -12,7 +12,7 @@ export async function GET({ request }) {
 		const galleries = await strapiAPI.getFeaturedPortfolioGalleries(limit);
 
 		// Format the galleries
-		const formattedGalleries = galleries.map((gallery: any) =>
+		const formattedGalleries = galleries.map((gallery) =>
 			strapiAPI.formatPortfolioGallery(gallery)
 		);
 
