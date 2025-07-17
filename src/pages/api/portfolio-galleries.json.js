@@ -49,7 +49,7 @@ export async function GET({ request }) {
 		});
 
 		// Format the galleries
-		const formattedGalleries = response.galleries.map((gallery: any) =>
+		const formattedGalleries = response.galleries.map((gallery) =>
 			strapiAPI.formatPortfolioGallery(gallery)
 		);
 
