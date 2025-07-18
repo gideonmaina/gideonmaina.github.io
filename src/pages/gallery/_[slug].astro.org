@@ -195,7 +195,6 @@ function renderContentComponent(component: any) {
 		</div>
 	  </blockquote>`;
 	}
-		case "content.embed":
 	case "embed": {
 	  return `
   <div class="my-10">
